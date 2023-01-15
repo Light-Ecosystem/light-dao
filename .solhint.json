@@ -1,0 +1,50 @@
+{
+    "extends": "solhint:recommended",
+    "plugins": [
+        "prettier"
+    ],
+    "rules": {
+        "compiler-version": [
+            "error",
+            "^0.8.0"
+        ],
+        "func-visibility": [
+            "warn",
+            {
+                "ignoreConstructors": true
+            }
+        ],
+        "max-states-count": [
+            "warn",
+            15
+        ],
+        "private-vars-leading-underscore": [
+            "warn",
+            {
+                "strict": false
+            }
+        ],
+        "const-name-snakecase": "warn",
+        "contract-name-camelcase": "warn",
+        "event-name-camelcase": "warn",
+        "visibility-modifier-order": "warn",
+        "no-unused-vars": "warn",
+        "prettier/prettier": "error",
+        "not-rely-on-time": "off",
+        "reason-string": "off",
+        "no-empty-blocks": "off",
+        "avoid-low-level-calls": "off",
+        "avoid-call-value": "warn",
+        "avoid-sha3": "warn",
+        "avoid-suicide": "warn",
+        "avoid-throw": "warn",
+        "avoid-tx-origin": "warn",
+        "check-send-result": "warn",
+        "multiple-sends": "warn",
+        "no-complex-fallback": "warn",
+        "no-inline-assembly": "warn",
+        "not-rely-on-block-hash": "warn",
+        "reentrancy": "warn",
+        "state-visibility": "warn"
+    }
+}

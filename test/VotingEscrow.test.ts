@@ -50,7 +50,7 @@ describe("VotingEscrow", function () {
             await expect(veLT.createLock(0, WEEK, NONCE, DEADLINE, sig)).to.revertedWith("VE000");
         });
 
-        it("should revert right error when locktime <= block.timestamp", async function () {
+        it("should revert right error when locktime <= block.timestamp + WEEK", async function () {
             const { veLT, eRC20LT, owner, permit2, otherAccount, WEEK, MAXTIME } = await loadFixture(deployOneYearLockFixture);
             const DEADLINE = await time.latest() + 60 * 60;
             let random = ethers.utils.randomBytes(32);
@@ -200,7 +200,7 @@ describe("VotingEscrow", function () {
             let value = ethers.utils.parseEther('1000');
             await eRC20LT.approve(veLT.address, value);
             let ti = await time.latest();
-            let lockTime = ti + WEEK;
+            let lockTime = ti + WEEK * 2;
 
             const DEADLINE = await time.latest() + 60 * 60;
             let NONCE = BigNumber.from(ethers.utils.randomBytes(32));
@@ -210,7 +210,7 @@ describe("VotingEscrow", function () {
 
             let NONCE1 = BigNumber.from(ethers.utils.randomBytes(32));
             const sig1 = await PermitSigHelper.signature(owner, eRC20LT.address, permit2.address, veLT.address, value, NONCE1, DEADLINE);
-            await time.increase(WEEK);
+            await time.increase(WEEK * 2);
             await expect(veLT.increaseAmount(value, NONCE1, DEADLINE, sig1)).to.revertedWith("VE005");
         });
 

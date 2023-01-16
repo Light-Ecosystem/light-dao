@@ -369,7 +369,8 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
 
         require(_value > 0, "VE000");
         require(_locked.amount == 0, "VE001");
-        require(_unlockTime > block.timestamp, "VE002");
+        //The locking time shall be at least two cycles
+        require(_unlockTime > block.timestamp + WEEK, "VE002");
         require(_unlockTime <= block.timestamp + MAXTIME, "VE003");
 
         _depositFor(msg.sender, _beneficiary, _value, _unlockTime, _locked, _CREATE_LOCK_TYPE, nonce, deadline, signature);

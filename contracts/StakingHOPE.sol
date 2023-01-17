@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
 contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
+    uint256 internal constant _LOCK_TIME = 28;
+
     // staking token contract
     address public stakedToken;
     // permit2 contract
@@ -27,7 +29,8 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
 
     uint256 public totalNotRedeemAmount;
     mapping(address => UnstakingOrderSummary) public unstakingMap;
-    address[] public unStakingKeys;
+    mapping(uint256 => uint256) public unstakingDayHistory;
+    uint256 private unstakeTotal;
 
     constructor(address _stakedToken, address _minter, address _permit2Address) AbsGomboc(_minter) initializer {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
@@ -84,12 +87,13 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
 
         uint256 nextDayTime = ((block.timestamp + _DAY) / _DAY) * _DAY;
         // lock 28 days
-        uint256 redeemTime = nextDayTime + _DAY * 28;
+        uint256 redeemTime = nextDayTime + _DAY * _LOCK_TIME;
+
+        unstakingDayHistory[nextDayTime] = unstakingDayHistory[nextDayTime] + amount;
+        unstakeTotal = unstakeTotal + amount;
 
         UnstakingOrderSummary storage summaryMap = unstakingMap[staker];
-        if (summaryMap.index == 0) {
-            unStakingKeys.push(staker);
-        }
+
         summaryMap.notRedeemAmount = summaryMap.notRedeemAmount + amount;
         summaryMap.index = summaryMap.index + 1;
         summaryMap.orderMap[summaryMap.index] = UnstakingOrderDetail(amount, redeemTime, false);
@@ -118,11 +122,12 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
         return _unstakingAmount;
     }
 
-    function unstakingTotal() external view returns (uint256) {
+    function unstakingTotal() public view returns (uint256) {
         uint256 _unstakingTotal = 0;
-        for (uint256 i; i < unStakingKeys.length; i++) {
-            address _addr = unStakingKeys[i];
-            _unstakingTotal += unstakingBalanceOf(_addr);
+
+        uint256 nextDayTime = ((block.timestamp + _DAY) / _DAY) * _DAY;
+        for (uint i = 0; i < _LOCK_TIME; i++) {
+            _unstakingTotal += unstakingDayHistory[nextDayTime - _DAY * i];
         }
         return _unstakingTotal;
     }
@@ -148,12 +153,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     }
 
     function unstakedTotal() external view returns (uint256) {
-        uint256 _unstakedTotal = 0;
-        for (uint256 i; i < unStakingKeys.length; i++) {
-            address _addr = unStakingKeys[i];
-            _unstakedTotal += unstakedBalanceOf(_addr);
-        }
-        return _unstakedTotal;
+        return unstakeTotal - unstakingTotal();
     }
 
     /***
@@ -185,6 +185,8 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
         _burn(redeemer, amountToRedeem);
         TransferHelper.doTransferOut(stakedToken, redeemer, amountToRedeem);
         _updateLiquidityLimit(redeemer, lpBalanceOf(redeemer), lpTotalSupply());
+
+        unstakeTotal = unstakeTotal - amountToRedeem;
 
         emit Redeem(redeemer, amountToRedeem);
     }
@@ -224,6 +226,8 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
             _burn(redeemer, amountToRedeem);
             TransferHelper.doTransferOut(stakedToken, redeemer, amountToRedeem);
             _updateLiquidityLimit(redeemer, lpBalanceOf(redeemer), lpTotalSupply());
+
+            unstakeTotal = unstakeTotal - amountToRedeem;
             emit Redeem(redeemer, amountToRedeem);
         }
     }

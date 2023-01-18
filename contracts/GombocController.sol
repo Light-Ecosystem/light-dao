@@ -18,7 +18,7 @@ contract GombocController is Ownable2Step, IGombocController {
     // lt token
     address public token;
     // veLT token
-    address public votingEscrow;
+    address public override votingEscrow;
 
     // Gomboc parameters
     // All numbers are "fixed point" on the basis of 1e18
@@ -89,7 +89,7 @@ contract GombocController is Ownable2Step, IGombocController {
      *  @param _addr Gomboc address
      * @return Gomboc type id
      */
-    function gombocTypes(address _addr) external view returns (int128) {
+    function gombocTypes(address _addr) external override view returns (int128) {
         int128 gombocType = _gombocTypes[_addr];
         require(gombocType != 0, "CE000");
         return gombocType - 1;
@@ -101,7 +101,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param gombocType Gomboc type
      * @param weight Gomboc weight
      */
-    function addGomboc(address addr, int128 gombocType, uint256 weight) external onlyOwner {
+    function addGomboc(address addr, int128 gombocType, uint256 weight) external override onlyOwner {
         require(gombocType >= 0 && gombocType < nGombocTypes, "GC001");
         require(_gombocTypes[addr] == 0, "GC002");
 
@@ -136,7 +136,7 @@ contract GombocController is Ownable2Step, IGombocController {
     /**
      * @notice Checkpoint to fill data common for all gombocs
      */
-    function checkpoint() external {
+    function checkpoint() external override{
         _getTotal();
     }
 
@@ -144,7 +144,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @notice Checkpoint to fill data for both a specific gomboc and common for all gomboc
      * @param addr Gomboc address
      */
-    function checkpointGomboc(address addr) external {
+    function checkpointGomboc(address addr) external override {
         _getWeight(addr);
         _getTotal();
     }
@@ -156,7 +156,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param time Relative weight at the specified timestamp in the past or present
      * @return Value of relative weight normalized to 1e18
      */
-    function gombocRelativeWeight(address gombocAddress, uint256 time) external view returns (uint256) {
+    function gombocRelativeWeight(address gombocAddress, uint256 time) external override view returns (uint256) {
         return _gombocRelativeWeight(gombocAddress, time);
     }
 
@@ -167,7 +167,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param time Relative weight at the specified timestamp in the past or present
      * @return Value of relative weight normalized to 1e18
      */
-    function gombocRelativeWeightWrite(address gombocAddress, uint256 time) external returns (uint256) {
+    function gombocRelativeWeightWrite(address gombocAddress, uint256 time) external override returns (uint256) {
         _getWeight(gombocAddress);
         // Also calculates get_sum;
         _getTotal();
@@ -180,7 +180,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param _name Name of gomboc type
      * @param weight Weight of gomboc type
      */
-    function addType(string memory _name, uint256 weight) external onlyOwner {
+    function addType(string memory _name, uint256 weight) external override onlyOwner {
         int128 typeId = nGombocTypes;
         gombocTypeNames[typeId] = _name;
         nGombocTypes = typeId + 1;
@@ -196,7 +196,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param typeId Gomboc type id
      * @param weight New Gomboc weight
      */
-    function changeTypeWeight(int128 typeId, uint256 weight) external onlyOwner {
+    function changeTypeWeight(int128 typeId, uint256 weight) external override onlyOwner {
         _changeTypeWeight(typeId, weight);
     }
 
@@ -205,7 +205,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param gombocAddress `Gomboc` contract address
      * @param weight New Gomboc weight
      */
-    function changeGombocWeight(address gombocAddress, uint256 weight) external onlyOwner {
+    function changeGombocWeight(address gombocAddress, uint256 weight) external override onlyOwner {
         int128 gombocType = _gombocTypes[gombocAddress] - 1;
         require(gombocType >= 0, "GC000");
         _changeGombocWeight(gombocAddress, weight);
@@ -227,7 +227,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param userWeight Weight for a gomboc in bps (units of 0.01%). Minimal is 0.01%.
      *        example: 10%=1000,3%=300,0.01%=1,100%=10000
      */
-    function voteForGombocWeights(address gombocAddress, uint256 userWeight) external {
+    function voteForGombocWeights(address gombocAddress, uint256 userWeight) external override {
         int128 gombocType = _gombocTypes[gombocAddress] - 1;
         require(gombocType >= 0, "GC000");
 
@@ -308,7 +308,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param addr Gomboc address
      * @return Gomboc weight
      */
-    function getGombocWeight(address addr) external view returns (uint256) {
+    function getGombocWeight(address addr) external override view returns (uint256) {
         return pointsWeight[addr][timeWeight[addr]].bias;
     }
 
@@ -317,7 +317,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param typeId Type id
      * @return Type weight
      */
-    function getTypeWeight(int128 typeId) external view returns (uint256) {
+    function getTypeWeight(int128 typeId) external override view returns (uint256) {
         return pointsTypeWeight[typeId][timeTypeWeight[_int128ToUint256(typeId)]];
     }
 
@@ -325,7 +325,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @notice Get current total (type-weighted) weight
      * @return Total weight
      */
-    function getTotalWeight() external view returns (uint256) {
+    function getTotalWeight() external override view returns (uint256) {
         return pointsTotal[timeTotal];
     }
 
@@ -334,7 +334,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param typeId Type id
      * @return Sum of gomboc weights
      */
-    function getWeightsSumPreType(int128 typeId) external view returns (uint256) {
+    function getWeightsSumPreType(int128 typeId) external override view returns (uint256) {
         return pointsSum[typeId][timeSum[_int128ToUint256(typeId)]].bias;
     }
 
@@ -343,7 +343,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param gombocType Gomboc type id
      * @return Type weight
      */
-    function _getTypeWeight(int128 gombocType) internal returns (uint256) {
+    function _getTypeWeight(int128 gombocType) internal  returns (uint256) {
         uint256 t = timeTypeWeight[_int128ToUint256(gombocType)];
         if (t <= 0) {
             return 0;

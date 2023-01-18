@@ -30,7 +30,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     uint256 public totalNotRedeemAmount;
     mapping(address => UnstakingOrderSummary) public unstakingMap;
     mapping(uint256 => uint256) public unstakingDayHistory;
-    uint256 private unstakeTotal;
+    uint256 private _unstakeTotal;
 
     constructor(address _stakedToken, address _minter, address _permit2Address) AbsGomboc(_minter) initializer {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
@@ -90,7 +90,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
         uint256 redeemTime = nextDayTime + _DAY * _LOCK_TIME;
 
         unstakingDayHistory[nextDayTime] = unstakingDayHistory[nextDayTime] + amount;
-        unstakeTotal = unstakeTotal + amount;
+        _unstakeTotal = _unstakeTotal + amount;
 
         UnstakingOrderSummary storage summaryMap = unstakingMap[staker];
 
@@ -153,7 +153,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     }
 
     function unstakedTotal() external view returns (uint256) {
-        return unstakeTotal - unstakingTotal();
+        return _unstakeTotal - unstakingTotal();
     }
 
     /***
@@ -186,7 +186,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
         TransferHelper.doTransferOut(stakedToken, redeemer, amountToRedeem);
         _updateLiquidityLimit(redeemer, lpBalanceOf(redeemer), lpTotalSupply());
 
-        unstakeTotal = unstakeTotal - amountToRedeem;
+        _unstakeTotal = _unstakeTotal - amountToRedeem;
 
         emit Redeem(redeemer, amountToRedeem);
     }
@@ -227,7 +227,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
             TransferHelper.doTransferOut(stakedToken, redeemer, amountToRedeem);
             _updateLiquidityLimit(redeemer, lpBalanceOf(redeemer), lpTotalSupply());
 
-            unstakeTotal = unstakeTotal - amountToRedeem;
+            _unstakeTotal = _unstakeTotal - amountToRedeem;
             emit Redeem(redeemer, amountToRedeem);
         }
     }

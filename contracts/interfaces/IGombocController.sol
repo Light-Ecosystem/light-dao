@@ -8,6 +8,13 @@ interface IGombocController {
         uint256 slope;
     }
 
+    struct UserPoint {
+        uint256 bias;
+        uint256 slope;
+        uint256 ts;
+        uint256 blk;
+    }
+
     struct VotedSlope {
         uint256 slope;
         uint256 power;

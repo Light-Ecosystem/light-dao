@@ -26,7 +26,7 @@ npx hardhat run scripts/mock/mock_lp_token.ts --network $_netwrok
 echo "set mock lp token for pool_gomboc_______________\n"
 
 echo "set pool gomboc_______________"
-npx hardhat run scripts/mock/mock_pool_gomboc.ts --network $_netwrok
+npx hardhat run scripts/mock/upgrade_mock_pool_gomboc.ts --network $_netwrok
 echo "set pool gmoboc_______________\n"
 
 echo "add  mock gomboc for gombocController_______________"

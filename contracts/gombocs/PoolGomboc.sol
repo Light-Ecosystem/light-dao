@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.17;
 
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./AbsGomboc.sol";
 
-contract PoolGomboc is AbsGomboc, ReentrancyGuard {
+contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
     uint256 private constant _MAX_REWARDS = 8;
 
     string public name;
@@ -54,17 +54,6 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-
-//    constructor(address _lpAddr, address _minter, address _permit2Address) AbsGomboc(_minter) {
-//        require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
-//        require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
-//
-//        permit2Address = _permit2Address;
-//        _lpToken = _lpAddr;
-//        symbol = IERC20Metadata(_lpAddr).symbol();
-//        decimals = IERC20Metadata(_lpAddr).decimals();
-//        name = string(abi.encodePacked(symbol, "-Gomboc"));
-//    }
 
     function initialize(address _lpAddr, address _minter, address _permit2Address) external initializer {
         require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");

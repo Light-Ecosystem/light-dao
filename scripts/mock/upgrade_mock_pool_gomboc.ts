@@ -8,13 +8,17 @@ async function main() {
   let minter = FileUtils.getContractAddress(Constants.LT_MINTER);
   let permit2 = FileUtils.getContractAddress(Constants.PERMIT2);
 
-
   const PoolGomboc = await ethers.getContractFactory("PoolGomboc");
-  //const poolGomboc = await PoolGomboc.deploy(mockLPToken, minter, permit2);
   let poolGomboc = await upgrades.deployProxy(PoolGomboc, [mockLPToken, minter, permit2]);
   await poolGomboc.deployed();
-  console.log("PoolGomboc Address: ", poolGomboc.address);
+  await print(poolGomboc);
   FileUtils.saveFrontendFiles(poolGomboc.address, "PoolGomboc", Constants.POOL_GOMBOC);
+}
+
+async function print(token: any) {
+  console.log(token.address, "PoolGomboc-ProxyAddress")
+  console.log(await upgrades.erc1967.getImplementationAddress(token.address), "PoolGomboc-LogicAddress")
+  console.log(await upgrades.erc1967.getAdminAddress(token.address), "ProxyAdminAddress")
 }
 
 main().catch((error) => {

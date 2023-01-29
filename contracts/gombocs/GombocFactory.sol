@@ -22,6 +22,7 @@ contract GombocFactory {
      */
     function deploy(address _lpAddr, bytes32 _salt) public payable returns (address) {
         PoolGomboc poolGomboc = new PoolGomboc{salt: _salt}();
+        poolGomboc.initialize(_lpAddr, _MINTER, _PERMIT2_ADDRESS);
         address poolGombocAddress = address(poolGomboc);
         require(poolGombocAddress == getAddress(_lpAddr, _salt), "not equal");
         return poolGombocAddress;

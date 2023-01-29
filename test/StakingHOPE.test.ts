@@ -5,7 +5,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { BigNumber } = require("ethers");
 
-describe("StakingHope", function () {
+describe("StakingHope", function() {
   const DAY = 86400;
   const YEAR = BigNumber.from(DAY * 365);
 
@@ -65,7 +65,7 @@ describe("StakingHope", function () {
     return { lt, mockLpToken, permit2, veLT, gombocController, hopeToken, minter, stakingHope, admin, owner, alice, bob };
   }
 
-  describe("test_checkpoint", async function () {
+  describe("test_checkpoint", async function() {
     it("test_user_checkpoint", async () => {
       const { stakingHope, alice } = await loadFixture(deployOneYearLockFixture);
       await stakingHope.connect(alice).userCheckpoint(alice.address);
@@ -85,7 +85,7 @@ describe("StakingHope", function () {
     });
   });
 
-  describe("staking", function () {
+  describe("staking", function() {
     it("staking", async () => {
       const { hopeToken, permit2, admin, alice, owner, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
@@ -125,7 +125,7 @@ describe("StakingHope", function () {
     });
 
 
-    it("should fail if amount is 0", async function () {
+    it("should fail if amount is 0", async function() {
       const { hopeToken, permit2, admin, alice, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       //const CREDIT = 100;
@@ -178,8 +178,8 @@ describe("StakingHope", function () {
 
   });
 
-  describe("unstaking", function () {
-    it("should unstaking", async function () {
+  describe("unstaking", function() {
+    it("should unstaking", async function() {
       const { hopeToken, permit2, admin, alice, owner, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("1");
@@ -231,9 +231,9 @@ describe("StakingHope", function () {
 
   });
 
-  describe("redeemAll", function () {
+  describe("redeemAll", function() {
 
-    it("test redeemAll ", async function () {
+    it("test redeemAll ", async function() {
       const { hopeToken, permit2, admin, alice, owner, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("1");
@@ -310,7 +310,7 @@ describe("StakingHope", function () {
 
     });
 
-    it("staking amount and unstaking mnay time  then use redeemByMaxIndex", async function () {
+    it("staking amount and unstaking mnay time  then use redeemByMaxIndex", async function() {
       const { hopeToken, permit2, admin, alice, owner, stakingHope, gombocController } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
@@ -408,7 +408,6 @@ describe("StakingHope", function () {
       expect(await stakingHope.unstakedTotal()).to.equal(ethers.constants.Zero);
 
 
-
       expect(await stakingHope.lpBalanceOf(alice.address)).to.equal(stakingAmount.sub(originAmount));
 
       // stHope to zero
@@ -423,8 +422,8 @@ describe("StakingHope", function () {
 
   });
 
-  describe("transfer ", function () {
-    it("test transfer ", async function () {
+  describe("transfer ", function() {
+    it("test transfer ", async function() {
       const { hopeToken, permit2, admin, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
@@ -462,7 +461,7 @@ describe("StakingHope", function () {
       expect(originLpTotoalSupply).to.equal(stakingAmount);
 
       let transAmout = BigNumber.from(10);
-      // transfer
+      // transfer 10
       await stakingHope.connect(alice).transfer(bob.address, transAmout);
       expect(await stakingHope.balanceOf(alice.address)).to.equal(originAliceBalance.sub(transAmout));
       expect(await stakingHope.balanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
@@ -474,7 +473,7 @@ describe("StakingHope", function () {
     });
 
 
-    it("test transferFrom ", async function () {
+    it("test transferFrom ", async function() {
       const { hopeToken, permit2, admin, owner, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
@@ -525,6 +524,52 @@ describe("StakingHope", function () {
       expect(await stakingHope.lpBalanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
 
       expect(await stakingHope.lpTotalSupply()).to.equal(originLpTotoalSupply);
+    });
+
+    it("shoule revert when transfer  amount  > lpBalanceOf() ", async function() {
+      const { hopeToken, permit2, admin, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
+
+      let MINT_AMOUNT = ethers.utils.parseEther("100");
+      const DEADLINE = await time.latest() + 60 * 60;
+
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
+
+      // mint hope
+      await admin.mint(alice.address, MINT_AMOUNT);
+
+      expect(await hopeToken.totalSupply()).to.equal(MINT_AMOUNT);
+      expect(await hopeToken.balanceOf(alice.address)).to.equal(MINT_AMOUNT);
+
+      let stakingAmount = BigNumber.from(10000);
+
+      let random = ethers.utils.randomBytes(32);
+      let NONCE = BigNumber.from(random);
+
+      // staking
+      const sig = await PermitSigHelper.signature(alice, hopeToken.address, permit2.address, stakingHope.address, stakingAmount, NONCE, DEADLINE);
+      await stakingHope.connect(alice).staking(stakingAmount, NONCE, DEADLINE, sig);
+
+      const originAliceBalance = await stakingHope.balanceOf(alice.address);
+      const originBobBalance = await stakingHope.balanceOf(bob.address);
+
+      // unstaking （stakingAmount / 2）
+      await stakingHope.connect(alice).unstaking(stakingAmount / 2);
+
+      // revert
+      let transAmout = stakingAmount;
+      await expect(stakingHope.transfer(bob.address, transAmout)).to.revertedWith("ERC20: transfer amount exceeds balance");
+
+      // transfer
+      transAmout = stakingAmount / 2;
+      // console.log(await stakingHope.lpBalanceOf(alice.address))
+      await stakingHope.connect(alice).transfer(bob.address, transAmout);
+
+      expect(await stakingHope.balanceOf(alice.address)).to.equal(originAliceBalance.sub(transAmout));
+      expect(await stakingHope.balanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
+      expect(await stakingHope.lpBalanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
+
     });
 
   });

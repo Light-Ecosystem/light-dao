@@ -72,9 +72,8 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      * @notice Contract init
      * @param _lp_addr Liquidity Pool contract address
      * @param _minter Minter contract address
-     * @param _admin Admin who can kill the gauge
      */
-    constructor(address _minter) {
+    function _abs_init(address _minter) internal onlyInitializing {
         require(_minter != address(0), "invalid votingEscrowAddress");
 
         minter = IMinter(_minter);
@@ -246,15 +245,6 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
         _checkpoint(_addr);
         _updateLiquidityLimit(_addr, lpBalanceOf(_addr), lpTotalSupply());
     }
-
-    //    /***
-    //     * @notice Set whether `_addr` can deposit tokens for `msg.sender`
-    //     * @param _addr Address to set approval on
-    //     * @param can_deposit bool - can this account deposit for `msg.sender`?
-    //     */
-    //    function setApproveDeposit(address _addr, bool canDeposit) external {
-    //        approvedToDeposit[_addr][msg.sender] = canDeposit;
-    //    }
 
     function integrateCheckpoint() external view returns (uint256) {
         return periodTimestamp[period];

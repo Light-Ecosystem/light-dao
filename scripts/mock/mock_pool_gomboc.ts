@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { FileUtils } from "../file_utils";
 import { Constants } from "../constant";
 
@@ -10,7 +10,8 @@ async function main() {
 
 
   const PoolGomboc = await ethers.getContractFactory("PoolGomboc");
-  const poolGomboc = await PoolGomboc.deploy(mockLPToken, minter, permit2);
+  //const poolGomboc = await PoolGomboc.deploy(mockLPToken, minter, permit2);
+  let poolGomboc = await upgrades.deployProxy(PoolGomboc, [mockLPToken, minter, permit2]);
   await poolGomboc.deployed();
   console.log("PoolGomboc Address: ", poolGomboc.address);
   FileUtils.saveFrontendFiles(poolGomboc.address, "PoolGomboc", Constants.POOL_GOMBOC);

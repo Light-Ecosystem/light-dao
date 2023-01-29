@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0
 
 pragma solidity 0.8.17;
+
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -13,7 +14,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     string public symbol;
     uint256 public decimals;
 
-    address immutable _lpToken;
+    address public lpToken;
     // permit2 contract
     address public permit2Address;
     mapping(address => uint256) public balanceOf;
@@ -54,12 +55,24 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    constructor(address _lpAddr, address _minter, address _permit2Address) AbsGomboc(_minter) {
+//    constructor(address _lpAddr, address _minter, address _permit2Address) AbsGomboc(_minter) {
+//        require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
+//        require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
+//
+//        permit2Address = _permit2Address;
+//        _lpToken = _lpAddr;
+//        symbol = IERC20Metadata(_lpAddr).symbol();
+//        decimals = IERC20Metadata(_lpAddr).decimals();
+//        name = string(abi.encodePacked(symbol, "-Gomboc"));
+//    }
+
+    function initialize(address _lpAddr, address _minter, address _permit2Address) external initializer {
         require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
+        _abs_init(_minter);
 
         permit2Address = _permit2Address;
-        _lpToken = _lpAddr;
+        lpToken = _lpAddr;
         symbol = IERC20Metadata(_lpAddr).symbol();
         decimals = IERC20Metadata(_lpAddr).decimals();
         name = string(abi.encodePacked(symbol, "-Gomboc"));
@@ -88,7 +101,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
             _updateLiquidityLimit(_addr, newBalance, _totalSupply);
 
-            IERC20Metadata(_lpToken).transferFrom(msg.sender, address(this), _value);
+            IERC20Metadata(lpToken).transferFrom(msg.sender, address(this), _value);
         }
 
         emit Deposit(_addr, _value);
@@ -129,7 +142,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
             _updateLiquidityLimit(msg.sender, newBalance, _totalSupply);
 
-            IERC20Metadata(_lpToken).transfer(msg.sender, _value);
+            IERC20Metadata(lpToken).transfer(msg.sender, _value);
         }
 
         emit Withdraw(msg.sender, _value);
@@ -429,13 +442,6 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
     function claimRewards(address _addr, address _receiver) external nonReentrant {
         _claimRewards(_addr, _receiver);
-    }
-
-    /***
-     * @notice Query the lp token used for this Gomboc
-     */
-    function lpToken() external view returns (address) {
-        return _lpToken;
     }
 
     function lpBalanceOf(address addr) public view override returns (uint256) {

@@ -32,10 +32,10 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    constructor(address _stakedToken, address _minter, address _permit2Address) AbsGomboc(_minter) initializer {
+    function initialize(address _stakedToken, address _minter, address _permit2Address) external initializer {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
-
+        _abs_init(_minter);
         __ERC20_init("Staked HOPE UNI", "stHOPE");
         stakedToken = _stakedToken;
         permit2Address = _permit2Address;

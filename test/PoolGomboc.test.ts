@@ -51,8 +51,9 @@ describe("PoolGomboc", function () {
     const minter = await Minter.deploy(lt.address, gombocController.address);
     await minter.deployed();
 
-    const poolGomboc = await PoolGomboc.deploy(mockLpToken.address, minter.address, permit2.address);
+    const poolGomboc = await PoolGomboc.deploy();
     await poolGomboc.deployed();
+    await poolGomboc.initialize(mockLpToken.address, minter.address, permit2.address)
     const periodTime = await time.latest();
 
     return { lt, permit2, veLT, gombocController, mockLpToken, minter, poolGomboc, owner, alice, bob, periodTime };

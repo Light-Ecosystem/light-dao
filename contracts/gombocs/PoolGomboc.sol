@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -322,7 +322,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         }
 
         vars._rewardCount = rewardCount;
-        for (uint i = 0; i < _MAX_REWARDS; i++) {
+        for (uint256 i = 0; i < _MAX_REWARDS; i++) {
             if (i == vars._rewardCount) {
                 break;
             }

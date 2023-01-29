@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -89,7 +89,7 @@ contract GombocController is Ownable2Step, IGombocController {
      *  @param _addr Gomboc address
      * @return Gomboc type id
      */
-    function gombocTypes(address _addr) external override view returns (int128) {
+    function gombocTypes(address _addr) external view override returns (int128) {
         int128 gombocType = _gombocTypes[_addr];
         require(gombocType != 0, "CE000");
         return gombocType - 1;
@@ -136,7 +136,7 @@ contract GombocController is Ownable2Step, IGombocController {
     /**
      * @notice Checkpoint to fill data common for all gombocs
      */
-    function checkpoint() external override{
+    function checkpoint() external override {
         _getTotal();
     }
 
@@ -156,7 +156,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param time Relative weight at the specified timestamp in the past or present
      * @return Value of relative weight normalized to 1e18
      */
-    function gombocRelativeWeight(address gombocAddress, uint256 time) external override view returns (uint256) {
+    function gombocRelativeWeight(address gombocAddress, uint256 time) external view override returns (uint256) {
         return _gombocRelativeWeight(gombocAddress, time);
     }
 
@@ -308,7 +308,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param addr Gomboc address
      * @return Gomboc weight
      */
-    function getGombocWeight(address addr) external override view returns (uint256) {
+    function getGombocWeight(address addr) external view override returns (uint256) {
         return pointsWeight[addr][timeWeight[addr]].bias;
     }
 
@@ -317,7 +317,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param typeId Type id
      * @return Type weight
      */
-    function getTypeWeight(int128 typeId) external override view returns (uint256) {
+    function getTypeWeight(int128 typeId) external view override returns (uint256) {
         return pointsTypeWeight[typeId][timeTypeWeight[_int128ToUint256(typeId)]];
     }
 
@@ -325,7 +325,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @notice Get current total (type-weighted) weight
      * @return Total weight
      */
-    function getTotalWeight() external override view returns (uint256) {
+    function getTotalWeight() external view override returns (uint256) {
         return pointsTotal[timeTotal];
     }
 
@@ -334,7 +334,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param typeId Type id
      * @return Sum of gomboc weights
      */
-    function getWeightsSumPreType(int128 typeId) external override view returns (uint256) {
+    function getWeightsSumPreType(int128 typeId) external view override returns (uint256) {
         return pointsSum[typeId][timeSum[_int128ToUint256(typeId)]].bias;
     }
 
@@ -343,14 +343,14 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param gombocType Gomboc type id
      * @return Type weight
      */
-    function _getTypeWeight(int128 gombocType) internal  returns (uint256) {
+    function _getTypeWeight(int128 gombocType) internal returns (uint256) {
         uint256 t = timeTypeWeight[_int128ToUint256(gombocType)];
         if (t <= 0) {
             return 0;
         }
 
         uint256 w = pointsTypeWeight[gombocType][t];
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }
@@ -376,7 +376,7 @@ contract GombocController is Ownable2Step, IGombocController {
         }
 
         Point memory pt = pointsSum[gombocType][t];
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }
@@ -419,7 +419,7 @@ contract GombocController is Ownable2Step, IGombocController {
             _getTypeWeight(gombocType);
         }
 
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }
@@ -456,7 +456,7 @@ contract GombocController is Ownable2Step, IGombocController {
             return 0;
         }
         Point memory pt = pointsWeight[gombocAddr][t];
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }

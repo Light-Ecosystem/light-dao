@@ -2,7 +2,7 @@ import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { PermitSigHelper } from "./PermitSigHelper";
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { time, mine, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
 
 describe("TokenhopeSalesAgent", function () {
@@ -151,8 +151,8 @@ describe("TokenhopeSalesAgent", function () {
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10,
-                1673319761,
-                1687237374,
+                0,
+                1000,
                 true,
                 true
             );
@@ -168,8 +168,8 @@ describe("TokenhopeSalesAgent", function () {
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10_000,
-                1673319761,
-                1687237374,
+                0,
+                1000,
                 true,
                 true
             );
@@ -182,13 +182,13 @@ describe("TokenhopeSalesAgent", function () {
         it("should return zero when not reach effective time", async () => {
             const { permit2, owner, hopeToken, hopeSalesAgent, usdtToken } = await loadFixture(deploySaleFixture);
             await hopeSalesAgent.addCurrency("USDT", usdtToken.address, 2000);
-            const effectiveTime = await time.latest() + 60 * 60;
-            const expirationTime = await time.latest() + 120 * 60;
+            const effectiveBlock = await ethers.provider.getBlockNumber() + 1000;
+            const expirationBlock = effectiveBlock + 1000;
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10_000,
-                effectiveTime,
-                expirationTime,
+                effectiveBlock,
+                expirationBlock,
                 true,
                 true
             );
@@ -201,17 +201,17 @@ describe("TokenhopeSalesAgent", function () {
         it("should return zero when greater than expiration time", async () => {
             const { permit2, owner, hopeToken, hopeSalesAgent, usdtToken } = await loadFixture(deploySaleFixture);
             await hopeSalesAgent.addCurrency("USDT", usdtToken.address, 2000);
-            const effectiveTime = await time.latest();
-            const expirationTime = await time.latest() + 120 * 60;
+            const effectiveBlock = await ethers.provider.getBlockNumber();
+            const expirationBlock = effectiveBlock + 1000;
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10_000,
-                effectiveTime,
-                expirationTime,
+                effectiveBlock,
+                expirationBlock,
                 true,
                 true
             );
-            await time.increase(121 * 60);
+            await mine(2000);
             const DEADLINE = await time.latest() + 60 * 60;
             let random = ethers.utils.randomBytes(32);
             let NONCE = BigNumber.from(random);
@@ -224,8 +224,8 @@ describe("TokenhopeSalesAgent", function () {
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10_000,
-                1673319761,
-                1687237374,
+                0,
+                1000,
                 true,
                 true
             );
@@ -257,8 +257,8 @@ describe("TokenhopeSalesAgent", function () {
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10_000,
-                1673319761,
-                1687237374,
+                0,
+                1000,
                 true,
                 true
             );
@@ -313,8 +313,8 @@ describe("TokenhopeSalesAgent", function () {
             await hopeToken.grantAgent(
                 hopeSalesAgent.address,
                 10_000,
-                1673319761,
-                1687237374,
+                0,
+                1000,
                 true,
                 true
             );

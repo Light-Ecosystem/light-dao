@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 interface IHOPESalesAgent {
     /**
@@ -32,13 +32,7 @@ interface IHOPESalesAgent {
      * @dev Buy HOPE token
      * @notice user need to call fromCurrencyToken.approve(address(this),fromValue) before buy HOPE token;
      */
-    function buy(
-        string memory fromCurrency,
-        uint256 fromValue,
-        uint256 nonce,
-        uint256 deadline,
-        bytes memory signature
-    ) external;
+    function buy(string memory fromCurrency, uint256 fromValue, uint256 nonce, uint256 deadline, bytes memory signature) external;
 
     /**
      * @dev Return erc20 balance from sales contract
@@ -48,20 +42,12 @@ interface IHOPESalesAgent {
     /**
      * @dev Redeem erc20 balance, onlyOwner
      */
-    function redeem(
-        string memory symbol,
-        address to,
-        uint256 amount
-    ) external returns (bool);
+    function redeem(string memory symbol, address to, uint256 amount) external returns (bool);
 
     /**
      * @dev Add currency that can buy HOPE token , onlyOwner
      */
-    function addCurrency(
-        string memory symbol,
-        address token,
-        uint256 rate
-    ) external;
+    function addCurrency(string memory symbol, address token, uint256 rate) external;
 
     /**
      * @dev Change currency exhange rate, onlyOwner

@@ -16,8 +16,8 @@ async function main() {
     await hopeToken.grantAgent(
         admin.address,
         totalSupply,
-        1673319761,
-        1687237374,
+        0,
+        100000000,
         true,
         true
     );

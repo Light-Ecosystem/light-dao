@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 interface IAgentManager {
     /**
@@ -9,8 +9,8 @@ interface IAgentManager {
     event AgentGranted(
         address indexed account,
         uint256 credit,
-        uint256 effectiveTime,
-        uint256 expirationTime,
+        uint256 effectiveBlock,
+        uint256 expirationBlock,
         bool minable,
         bool burnable,
         address sender
@@ -31,14 +31,14 @@ interface IAgentManager {
     event AgentDecreaseCredit(address indexed account, uint256 credit, address sender);
 
     /**
-     * @dev Emitted when change agent effective time
+     * @dev Emitted when change agent effective block number
      */
-    event AgentChangeEffectiveTime(address indexed account, uint256 effectiveTime, address sender);
+    event AgentChangeEffectiveBlock(address indexed account, uint256 effectiveBlock, address sender);
 
     /**
-     * @dev Emitted when change agent expiration time
+     * @dev Emitted when change agent expiration block number
      */
-    event AgentChangeExpirationTime(address indexed account, uint256 expirationTime, address sender);
+    event AgentChangeExpirationBlock(address indexed account, uint256 expirationBlock, address sender);
 
     /**
      * @dev Emitted when switch agent minable
@@ -71,14 +71,14 @@ interface IAgentManager {
     function isBurnable(address account) external view returns (bool);
 
     /**
-     * @dev Return agent effective time
+     * @dev Return agent effective block number
      */
-    function getEffectiveTime(address account) external view returns (uint256);
+    function getEffectiveBlock(address account) external view returns (uint256);
 
     /**
-     * @dev Return agent expiration time
+     * @dev Return agent expiration block number
      */
-    function getExpirationTime(address account) external view returns (uint256);
+    function getExpirationBlock(address account) external view returns (uint256);
 
     /**
      * @dev Return whether the address is an agent
@@ -91,8 +91,8 @@ interface IAgentManager {
     function grantAgent(
         address account,
         uint256 credit,
-        uint256 effectiveTime,
-        uint256 expirationTime,
+        uint256 effectiveBlock,
+        uint256 expirationBlock,
         bool minable,
         bool burnable
     ) external;
@@ -103,14 +103,14 @@ interface IAgentManager {
     function revokeAgent(address account) external;
 
     /**
-     * @dev Change the effective time of the address agent
+     * @dev Change the effective block number of the address agent
      */
-    function changeEffectiveTime(address account, uint256 effectiveTime) external;
+    function changeEffectiveBlock(address account, uint256 effectiveBlock) external;
 
     /**
-     * @dev Change the expiration time of the address agent
+     * @dev Change the expiration block number of the address agent
      */
-    function changeExpirationTime(address account, uint256 expirationTime) external;
+    function changeExpirationBlock(address account, uint256 expirationBlock) external;
 
     /**
      * @dev Change the minable status of the address agent

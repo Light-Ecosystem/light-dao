@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { expect } from 'chai';
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { time, mine, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 describe("HOPETokenContract", () => {
 
@@ -37,8 +37,8 @@ describe("HOPETokenContract", () => {
                 await expect(hopeToken.grantAgent(
                     ethers.constants.AddressZero,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 )).to.be.revertedWith("CE000");
@@ -49,16 +49,16 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 )
                 await expect(hopeToken.grantAgent(
                     addr1.address,
                     100_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 )).to.be.revertedWith("AG001")
@@ -69,34 +69,35 @@ describe("HOPETokenContract", () => {
                 await expect(hopeToken.grantAgent(
                     owner.address,
                     0,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 )).to.be.revertedWith("AG005");
             })
-            it("should revert expiration time greater than or equal now", async () => {
+            it("should revert expiration block greater than or equal now", async () => {
                 const { owner, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
+                await mine(1000);
                 await expect(hopeToken.grantAgent(
                     owner.address,
                     10_000,
-                    1673319761,
-                    1671512574,
+                    0,
+                    1000,
                     true,
                     true
                 )).to.be.revertedWith("AG006");
             })
-            it("should revert effctive time less than expiration time", async () => {
+            it("should revert effctive block less than expiration block", async () => {
                 const { owner, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                const effectiveTime = await time.latest() + 60 * 60;
-                const expirationTime = await time.latest() + 60 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber() + 1000;
+                const expirationBlock = effectiveBlock;
                 await expect(hopeToken.grantAgent(
                     owner.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 )).to.be.revertedWith("AG015");
@@ -104,20 +105,20 @@ describe("HOPETokenContract", () => {
             it("grant role data", async () => {
                 const { owner, addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                hopeToken.on("AgentGranted", (account, credit, effectiveTime, expirationTime, minable, burnable, sender) => {
-                    console.log("AgentGranted Event: ", account, credit, effectiveTime, expirationTime, minable, burnable, sender);
+                hopeToken.on("AgentGranted", (account, credit, effectiveBlock, expirationBlock, minable, burnable, sender) => {
+                    console.log("AgentGranted Event: ", account, credit, effectiveBlock, expirationBlock, minable, burnable, sender);
                 })
-                const effectiveTime = await time.latest() + 60 * 60;
-                const expirationTime = await time.latest() + 120 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber();
+                const expirationBlock = effectiveBlock + 1000;
                 await expect(hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 )).to.be.emit(hopeToken, "AgentGranted")
-                    .withArgs(addr1.address, 10_000, effectiveTime, expirationTime, true, true, owner.address);
+                    .withArgs(addr1.address, 10_000, effectiveBlock, expirationBlock, true, true, owner.address);
             })
         })
         describe("Revoked Role", async () => {
@@ -137,8 +138,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 )
@@ -153,8 +154,8 @@ describe("HOPETokenContract", () => {
             await hopeToken.grantAgent(
                 addr1.address,
                 10_000,
-                1673319761,
-                1687237374,
+                0,
+                1000,
                 true,
                 true
             );
@@ -173,8 +174,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -187,35 +188,35 @@ describe("HOPETokenContract", () => {
                 await hopeToken.initialize(restrictedList.address);
                 await expect(hopeToken.getRemainingCredit(addr1.address)).to.be.revertedWith("AG000");
             })
-            it("should return zero when not reach effective time", async () => {
+            it("should return zero when not reach effective block", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                const effectiveTime = await time.latest() + 60 * 60;
-                const expirationTime = await time.latest() + 120 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber() + 1000;
+                const expirationBlock = effectiveBlock + 1000;
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 );
                 expect(await hopeToken.getRemainingCredit(addr1.address)).to.equal(0);
             })
-            it("should return zero when greater than expiration time", async () => {
+            it("should return zero when greater than expiration block", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                const effectiveTime = await time.latest() + 60 * 60;
-                const expirationTime = await time.latest() + 120 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber();
+                const expirationBlock = effectiveBlock + 1000;
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 );
-                await time.increase(121 * 60);
+                await mine(2000);
                 expect(await hopeToken.getRemainingCredit(addr1.address)).to.equal(0);
             })
             it("get remaining credit", async () => {
@@ -224,8 +225,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -244,8 +245,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -264,140 +265,140 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
                 expect(await hopeToken.isBurnable(addr1.address)).to.be.true;
             })
         })
-        describe("Get Agent Effective Time", async () => {
+        describe("Get Agent Effective Block", async () => {
             it("should revert account not has agent role", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                await expect(hopeToken.getEffectiveTime(addr1.address)).to.be.revertedWith("AG000");
+                await expect(hopeToken.getEffectiveBlock(addr1.address)).to.be.revertedWith("AG000");
             })
-            it("get effective time", async () => {
+            it("get effective block", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                const effectiveTime = await time.latest() + 60 * 60;
-                const expirationTime = await time.latest() + 120 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber();
+                const expirationBlock = await ethers.provider.getBlockNumber() + 1000;
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 );
-                expect(await hopeToken.getEffectiveTime(addr1.address)).to.equal(effectiveTime);
+                expect(await hopeToken.getEffectiveBlock(addr1.address)).to.equal(effectiveBlock);
             })
         })
-        describe("Change Effective Time", async () => {
+        describe("Change Effective Block", async () => {
             it("should revert invalid address", async () => {
                 const { hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                await expect(hopeToken.changeEffectiveTime(ethers.constants.AddressZero, 1687237374)).rejectedWith("CE000");
+                await expect(hopeToken.changeEffectiveBlock(ethers.constants.AddressZero, 0)).rejectedWith("CE000");
             })
             it("should revert account not has agent role", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                await expect(hopeToken.changeEffectiveTime(addr1.address, 1687237374)).to.be.revertedWith("AG000");
+                await expect(hopeToken.changeEffectiveBlock(addr1.address, 0)).to.be.revertedWith("AG000");
             })
-            it("should revert invalid effective time", async () => {
+            it("should revert invalid effective block", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                const effectiveTime = await time.latest() + 60 * 60;
-                let expirationTime = await time.latest() + 120 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber();
+                let expirationBlock = effectiveBlock + 1000;
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 );
-                const afterEffectiveTime = expirationTime + 1
-                await expect(hopeToken.changeEffectiveTime(addr1.address, afterEffectiveTime)).to.be.revertedWith("AG012");
+                const afterEffectiveBlock = expirationBlock + 1
+                await expect(hopeToken.changeEffectiveBlock(addr1.address, afterEffectiveBlock)).to.be.revertedWith("AG012");
             })
-            it("change effective time", async () => {
+            it("change effective block", async () => {
                 const { owner, addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                const effectiveTime = await time.latest() + 60 * 60;
-                let expirationTime = await time.latest() + 120 * 60;
+                const effectiveBlock = await ethers.provider.getBlockNumber();
+                let expirationBlock = effectiveBlock + 1000;
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    effectiveTime,
-                    expirationTime,
+                    effectiveBlock,
+                    expirationBlock,
                     true,
                     true
                 );
-                const afterEffectiveTime = expirationTime - 5;
-                await expect(hopeToken.changeEffectiveTime(addr1.address, afterEffectiveTime)).to.be.emit(hopeToken, "AgentChangeEffectiveTime")
-                    .withArgs(addr1.address, afterEffectiveTime, owner.address);
-                expect(await hopeToken.getEffectiveTime(addr1.address)).to.equal(afterEffectiveTime);
+                const afterEffectiveBlock = expirationBlock - 5;
+                await expect(hopeToken.changeEffectiveBlock(addr1.address, afterEffectiveBlock)).to.be.emit(hopeToken, "AgentChangeEffectiveBlock")
+                    .withArgs(addr1.address, afterEffectiveBlock, owner.address);
+                expect(await hopeToken.getEffectiveBlock(addr1.address)).to.equal(afterEffectiveBlock);
             })
         })
-        describe("Get Agent Expiration Time", async () => {
+        describe("Get Agent Expiration Block", async () => {
             it("should revert account not has agent role", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                await expect(hopeToken.getExpirationTime(addr1.address)).to.be.revertedWith("AG000");
+                await expect(hopeToken.getExpirationBlock(addr1.address)).to.be.revertedWith("AG000");
             })
-            it("get expiration time", async () => {
+            it("get expiration block", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
-                expect(await hopeToken.getExpirationTime(addr1.address)).to.equal(1687237374);
+                expect(await hopeToken.getExpirationBlock(addr1.address)).to.equal(1000);
             })
         })
-        describe("Change Expiration Time", async () => {
+        describe("Change Expiration Block", async () => {
             it("should revert invalid address", async () => {
                 const { hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                await expect(hopeToken.changeExpirationTime(ethers.constants.AddressZero, 1687237374)).rejectedWith("CE000");
+                await expect(hopeToken.changeExpirationBlock(ethers.constants.AddressZero, 1000)).rejectedWith("CE000");
             })
             it("should revert account not has agent role", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
-                await expect(hopeToken.changeExpirationTime(addr1.address, 1687237374)).to.be.revertedWith("AG000");
+                await expect(hopeToken.changeExpirationBlock(addr1.address, 1000)).to.be.revertedWith("AG000");
             })
-            it("should revert invalid expiration time", async () => {
+            it("should revert invalid expiration block", async () => {
                 const { addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
-                await expect(hopeToken.changeExpirationTime(addr1.address, 1687237374)).to.be.revertedWith("AG013");
+                await expect(hopeToken.changeExpirationBlock(addr1.address, 1000)).to.be.revertedWith("AG013");
             })
-            it("change expiration time", async () => {
+            it("change expiration block", async () => {
                 const { owner, addr1, hopeToken, restrictedList } = await loadFixture(deployHOPEFixture);
                 await hopeToken.initialize(restrictedList.address);
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
-                await expect(hopeToken.changeExpirationTime(addr1.address, 1687237380)).to.be.emit(hopeToken, "AgentChangeExpirationTime")
-                    .withArgs(addr1.address, 1687237380, owner.address);
-                expect(await hopeToken.getExpirationTime(addr1.address)).to.equal(1687237380);
+                await expect(hopeToken.changeExpirationBlock(addr1.address, 2000)).to.be.emit(hopeToken, "AgentChangeExpirationBlock")
+                    .withArgs(addr1.address, 2000, owner.address);
+                expect(await hopeToken.getExpirationBlock(addr1.address)).to.equal(2000);
             })
         })
 
@@ -418,8 +419,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -431,8 +432,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -459,8 +460,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -472,8 +473,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -499,8 +500,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -512,8 +513,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -540,8 +541,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -553,8 +554,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );
@@ -566,8 +567,8 @@ describe("HOPETokenContract", () => {
                 await hopeToken.grantAgent(
                     addr1.address,
                     10_000,
-                    1673319761,
-                    1687237374,
+                    0,
+                    1000,
                     true,
                     true
                 );

@@ -94,9 +94,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1000");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -133,9 +133,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1000");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -159,9 +159,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1000");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -185,9 +185,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -239,9 +239,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -325,9 +325,9 @@ describe("StakingHope", function () {
       await gombocController.addGomboc(stakingHope.address, typeId, gombocWeight);
 
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       // mint hope
       await admin.mint(alice.address, MINT_AMOUNT);
@@ -430,9 +430,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("100");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       // mint hope
       await admin.mint(alice.address, MINT_AMOUNT);
@@ -480,9 +480,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("100");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       // mint hope
       await admin.mint(alice.address, MINT_AMOUNT);

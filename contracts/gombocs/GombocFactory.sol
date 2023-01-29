@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "./PoolGomboc.sol";
 
@@ -30,7 +30,7 @@ contract GombocFactory {
     function getAddress(address _lpAddr, bytes32 _salt) public view returns (address) {
         address poolGombocAddress = address(
             uint160(
-                uint(
+                uint256(
                     keccak256(
                         abi.encodePacked(
                             bytes1(0xff),

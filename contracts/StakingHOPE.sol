@@ -126,7 +126,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
         uint256 _unstakingTotal = 0;
 
         uint256 nextDayTime = ((block.timestamp + _DAY) / _DAY) * _DAY;
-        for (uint i = 0; i < _LOCK_TIME; i++) {
+        for (uint256 i = 0; i < _LOCK_TIME; i++) {
             _unstakingTotal += unstakingDayHistory[nextDayTime - _DAY * i];
         }
         return _unstakingTotal;

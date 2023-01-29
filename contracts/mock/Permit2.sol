@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import {SignatureTransfer} from "light-permit2/contracts/SignatureTransfer.sol";
 import {AllowanceTransfer} from "light-permit2/contracts/AllowanceTransfer.sol";

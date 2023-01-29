@@ -11,12 +11,12 @@ async function main() {
     await hopeToken.grantAgent(
         tokenSaleAddress,
         maxCredit,
-        1673319761,
-        1703681460,
+        0,
+        100000000,
         true,
         true
     )
-    console.log("Grant Info: ", tokenSaleAddress, await hopeToken.getMaxCredit(tokenSaleAddress), await hopeToken.getExpirationTime(tokenSaleAddress));
+    console.log("Grant Info: ", tokenSaleAddress, await hopeToken.getMaxCredit(tokenSaleAddress), await hopeToken.getExpirationBlock(tokenSaleAddress));
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "../agents/AgentManager.sol";
 import "../interfaces/IRestrictedList.sol";
@@ -29,10 +29,10 @@ contract HOPE is ERC20Upgradeable, AgentManager {
      * @param amount mint amount
      */
     function mint(address to, uint256 amount) public onlyAgent onlyMinable {
-        require(!IRestrictedList(restrictedList).getRestrictedListStatus(to), "FA000");
+        require(!IRestrictedList(restrictedList).isRestrictedList(to), "FA000");
         require(tx.origin != _msgSender(), "HO000");
-        require(getEffectiveTime(_msgSender()) <= block.timestamp, "AG014");
-        require(getExpirationTime(_msgSender()) >= block.timestamp, "AG011");
+        require(getEffectiveBlock(_msgSender()) <= block.number, "AG014");
+        require(getExpirationBlock(_msgSender()) >= block.number, "AG011");
         require(getRemainingCredit(_msgSender()) >= amount, "AG004");
         _mint(to, amount);
         _decreaseRemainingCredit(_msgSender(), amount);
@@ -44,8 +44,8 @@ contract HOPE is ERC20Upgradeable, AgentManager {
      * @param amount burn amount
      */
     function burn(uint256 amount) external onlyAgent onlyBurnable {
-        require(getEffectiveTime(_msgSender()) <= block.timestamp, "AG014");
-        require(getExpirationTime(_msgSender()) >= block.timestamp, "AG011");
+        require(getEffectiveBlock(_msgSender()) <= block.number, "AG014");
+        require(getExpirationBlock(_msgSender()) >= block.number, "AG011");
         _burn(_msgSender(), amount);
         _increaseRemainingCredit(_msgSender(), amount);
     }
@@ -58,8 +58,7 @@ contract HOPE is ERC20Upgradeable, AgentManager {
      */
     function transfer(address to, uint256 amount) public override returns (bool) {
         require(
-            !IRestrictedList(restrictedList).getRestrictedListStatus(msg.sender) &&
-                !IRestrictedList(restrictedList).getRestrictedListStatus(to),
+            !IRestrictedList(restrictedList).isRestrictedList(msg.sender) && !IRestrictedList(restrictedList).isRestrictedList(to),
             "FA000"
         );
         return super.transfer(to, amount);
@@ -73,10 +72,7 @@ contract HOPE is ERC20Upgradeable, AgentManager {
      * @param amount uint the amount of tokens to be transferred
      */
     function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
-        require(
-            !IRestrictedList(restrictedList).getRestrictedListStatus(from) && !IRestrictedList(restrictedList).getRestrictedListStatus(to),
-            "FA000"
-        );
+        require(!IRestrictedList(restrictedList).isRestrictedList(from) && !IRestrictedList(restrictedList).isRestrictedList(to), "FA000");
         return super.transferFrom(from, to, amount);
     }
 }

@@ -268,4 +268,9 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      * @notice The total amount of LP tokens that are currently deposited into the Gomboc.
      */
     function lpTotalSupply() public view virtual returns (uint256);
+
+    // @dev This empty reserved space is put in place to allow future versions to add new
+    // variables without shifting down storage in the inheritance chain.
+    // See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }

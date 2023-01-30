@@ -16,9 +16,9 @@ contract GombocController is Ownable2Step, IGombocController {
     uint256 private constant _MULTIPLIER = 10 ** 18;
 
     // lt token
-    address public token;
+    address public immutable token;
     // veLT token
-    address public override votingEscrow;
+    address public immutable override votingEscrow;
 
     // Gomboc parameters
     // All numbers are "fixed point" on the basis of 1e18

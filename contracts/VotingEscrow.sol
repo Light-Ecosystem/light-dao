@@ -53,9 +53,9 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     int256 public constant BASE_RATE = 10000;
 
     /// LT token address
-    address public token;
+    address public immutable token;
     /// permit2 contract address
-    address public permit2Address;
+    address public immutable permit2Address;
     /// total locked LT value
     uint256 public supply;
 
@@ -70,7 +70,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
 
     string public name;
     string public symbol;
-    uint256 public decimals;
+    uint256 public immutable decimals;
 
     constructor(address _tokenAddr, address _permit2Address) {
         require(_permit2Address != address(0), "CE000");

@@ -14,8 +14,8 @@ interface LiquidityGomboc {
 contract Minter {
     event Minted(address indexed recipient, address gomboc, uint256 minted);
 
-    address public token;
-    address public controller;
+    address public immutable token;
+    address public immutable controller;
 
     // user -> gomboc -> value
     mapping(address => mapping(address => uint256)) public minted;

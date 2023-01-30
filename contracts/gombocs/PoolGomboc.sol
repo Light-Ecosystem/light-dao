@@ -272,7 +272,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
      */
     function addReward(address _rewardToken, address _distributor) external onlyOwner {
         uint256 _rewardCount = rewardCount;
-        require(_rewardCount < _MAX_REWARDS);
+        require(_rewardCount < _MAX_REWARDS, "Reward Threshold");
         require(rewardData[_rewardToken].distributor == address(0), "Repeat setting");
         rewardData[_rewardToken].distributor = _distributor;
         rewardTokens[_rewardCount] = _rewardToken;
@@ -281,9 +281,9 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
 
     function setRewardDistributor(address _rewardToken, address _distributor) external {
         address currentDistributor = rewardData[_rewardToken].distributor;
-        require(msg.sender == currentDistributor || msg.sender == owner());
-        require(currentDistributor != address(0));
-        require(_distributor != address(0));
+        require(msg.sender == currentDistributor || msg.sender == owner(), "Must currentDistributor or owner");
+        require(currentDistributor != address(0), "currentDistributor the zero address");
+        require(_distributor != address(0), "distributor the zero address");
         rewardData[_rewardToken].distributor = _distributor;
     }
 
@@ -292,7 +292,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
 
         _checkpointRewards(address(0), totalSupply, false, address(0));
 
-        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount));
+        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount), "Transfer failed");
 
         uint256 periodFinish = rewardData[_rewardToken].periodFinish;
         if (block.timestamp >= periodFinish) {
@@ -357,7 +357,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
                     uint256 totalClaimed = _claimData % 2 ** 128;
                     if (_claim) {
                         claimData[_user][vars.token] = totalClaimed + totalClaimable;
-                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable));
+                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable), "Transfer failed");
                     } else if (newClaimable > 0) {
                         claimData[_user][vars.token] = totalClaimed + (totalClaimable << 128);
                     }
@@ -415,7 +415,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
      */
     function _claimRewards(address _addr, address _receiver) private {
         if (_receiver != address(0)) {
-            require(_addr == msg.sender);
+            require(_addr == msg.sender, "Cannot redirect when claiming for another user");
             // dev: cannot redirect when claiming for another user
         }
         _checkpointRewards(_addr, totalSupply, true, _receiver);

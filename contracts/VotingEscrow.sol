@@ -85,15 +85,6 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     }
 
     /***
-     * @dev Get the point for checkpoint `_index`
-     * @param _index supply epoch number
-     * @return Epoch checkpoint
-     */
-    function getSupplyPointHistory(uint256 _index) external view override returns (Point memory) {
-        return supplyPointHistory[_index];
-    }
-
-    /***
      * @dev Get the user point for checkpoint for `_index` for `_userAddress`
      * @param _userAddress Address of the user wallet
      * @param _index User epoch number
@@ -703,9 +694,5 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         // Now dt contains info on how far are we beyond point
 
         return _supplyAt(_point, _point.ts + dt);
-    }
-
-    function getUserPointEpoch(address _user) external view override returns (uint256) {
-        return userPointEpoch[_user];
     }
 }

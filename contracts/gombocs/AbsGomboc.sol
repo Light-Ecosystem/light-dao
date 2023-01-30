@@ -236,7 +236,7 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      */
     function kick(address _addr) external {
         uint256 _tLast = integrateCheckpointOf[_addr];
-        uint256 _tVe = votingEscrow.userPointHistoryTs(_addr, votingEscrow.getUserPointEpoch(_addr));
+        uint256 _tVe = votingEscrow.userPointHistoryTs(_addr, votingEscrow.userPointEpoch(_addr));
         uint256 _balance = lpBalanceOf(_addr);
 
         require(votingEscrow.balanceOfAtTime(_addr, block.timestamp) == 0 || _tVe > _tLast, "dev: kick not allowed");

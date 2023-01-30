@@ -74,7 +74,7 @@ interface IVotingEscrow {
 
     function getUserPointHistory(address _userAddress, uint256 _index) external view returns (Point memory);
 
-    function getSupplyPointHistory(uint256 _index) external view returns (Point memory);
+    function supplyPointHistory(uint256 _index) external view returns (int256 bias, int256 slope, uint256 ts, uint256 blk);
 
     /***
      * @notice Get the current voting power for `msg.sender`
@@ -90,5 +90,5 @@ interface IVotingEscrow {
 
     function totalSupplyAtTime(uint256 _t) external view returns (uint256);
 
-    function getUserPointEpoch(address _user) external view returns (uint256);
+    function userPointEpoch(address _user) external view returns (uint256);
 }

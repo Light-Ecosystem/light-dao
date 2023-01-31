@@ -1,6 +1,6 @@
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { PermitSigHelper } from "./PermitSigHelper";
 import { time, mine, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
@@ -16,8 +16,8 @@ describe("TokenhopeSalesAgent", function () {
         console.log("RestrictedList contract address: ", restrictedList.address);
 
         const HOPEToken = await ethers.getContractFactory("HOPE");
-        const hopeToken = await HOPEToken.deploy();
-        await hopeToken.initialize(restrictedList.address);
+        const hopeToken = await upgrades.deployProxy(HOPEToken, [restrictedList.address]);
+        await hopeToken.deployed();
         console.log("HOPE contract address: ", hopeToken.address);
 
         const Permit2Contract = await ethers.getContractFactory("Permit2");

@@ -32,6 +32,11 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address _stakedToken, address _minter, address _permit2Address) external initializer {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");

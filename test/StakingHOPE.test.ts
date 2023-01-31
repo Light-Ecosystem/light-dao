@@ -1,11 +1,12 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { PermitSigHelper } from "./PermitSigHelper";
+import { upgrades } from "hardhat";
 
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { BigNumber } = require("ethers");
 
-describe("StakingHope", function() {
+describe("StakingHope", function () {
   const DAY = 86400;
   const YEAR = BigNumber.from(DAY * 365);
 
@@ -25,9 +26,8 @@ describe("StakingHope", function() {
 
     const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000); //Not using the actual InsureDAO contract
 
-    const lt = await LT.deploy();
+    const lt = await upgrades.deployProxy(LT, ["LT Dao Token", "LT"]);
     await lt.deployed();
-    await lt.initialize("LT Dao Token", "LT");
 
     await time.increase(DAY);
     await lt.updateMiningParameters();
@@ -48,8 +48,8 @@ describe("StakingHope", function() {
 
     const restrictedList = await RestrictedList.deploy();
 
-    const hopeToken = await HOPE.deploy();
-    await hopeToken.initialize(restrictedList.address);
+    const hopeToken = await upgrades.deployProxy(HOPE, [restrictedList.address]);
+    await hopeToken.deployed();
 
     // approve owner, alice, bob
     await hopeToken.approve(permit2.address, ethers.utils.parseEther("1000"));
@@ -59,14 +59,13 @@ describe("StakingHope", function() {
 
     const admin = await Admin.deploy(hopeToken.address);
 
-    const stakingHope = await StakingHOPE.deploy();
+    const stakingHope = await upgrades.deployProxy(StakingHOPE, [hopeToken.address, minter.address, permit2.address]);
     await stakingHope.deployed();
-    await stakingHope.initialize(hopeToken.address, minter.address, permit2.address)
 
     return { lt, mockLpToken, permit2, veLT, gombocController, hopeToken, minter, stakingHope, admin, owner, alice, bob };
   }
 
-  describe("test_checkpoint", async function() {
+  describe("test_checkpoint", async function () {
     it("test_user_checkpoint", async () => {
       const { stakingHope, alice } = await loadFixture(deployOneYearLockFixture);
       await stakingHope.connect(alice).userCheckpoint(alice.address);
@@ -86,7 +85,7 @@ describe("StakingHope", function() {
     });
   });
 
-  describe("staking", function() {
+  describe("staking", function () {
     it("staking", async () => {
       const { hopeToken, permit2, admin, alice, owner, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
@@ -126,7 +125,7 @@ describe("StakingHope", function() {
     });
 
 
-    it("should fail if amount is 0", async function() {
+    it("should fail if amount is 0", async function () {
       const { hopeToken, permit2, admin, alice, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       //const CREDIT = 100;
@@ -179,8 +178,8 @@ describe("StakingHope", function() {
 
   });
 
-  describe("unstaking", function() {
-    it("should unstaking", async function() {
+  describe("unstaking", function () {
+    it("should unstaking", async function () {
       const { hopeToken, permit2, admin, alice, owner, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("1");
@@ -232,9 +231,9 @@ describe("StakingHope", function() {
 
   });
 
-  describe("redeemAll", function() {
+  describe("redeemAll", function () {
 
-    it("test redeemAll ", async function() {
+    it("test redeemAll ", async function () {
       const { hopeToken, permit2, admin, alice, owner, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("1");
@@ -311,7 +310,7 @@ describe("StakingHope", function() {
 
     });
 
-    it("staking amount and unstaking mnay time  then use redeemByMaxIndex", async function() {
+    it("staking amount and unstaking mnay time  then use redeemByMaxIndex", async function () {
       const { hopeToken, permit2, admin, alice, owner, stakingHope, gombocController } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
@@ -423,8 +422,8 @@ describe("StakingHope", function() {
 
   });
 
-  describe("transfer ", function() {
-    it("test transfer ", async function() {
+  describe("transfer ", function () {
+    it("test transfer ", async function () {
       const { hopeToken, permit2, admin, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
@@ -474,7 +473,7 @@ describe("StakingHope", function() {
     });
 
 
-    it("test transferFrom ", async function() {
+    it("test transferFrom ", async function () {
       const { hopeToken, permit2, admin, owner, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
@@ -527,7 +526,7 @@ describe("StakingHope", function() {
       expect(await stakingHope.lpTotalSupply()).to.equal(originLpTotoalSupply);
     });
 
-    it("shoule revert when transfer  amount  > lpBalanceOf() ", async function() {
+    it("shoule revert when transfer  amount  > lpBalanceOf() ", async function () {
       const { hopeToken, permit2, admin, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");

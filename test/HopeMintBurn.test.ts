@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { expect } from 'chai';
 import { time, mine, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
@@ -11,8 +11,8 @@ describe("HOPETokenContract", () => {
         console.log("RestrictedList deploy address: ", restrictedList.address);
 
         const HOPEToken = await ethers.getContractFactory("HOPE");
-        const hopeToken = await HOPEToken.deploy();
-        await hopeToken.initialize(restrictedList.address);
+        const hopeToken = await upgrades.deployProxy(HOPEToken, [restrictedList.address]);
+        await hopeToken.deployed();
         console.log("HOPEToken deploy address: ", hopeToken.address);
 
         const Admin = await ethers.getContractFactory("Admin");

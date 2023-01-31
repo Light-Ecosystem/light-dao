@@ -13,11 +13,13 @@ async function main() {
     FileUtils.saveFrontendFiles(admin.address, 'Admin', Constants.ADMIN);
 
     let totalSupply = ethers.utils.parseEther("2000000000");
+    const effectiveBlock = await ethers.provider.getBlockNumber();
+    const expirationBlock = effectiveBlock + 20000;
     await hopeToken.grantAgent(
         admin.address,
         totalSupply,
-        0,
-        100000000,
+        effectiveBlock,
+        expirationBlock,
         true,
         true
     );

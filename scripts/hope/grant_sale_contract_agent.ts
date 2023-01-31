@@ -8,11 +8,13 @@ async function main() {
     let hopeTokenAddress = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
     const hopeToken = await ethers.getContractAt('HOPE', hopeTokenAddress);
     let maxCredit = ethers.utils.parseEther('200000');
+    const effectiveBlock = await ethers.provider.getBlockNumber();
+    const expirationBlock = effectiveBlock + 20000;
     await hopeToken.grantAgent(
         tokenSaleAddress,
         maxCredit,
-        0,
-        100000000,
+        effectiveBlock,
+        expirationBlock,
         true,
         true
     )

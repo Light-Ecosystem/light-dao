@@ -55,6 +55,11 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address _lpAddr, address _minter, address _permit2Address) external initializer {
         require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");

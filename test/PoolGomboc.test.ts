@@ -1,5 +1,5 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
-import { network } from "hardhat";
+import { network, upgrades } from "hardhat";
 import { PermitSigHelper } from "./PermitSigHelper";
 
 const { expect } = require("chai");
@@ -25,9 +25,8 @@ describe("PoolGomboc", function () {
     const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000); //Not using the actual InsureDAO contract
 
 
-    const lt = await MyERC20LT.deploy();
+    const lt = await upgrades.deployProxy(MyERC20LT, ["LT Dao Token", "LT"]);
     await lt.deployed();
-    await lt.initialize("LT Dao Token", "LT");
     await time.increase(DAY);
     await lt.updateMiningParameters();
 
@@ -51,9 +50,8 @@ describe("PoolGomboc", function () {
     const minter = await Minter.deploy(lt.address, gombocController.address);
     await minter.deployed();
 
-    const poolGomboc = await PoolGomboc.deploy();
+    const poolGomboc = await upgrades.deployProxy(PoolGomboc, [mockLpToken.address, minter.address, permit2.address]);
     await poolGomboc.deployed();
-    await poolGomboc.initialize(mockLpToken.address, minter.address, permit2.address)
     const periodTime = await time.latest();
 
     return { lt, permit2, veLT, gombocController, mockLpToken, minter, poolGomboc, owner, alice, bob, periodTime };

@@ -44,6 +44,11 @@ contract LT is ERC20Upgradeable, Ownable2StepUpgradeable, ILT {
 
     uint256 public startEpochSupply;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Contract constructor
      * @param _name Token full name

@@ -15,8 +15,12 @@ contract HOPE is ERC20Upgradeable, AgentManager {
     // RestrictedList contract
     address public restrictedList;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address _restrictedList) external initializer {
-        require(_restrictedList != address(0), "CE000");
         restrictedList = _restrictedList;
         __Ownable2Step_init();
         __ERC20_init("HOPE", "HOPE");

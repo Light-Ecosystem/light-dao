@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "./PoolGomboc.sol";
 
@@ -21,7 +21,8 @@ contract GombocFactory {
      * @return
      */
     function deploy(address _lpAddr, bytes32 _salt) public payable returns (address) {
-        PoolGomboc poolGomboc = new PoolGomboc{salt: _salt}(_lpAddr, _MINTER, _PERMIT2_ADDRESS);
+        PoolGomboc poolGomboc = new PoolGomboc{salt: _salt}();
+        poolGomboc.initialize(_lpAddr, _MINTER, _PERMIT2_ADDRESS);
         address poolGombocAddress = address(poolGomboc);
         require(poolGombocAddress == getAddress(_lpAddr, _salt), "not equal");
         return poolGombocAddress;
@@ -30,7 +31,7 @@ contract GombocFactory {
     function getAddress(address _lpAddr, bytes32 _salt) public view returns (address) {
         address poolGombocAddress = address(
             uint160(
-                uint(
+                uint256(
                     keccak256(
                         abi.encodePacked(
                             bytes1(0xff),

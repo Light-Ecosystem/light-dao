@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 /***
  *@title VotingEscrow
@@ -53,9 +53,9 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     int256 public constant BASE_RATE = 10000;
 
     /// LT token address
-    address public token;
+    address public immutable token;
     /// permit2 contract address
-    address public permit2Address;
+    address public immutable permit2Address;
     /// total locked LT value
     uint256 public supply;
 
@@ -70,7 +70,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
 
     string public name;
     string public symbol;
-    uint256 public decimals;
+    uint256 public immutable decimals;
 
     constructor(address _tokenAddr, address _permit2Address) {
         require(_permit2Address != address(0), "CE000");
@@ -82,15 +82,6 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         decimals = _decimals;
         name = "Vote-escrowed LT";
         symbol = "veLT";
-    }
-
-    /***
-     * @dev Get the point for checkpoint `_index`
-     * @param _index supply epoch number
-     * @return Epoch checkpoint
-     */
-    function getSupplyPointHistory(uint256 _index) external view override returns (Point memory) {
-        return supplyPointHistory[_index];
     }
 
     /***
@@ -703,9 +694,5 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         // Now dt contains info on how far are we beyond point
 
         return _supplyAt(_point, _point.ts + dt);
-    }
-
-    function getUserPointEpoch(address _user) external view override returns (uint256) {
-        return userPointEpoch[_user];
     }
 }

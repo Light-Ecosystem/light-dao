@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -72,9 +72,8 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      * @notice Contract init
      * @param _lp_addr Liquidity Pool contract address
      * @param _minter Minter contract address
-     * @param _admin Admin who can kill the gauge
      */
-    constructor(address _minter) {
+    function _abs_init(address _minter) internal onlyInitializing {
         require(_minter != address(0), "invalid votingEscrowAddress");
 
         minter = IMinter(_minter);
@@ -237,7 +236,7 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      */
     function kick(address _addr) external {
         uint256 _tLast = integrateCheckpointOf[_addr];
-        uint256 _tVe = votingEscrow.userPointHistoryTs(_addr, votingEscrow.getUserPointEpoch(_addr));
+        uint256 _tVe = votingEscrow.userPointHistoryTs(_addr, votingEscrow.userPointEpoch(_addr));
         uint256 _balance = lpBalanceOf(_addr);
 
         require(votingEscrow.balanceOfAtTime(_addr, block.timestamp) == 0 || _tVe > _tLast, "dev: kick not allowed");
@@ -246,15 +245,6 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
         _checkpoint(_addr);
         _updateLiquidityLimit(_addr, lpBalanceOf(_addr), lpTotalSupply());
     }
-
-    //    /***
-    //     * @notice Set whether `_addr` can deposit tokens for `msg.sender`
-    //     * @param _addr Address to set approval on
-    //     * @param can_deposit bool - can this account deposit for `msg.sender`?
-    //     */
-    //    function setApproveDeposit(address _addr, bool canDeposit) external {
-    //        approvedToDeposit[_addr][msg.sender] = canDeposit;
-    //    }
 
     function integrateCheckpoint() external view returns (uint256) {
         return periodTimestamp[period];
@@ -278,4 +268,9 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      * @notice The total amount of LP tokens that are currently deposited into the Gomboc.
      */
     function lpTotalSupply() public view virtual returns (uint256);
+
+    // @dev This empty reserved space is put in place to allow future versions to add new
+    // variables without shifting down storage in the inheritance chain.
+    // See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }

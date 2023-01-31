@@ -5,7 +5,7 @@
  *  @notice ERC20 with piecewise-linear mining supply.
  *  @dev Based on the ERC-20 token standard as defined at https://eips.ethereum.org/EIPS/eip-20
  */
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
@@ -43,6 +43,11 @@ contract LT is ERC20Upgradeable, Ownable2StepUpgradeable, ILT {
     uint256 public rate;
 
     uint256 public startEpochSupply;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @notice Contract constructor

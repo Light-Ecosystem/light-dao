@@ -1,6 +1,6 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 
 
@@ -14,10 +14,9 @@ describe("LT", function () {
         const [owner, otherAccount] = await ethers.getSigners();
 
         let MyLT = await ethers.getContractFactory("LT");
-        const eRC20LT = await MyLT.deploy();
+        const eRC20LT = await upgrades.deployProxy(MyLT, ['LT Dao Token', 'LT']);
         await eRC20LT.deployed();
         // console.log('eRC20LT address is', eRC20LT.address);
-        await eRC20LT.initialize('LT Dao Token', 'LT');
 
         await time.increase(86400 + 10);
         await eRC20LT.updateMiningParameters();

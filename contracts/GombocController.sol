@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
@@ -362,7 +362,7 @@ contract GombocController is Ownable2Step, IGombocController {
         }
 
         uint256 w = pointsTypeWeight[gombocType][t];
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }
@@ -388,7 +388,7 @@ contract GombocController is Ownable2Step, IGombocController {
         }
 
         Point memory pt = pointsSum[gombocType][t];
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }
@@ -431,7 +431,7 @@ contract GombocController is Ownable2Step, IGombocController {
             _getTypeWeight(gombocType);
         }
 
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }
@@ -468,7 +468,7 @@ contract GombocController is Ownable2Step, IGombocController {
             return 0;
         }
         Point memory pt = pointsWeight[gombocAddr][t];
-        for (uint i = 0; i < 500; i++) {
+        for (uint256 i = 0; i < 500; i++) {
             if (t > block.timestamp) {
                 break;
             }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "./interfaces/IStaking.sol";
 import "./gombocs/AbsGomboc.sol";
@@ -32,10 +32,15 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    constructor(address _stakedToken, address _minter, address _permit2Address) AbsGomboc(_minter) initializer {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _stakedToken, address _minter, address _permit2Address) external initializer {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
-
+        _abs_init(_minter);
         __ERC20_init("Staked HOPE UNI", "stHOPE");
         stakedToken = _stakedToken;
         permit2Address = _permit2Address;
@@ -126,7 +131,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
         uint256 _unstakingTotal = 0;
 
         uint256 nextDayTime = ((block.timestamp + _DAY) / _DAY) * _DAY;
-        for (uint i = 0; i < _LOCK_TIME; i++) {
+        for (uint256 i = 0; i < _LOCK_TIME; i++) {
             _unstakingTotal += unstakingDayHistory[nextDayTime - _DAY * i];
         }
         return _unstakingTotal;
@@ -247,12 +252,18 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
      * @param amount
      * @return bool
      */
-    function transfer(address to, uint256 amount) public virtual override returns (bool) {
-        _checkpoint(_msgSender());
-        _checkpoint(to);
-        bool result = super.transfer(to, amount);
-        _updateLiquidityLimit(_msgSender(), lpBalanceOf(_msgSender()), lpTotalSupply());
-        _updateLiquidityLimit(to, lpBalanceOf(to), lpTotalSupply());
+    function transfer(address _to, uint256 _amount) public virtual override returns (bool) {
+        address owner = _msgSender();
+        uint256 fromBalance = lpBalanceOf(owner);
+        require(fromBalance >= _amount, "ERC20: transfer amount exceeds balance");
+
+        _checkpoint(owner);
+        _checkpoint(_to);
+
+        bool result = super.transfer(_to, _amount);
+
+        _updateLiquidityLimit(owner, lpBalanceOf(owner), lpTotalSupply());
+        _updateLiquidityLimit(_to, lpBalanceOf(_to), lpTotalSupply());
         return result;
     }
 
@@ -265,6 +276,9 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
      * @return bool
      */
     function transferFrom(address _from, address _to, uint256 _amount) public override returns (bool) {
+        uint256 fromBalance = lpBalanceOf(_from);
+        require(fromBalance >= _amount, "ERC20: transfer amount exceeds balance");
+
         _checkpoint(_from);
         _checkpoint(_to);
 

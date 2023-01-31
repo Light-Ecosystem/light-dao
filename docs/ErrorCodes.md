@@ -48,16 +48,16 @@
 `AG003` : `The address cannot burn`
 `AG004` : `Insufficient credit`
 `AG005` : `Credit must greater than zero`
-`AG006` : `Expiration time must be greater than or equal to the now`
+`AG006` : `Expiration block number must be greater than or equal to the now`
 `AG007` : `Increase credit must greater than zero`
 `AG008` : `Decrease credit must greater than zero`
 `AG009` : `Decrease credit must less than or equal remaining credit`
 `AG010` : `The modification status is the same as the current one`
 `AG011` : `The address authorization has expired`
-`AG012` : `Invalid effective time`
-`AG013` : `Invalid expiration time`
-`AG014` : `The address has not reached authorization effective time`
-`AG015` : `The effective time must be less than expiration time`
+`AG012` : `Invalid effective block number`
+`AG013` : `Invalid expiration block number`
+`AG014` : `The address has not reached authorization effective block number`
+`AG015` : `The effective block number must be less than expiration block number`
 
 ## RetrictedList related
 

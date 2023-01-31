@@ -1,6 +1,6 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { PermitSigHelper } from "./PermitSigHelper";
 import { BigNumber } from "ethers";
@@ -16,9 +16,8 @@ describe("GombocController", function () {
         const [owner, otherAccount, thridAccount] = await ethers.getSigners();
 
         let MyERC20LT = await ethers.getContractFactory("LT");
-        const eRC20LT = await MyERC20LT.deploy();
+        const eRC20LT = await upgrades.deployProxy(MyERC20LT, ['LT Dao Token', 'LT']);
         await eRC20LT.deployed();
-        await eRC20LT.initialize('LT Dao Token', 'LT');
         await time.increase(86400);
         await eRC20LT.updateMiningParameters();
 

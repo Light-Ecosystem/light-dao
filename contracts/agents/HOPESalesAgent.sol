@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -26,13 +26,13 @@ contract HOPESalesAgent is IHOPESalesAgent, Ownable2Step, Pausable {
     }
 
     // Currency rate denominator rate/rateDenominator,if TokenA:TokenB=1:1, set rate = 1000*10^(Adecimal-Bdecimal)
-    uint256 public rateDenominator;
+    uint256 public immutable rateDenominator;
 
     // HOPE token contract
-    address public hopeToken;
+    address public immutable hopeToken;
 
     // Permit2 contract
-    address public permit2;
+    address public immutable permit2;
 
     // Map of currencies available for purchase  currencySymbol => Currency
     mapping(string => Currency) public currencys;

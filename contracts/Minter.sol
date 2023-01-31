@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "./interfaces/ILT.sol";
 import "./interfaces/IGombocController.sol";
@@ -14,8 +14,8 @@ interface LiquidityGomboc {
 contract Minter {
     event Minted(address indexed recipient, address gomboc, uint256 minted);
 
-    address public token;
-    address public controller;
+    address public immutable token;
+    address public immutable controller;
 
     // user -> gomboc -> value
     mapping(address => mapping(address => uint256)) public minted;
@@ -46,7 +46,7 @@ contract Minter {
      * @param gombocAddressList List of `LiquidityGomboc` addresses
      */
     function mintMany(address[] memory gombocAddressList) external {
-        for (uint i = 0; i < gombocAddressList.length; i++) {
+        for (uint256 i = 0; i < gombocAddressList.length; i++) {
             if (gombocAddressList[i] == address(0)) {
                 continue;
             }

@@ -29,16 +29,16 @@ function isBurnable(address account) public view override returns (bool)
 Return agent burnable status.
 
 ```solidity
-function getEffectiveTime(address account) public view override returns (uint256)
+function getEffectiveBlock(address account) public view override returns (uint256)
 ```
 
-Return agent effective time.
+Return agent effective block number.
 
 ```solidity
-function getExpirationTime(address account) public view override returns (uint256)
+function getExpirationBlock(address account) public view override returns (uint256)
 ```
 
-Return agent expiration time.
+Return agent expiration block number.
 
 ```solidity
 function hasAgent(address account) public view override returns (bool)
@@ -52,8 +52,8 @@ Return whether the address is an agent.
 function grantAgent(
         address account,
         uint256 credit,
-        uint256 effectiveTime,
-        uint256 expirationTime,
+        uint256 effectiveBlock,
+        uint256 expirationBlock,
         bool minable,
         bool burnable
     ) public override onlyOwner
@@ -68,16 +68,16 @@ function revokeAgent(address account) public override onlyOwner
 Revoke the agent at the address.
 
 ```solidity
-function changeEffectiveTime(address account, uint256 effectiveTime) public override onlyOwner
+function changeEffectiveBlock(address account, uint256 effectiveBlock) public override onlyOwner
 ```
 
-Change the effective time of the address agent.
+Change the effective block number of the address agent.
 
 ```solidity
-function changeExpirationTime(address account, uint256 expirationTime) public override onlyOwner
+function changeExpirationBlock(address account, uint256 expirationBlock) public override onlyOwner
 ```
 
-Change the expiration time of the address agent.
+Change the expiration block number of the address agent.
 
 ```solidity
 function switchMinable(address account, bool minable) public override onlyOwner

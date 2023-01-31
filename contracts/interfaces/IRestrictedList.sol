@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 interface IRestrictedList {
     /**
      * @dev Return whether the address exists in the restricted list
      */
-    function getRestrictedListStatus(address _maker) external view returns (bool);
+    function isRestrictedList(address _maker) external view returns (bool);
 
     /**
      * @dev Add the address to the restricted list

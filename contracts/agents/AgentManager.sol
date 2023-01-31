@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
@@ -14,8 +14,8 @@ contract AgentManager is IAgentManager, Ownable2StepUpgradeable {
         bool hasAgent;
         uint256 maxCredit;
         uint256 remainingCredit;
-        uint256 effectiveTime;
-        uint256 expirationTime;
+        uint256 effectiveBlock;
+        uint256 expirationBlock;
         bool minable;
         bool burnable;
     }
@@ -48,14 +48,14 @@ contract AgentManager is IAgentManager, Ownable2StepUpgradeable {
 
     /**
      * @dev Return agent remaining credit
-     * @dev Return zero when the time does not reach the effective time or exceeds the expiration time
+     * @dev Return zero when the block number does not reach the effective block number or exceeds the expiration block number
      */
     function getRemainingCredit(address account) public view override returns (uint256) {
         require(hasAgent(account), "AG000");
-        if (_agents[account].effectiveTime > block.timestamp) {
+        if (_agents[account].effectiveBlock > block.number) {
             return 0;
         }
-        if (_agents[account].expirationTime < block.timestamp) {
+        if (_agents[account].expirationBlock < block.number) {
             return 0;
         }
         return _agents[account].remainingCredit;
@@ -78,19 +78,19 @@ contract AgentManager is IAgentManager, Ownable2StepUpgradeable {
     }
 
     /**
-     * @dev Return agent effective time
+     * @dev Return agent effective block number
      */
-    function getEffectiveTime(address account) public view override returns (uint256) {
+    function getEffectiveBlock(address account) public view override returns (uint256) {
         require(hasAgent(account), "AG000");
-        return _agents[account].effectiveTime;
+        return _agents[account].effectiveBlock;
     }
 
     /**
-     * @dev Return agent expiration time
+     * @dev Return agent expiration block number
      */
-    function getExpirationTime(address account) public view override returns (uint256) {
+    function getExpirationBlock(address account) public view override returns (uint256) {
         require(hasAgent(account), "AG000");
-        return _agents[account].expirationTime;
+        return _agents[account].expirationBlock;
     }
 
     /**
@@ -105,43 +105,43 @@ contract AgentManager is IAgentManager, Ownable2StepUpgradeable {
      * @dev After setting credit, the max credit and the remaining credit are the same as credit
      * @param account Grant agent address
      * @param credit Grant agent Max credit & Remaining credit
-     * @param effectiveTime Agent effective time
-     * @param expirationTime Agent expiration time
+     * @param effectiveBlock Agent effective block number
+     * @param expirationBlock Agent expiration block number
      * @param minable Agent minable
      * @param burnable Agent burnable
      */
     function grantAgent(
         address account,
         uint256 credit,
-        uint256 effectiveTime,
-        uint256 expirationTime,
+        uint256 effectiveBlock,
+        uint256 expirationBlock,
         bool minable,
         bool burnable
     ) public override onlyOwner {
         require(account != address(0), "CE000");
         require(!hasAgent(account), "AG001");
         require(credit > 0, "AG005");
-        require(expirationTime > block.timestamp, "AG006");
-        require(effectiveTime < expirationTime, "AG015");
-        _grantAgent(account, credit, effectiveTime, expirationTime, minable, burnable);
+        require(expirationBlock > block.number, "AG006");
+        require(effectiveBlock < expirationBlock, "AG015");
+        _grantAgent(account, credit, effectiveBlock, expirationBlock, minable, burnable);
     }
 
     function _grantAgent(
         address account,
         uint256 credit,
-        uint256 effectiveTime,
-        uint256 expirationTime,
+        uint256 effectiveBlock,
+        uint256 expirationBlock,
         bool minable,
         bool burnable
     ) internal {
         _agents[account].hasAgent = true;
         _agents[account].maxCredit = credit;
         _agents[account].remainingCredit = credit;
-        _agents[account].effectiveTime = effectiveTime;
-        _agents[account].expirationTime = expirationTime;
+        _agents[account].effectiveBlock = effectiveBlock;
+        _agents[account].expirationBlock = expirationBlock;
         _agents[account].minable = minable;
         _agents[account].burnable = burnable;
-        emit AgentGranted(account, credit, effectiveTime, expirationTime, minable, burnable, _msgSender());
+        emit AgentGranted(account, credit, effectiveBlock, expirationBlock, minable, burnable, _msgSender());
     }
 
     /**
@@ -160,25 +160,25 @@ contract AgentManager is IAgentManager, Ownable2StepUpgradeable {
     }
 
     /**
-     * @dev Change the effective time of the address agent
+     * @dev Change the effective block number of the address agent
      */
-    function changeEffectiveTime(address account, uint256 effectiveTime) public override onlyOwner {
+    function changeEffectiveBlock(address account, uint256 effectiveBlock) public override onlyOwner {
         require(account != address(0), "CE000");
         require(hasAgent(account), "AG000");
-        require(effectiveTime < _agents[account].expirationTime, "AG012");
-        _agents[account].effectiveTime = effectiveTime;
-        emit AgentChangeEffectiveTime(account, effectiveTime, _msgSender());
+        require(effectiveBlock < _agents[account].expirationBlock, "AG012");
+        _agents[account].effectiveBlock = effectiveBlock;
+        emit AgentChangeEffectiveBlock(account, effectiveBlock, _msgSender());
     }
 
     /**
-     * @dev Change the expiration time of the address agent
+     * @dev Change the expiration block number of the address agent
      */
-    function changeExpirationTime(address account, uint256 expirationTime) public override onlyOwner {
+    function changeExpirationBlock(address account, uint256 expirationBlock) public override onlyOwner {
         require(account != address(0), "CE000");
         require(hasAgent(account), "AG000");
-        require(expirationTime != _agents[account].expirationTime && expirationTime > block.timestamp, "AG013");
-        _agents[account].expirationTime = expirationTime;
-        emit AgentChangeExpirationTime(account, expirationTime, _msgSender());
+        require(expirationBlock != _agents[account].expirationBlock && expirationBlock > block.number, "AG013");
+        _agents[account].expirationBlock = expirationBlock;
+        emit AgentChangeExpirationBlock(account, expirationBlock, _msgSender());
     }
 
     /**
@@ -241,4 +241,9 @@ contract AgentManager is IAgentManager, Ownable2StepUpgradeable {
     function _decreaseRemainingCredit(address account, uint256 amount) internal {
         _agents[account].remainingCredit -= amount;
     }
+
+    // @dev This empty reserved space is put in place to allow future versions to add new
+    // variables without shifting down storage in the inheritance chain.
+    // See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+    uint256[49] private __gap;
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -16,13 +16,6 @@ contract RestrictedList is Ownable2Step {
     event RemovedRestrictedList(address _user);
 
     mapping(address => bool) public isRestrictedList;
-
-    /**
-     * @dev Return whether the address exists in the restricted list
-     */
-    function getRestrictedListStatus(address _maker) external view returns (bool) {
-        return isRestrictedList[_maker];
-    }
 
     /**
      * @dev Add the address to the restricted list

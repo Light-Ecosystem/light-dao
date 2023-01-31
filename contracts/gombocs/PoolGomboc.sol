@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0
 
-pragma solidity >=0.8.0 <0.9.0;
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+pragma solidity 0.8.17;
+
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./AbsGomboc.sol";
 
-contract PoolGomboc is AbsGomboc, ReentrancyGuard {
+contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
     uint256 private constant _MAX_REWARDS = 8;
 
     string public name;
     string public symbol;
     uint256 public decimals;
 
-    address immutable _lpToken;
+    address public lpToken;
     // permit2 contract
     address public permit2Address;
     mapping(address => uint256) public balanceOf;
@@ -54,12 +55,18 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    constructor(address _lpAddr, address _minter, address _permit2Address) AbsGomboc(_minter) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _lpAddr, address _minter, address _permit2Address) external initializer {
         require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
+        _abs_init(_minter);
 
         permit2Address = _permit2Address;
-        _lpToken = _lpAddr;
+        lpToken = _lpAddr;
         symbol = IERC20Metadata(_lpAddr).symbol();
         decimals = IERC20Metadata(_lpAddr).decimals();
         name = string(abi.encodePacked(symbol, "-Gomboc"));
@@ -88,7 +95,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
             _updateLiquidityLimit(_addr, newBalance, _totalSupply);
 
-            IERC20Metadata(_lpToken).transferFrom(msg.sender, address(this), _value);
+            IERC20Metadata(lpToken).transferFrom(msg.sender, address(this), _value);
         }
 
         emit Deposit(_addr, _value);
@@ -129,7 +136,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
             _updateLiquidityLimit(msg.sender, newBalance, _totalSupply);
 
-            IERC20Metadata(_lpToken).transfer(msg.sender, _value);
+            IERC20Metadata(lpToken).transfer(msg.sender, _value);
         }
 
         emit Withdraw(msg.sender, _value);
@@ -270,7 +277,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
      */
     function addReward(address _rewardToken, address _distributor) external onlyOwner {
         uint256 _rewardCount = rewardCount;
-        require(_rewardCount < _MAX_REWARDS);
+        require(_rewardCount < _MAX_REWARDS, "Reward Threshold");
         require(rewardData[_rewardToken].distributor == address(0), "Repeat setting");
         rewardData[_rewardToken].distributor = _distributor;
         rewardTokens[_rewardCount] = _rewardToken;
@@ -279,9 +286,9 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
     function setRewardDistributor(address _rewardToken, address _distributor) external {
         address currentDistributor = rewardData[_rewardToken].distributor;
-        require(msg.sender == currentDistributor || msg.sender == owner());
-        require(currentDistributor != address(0));
-        require(_distributor != address(0));
+        require(msg.sender == currentDistributor || msg.sender == owner(), "Must currentDistributor or owner");
+        require(currentDistributor != address(0), "currentDistributor the zero address");
+        require(_distributor != address(0), "distributor the zero address");
         rewardData[_rewardToken].distributor = _distributor;
     }
 
@@ -290,7 +297,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
         _checkpointRewards(address(0), totalSupply, false, address(0));
 
-        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount));
+        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount), "Transfer failed");
 
         uint256 periodFinish = rewardData[_rewardToken].periodFinish;
         if (block.timestamp >= periodFinish) {
@@ -322,7 +329,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         }
 
         vars._rewardCount = rewardCount;
-        for (uint i = 0; i < _MAX_REWARDS; i++) {
+        for (uint256 i = 0; i < _MAX_REWARDS; i++) {
             if (i == vars._rewardCount) {
                 break;
             }
@@ -355,7 +362,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
                     uint256 totalClaimed = _claimData % 2 ** 128;
                     if (_claim) {
                         claimData[_user][vars.token] = totalClaimed + totalClaimable;
-                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable));
+                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable), "Transfer failed");
                     } else if (newClaimable > 0) {
                         claimData[_user][vars.token] = totalClaimed + (totalClaimable << 128);
                     }
@@ -413,7 +420,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
      */
     function _claimRewards(address _addr, address _receiver) private {
         if (_receiver != address(0)) {
-            require(_addr == msg.sender);
+            require(_addr == msg.sender, "Cannot redirect when claiming for another user");
             // dev: cannot redirect when claiming for another user
         }
         _checkpointRewards(_addr, totalSupply, true, _receiver);
@@ -429,13 +436,6 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
     function claimRewards(address _addr, address _receiver) external nonReentrant {
         _claimRewards(_addr, _receiver);
-    }
-
-    /***
-     * @notice Query the lp token used for this Gomboc
-     */
-    function lpToken() external view returns (address) {
-        return _lpToken;
     }
 
     function lpBalanceOf(address addr) public view override returns (uint256) {

@@ -1,5 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { PermitSigHelper } from "./PermitSigHelper";
+import { upgrades } from "hardhat";
 
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
@@ -25,9 +26,8 @@ describe("StakingHope", function () {
 
     const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000); //Not using the actual InsureDAO contract
 
-    const lt = await LT.deploy();
+    const lt = await upgrades.deployProxy(LT, ["LT Dao Token", "LT"]);
     await lt.deployed();
-    await lt.initialize("LT Dao Token", "LT");
 
     await time.increase(DAY);
     await lt.updateMiningParameters();
@@ -48,8 +48,8 @@ describe("StakingHope", function () {
 
     const restrictedList = await RestrictedList.deploy();
 
-    const hopeToken = await HOPE.deploy();
-    await hopeToken.initialize(restrictedList.address);
+    const hopeToken = await upgrades.deployProxy(HOPE, [restrictedList.address]);
+    await hopeToken.deployed();
 
     // approve owner, alice, bob
     await hopeToken.approve(permit2.address, ethers.utils.parseEther("1000"));
@@ -59,7 +59,7 @@ describe("StakingHope", function () {
 
     const admin = await Admin.deploy(hopeToken.address);
 
-    const stakingHope = await StakingHOPE.deploy(hopeToken.address, minter.address, permit2.address);
+    const stakingHope = await upgrades.deployProxy(StakingHOPE, [hopeToken.address, minter.address, permit2.address]);
     await stakingHope.deployed();
 
     return { lt, mockLpToken, permit2, veLT, gombocController, hopeToken, minter, stakingHope, admin, owner, alice, bob };
@@ -94,9 +94,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1000");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -133,9 +133,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1000");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -159,9 +159,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1000");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -185,9 +185,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -239,9 +239,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("1");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       await admin.mint(alice.address, MINT_AMOUNT);
 
@@ -325,9 +325,9 @@ describe("StakingHope", function () {
       await gombocController.addGomboc(stakingHope.address, typeId, gombocWeight);
 
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       // mint hope
       await admin.mint(alice.address, MINT_AMOUNT);
@@ -408,7 +408,6 @@ describe("StakingHope", function () {
       expect(await stakingHope.unstakedTotal()).to.equal(ethers.constants.Zero);
 
 
-
       expect(await stakingHope.lpBalanceOf(alice.address)).to.equal(stakingAmount.sub(originAmount));
 
       // stHope to zero
@@ -430,9 +429,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("100");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       // mint hope
       await admin.mint(alice.address, MINT_AMOUNT);
@@ -462,7 +461,7 @@ describe("StakingHope", function () {
       expect(originLpTotoalSupply).to.equal(stakingAmount);
 
       let transAmout = BigNumber.from(10);
-      // transfer
+      // transfer 10
       await stakingHope.connect(alice).transfer(bob.address, transAmout);
       expect(await stakingHope.balanceOf(alice.address)).to.equal(originAliceBalance.sub(transAmout));
       expect(await stakingHope.balanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
@@ -480,9 +479,9 @@ describe("StakingHope", function () {
       let MINT_AMOUNT = ethers.utils.parseEther("100");
       const DEADLINE = await time.latest() + 60 * 60;
 
-      const effectiveTime = await time.latest();
-      const expirationTime = effectiveTime + 60 * 60;
-      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveTime, expirationTime, true, true);
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
 
       // mint hope
       await admin.mint(alice.address, MINT_AMOUNT);
@@ -525,6 +524,52 @@ describe("StakingHope", function () {
       expect(await stakingHope.lpBalanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
 
       expect(await stakingHope.lpTotalSupply()).to.equal(originLpTotoalSupply);
+    });
+
+    it("shoule revert when transfer  amount  > lpBalanceOf() ", async function () {
+      const { hopeToken, permit2, admin, alice, bob, stakingHope } = await loadFixture(deployOneYearLockFixture);
+
+      let MINT_AMOUNT = ethers.utils.parseEther("100");
+      const DEADLINE = await time.latest() + 60 * 60;
+
+      const effectiveBlock = await ethers.provider.getBlockNumber();
+      const expirationBlock = effectiveBlock + 1000;
+      await hopeToken.grantAgent(admin.address, MINT_AMOUNT, effectiveBlock, expirationBlock, true, true);
+
+      // mint hope
+      await admin.mint(alice.address, MINT_AMOUNT);
+
+      expect(await hopeToken.totalSupply()).to.equal(MINT_AMOUNT);
+      expect(await hopeToken.balanceOf(alice.address)).to.equal(MINT_AMOUNT);
+
+      let stakingAmount = BigNumber.from(10000);
+
+      let random = ethers.utils.randomBytes(32);
+      let NONCE = BigNumber.from(random);
+
+      // staking
+      const sig = await PermitSigHelper.signature(alice, hopeToken.address, permit2.address, stakingHope.address, stakingAmount, NONCE, DEADLINE);
+      await stakingHope.connect(alice).staking(stakingAmount, NONCE, DEADLINE, sig);
+
+      const originAliceBalance = await stakingHope.balanceOf(alice.address);
+      const originBobBalance = await stakingHope.balanceOf(bob.address);
+
+      // unstaking （stakingAmount / 2）
+      await stakingHope.connect(alice).unstaking(stakingAmount / 2);
+
+      // revert
+      let transAmout = stakingAmount;
+      await expect(stakingHope.transfer(bob.address, transAmout)).to.revertedWith("ERC20: transfer amount exceeds balance");
+
+      // transfer
+      transAmout = stakingAmount / 2;
+      // console.log(await stakingHope.lpBalanceOf(alice.address))
+      await stakingHope.connect(alice).transfer(bob.address, transAmout);
+
+      expect(await stakingHope.balanceOf(alice.address)).to.equal(originAliceBalance.sub(transAmout));
+      expect(await stakingHope.balanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
+      expect(await stakingHope.lpBalanceOf(bob.address)).to.equal(originBobBalance.add(transAmout));
+
     });
 
   });

@@ -41,6 +41,11 @@ contract GombocController is Ownable2Step, IGombocController {
     // Last user vote's timestamp for each gomboc address
     mapping(address => mapping(address => uint256)) public lastUserVote;
 
+    // user -> gombocAddr -> epoch -> Point
+    mapping(address => mapping(address => mapping(uint256 => UserPoint))) public voteVeLtPointHistory;
+    // user -> gombocAddr -> lastEpoch
+    mapping(address => mapping(address => uint256)) public lastVoteVeLtPointEpoch;
+
     // Past and scheduled points for gomboc weight, sum of weights per type, total weight
     // Point is for bias+slope
     // changes_* are for changes in slope
@@ -220,6 +225,7 @@ contract GombocController is Ownable2Step, IGombocController {
         uint256 oldBias;
         uint256 newDt;
         uint256 newBias;
+        UserPoint newUserPoint;
     }
 
     /**
@@ -254,6 +260,7 @@ contract GombocController is Ownable2Step, IGombocController {
         // dev: raises when expired
         param.newDt = lockEnd - nextTime;
         param.newBias = param.newSlope.slope * param.newDt;
+        param.newUserPoint = UserPoint({bias: param.newBias, slope: param.newSlope.slope, ts: nextTime, blk: block.number});
 
         // Check and update powers (weights) used
         uint256 powerUsed = voteUserPower[msg.sender];
@@ -300,6 +307,11 @@ contract GombocController is Ownable2Step, IGombocController {
 
         // Record last action time
         lastUserVote[msg.sender][gombocAddress] = block.timestamp;
+
+        //record user point history
+        uint256 voteVeLtPointEpoch = lastVoteVeLtPointEpoch[msg.sender][gombocAddress] + 1;
+        voteVeLtPointHistory[msg.sender][gombocAddress][voteVeLtPointEpoch] = param.newUserPoint;
+        lastVoteVeLtPointEpoch[msg.sender][gombocAddress] = voteVeLtPointEpoch;
 
         emit VoteForGomboc(msg.sender, gombocAddress, block.timestamp, userWeight);
     }

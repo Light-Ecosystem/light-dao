@@ -9,8 +9,7 @@ async function main() {
   let permit2 = FileUtils.getContractAddress(Constants.PERMIT2);
 
   const StakingHOPE = await ethers.getContractFactory("StakingHOPE");
-  let stakingHope = await upgrades.deployProxy(StakingHOPE, [hope, minter, permit2]);
-  //const stakingHope = await StakingHOPE.deploy(hope, minter, permit2, { "gasLimit": 4100000 });
+  const stakingHope = await StakingHOPE.deploy(hope, minter, permit2, { "gasLimit": 4100000 });
   await stakingHope.deployed();
   console.log("StakingHope Address: ", stakingHope.address);
   FileUtils.saveFrontendFiles(stakingHope.address, "StakingHOPE", Constants.STAKING_HOPE_GOMBOC);

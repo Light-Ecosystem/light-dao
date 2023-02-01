@@ -59,7 +59,9 @@ describe("StakingHope", function () {
 
     const admin = await Admin.deploy(hopeToken.address);
 
-    const stakingHope = await upgrades.deployProxy(StakingHOPE, [hopeToken.address, minter.address, permit2.address]);
+
+    // const stakingHope = await upgrades.deployProxy(StakingHOPE, [hopeToken.address, minter.address, permit2.address]);
+    const stakingHope = await StakingHOPE.deploy(hopeToken.address, minter.address, permit2.address);
     await stakingHope.deployed();
 
     return { lt, mockLpToken, permit2, veLT, gombocController, hopeToken, minter, stakingHope, admin, owner, alice, bob };

@@ -7,7 +7,7 @@ const { ethers } = require("hardhat");
 const { BigNumber } = require("ethers");
 
 
-describe("PoolGomboc", function () {
+describe("PoolGomboc", function() {
   const DAY = 86400;
   const WEEK = DAY * 7;
 
@@ -50,7 +50,7 @@ describe("PoolGomboc", function () {
     const minter = await Minter.deploy(lt.address, gombocController.address);
     await minter.deployed();
 
-    const poolGomboc = await upgrades.deployProxy(PoolGomboc, [mockLpToken.address, minter.address, permit2.address]);
+    const poolGomboc = await PoolGomboc.deploy(mockLpToken.address, minter.address, permit2.address);
     await poolGomboc.deployed();
     const periodTime = await time.latest();
 
@@ -58,9 +58,9 @@ describe("PoolGomboc", function () {
   }
 
 
-  describe("test pool gomboc", function () {
+  describe("test pool gomboc", function() {
 
-    it("test gomboc integral ", async function () {
+    it("test gomboc integral ", async function() {
       const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime } = await loadFixture(deployOneYearLockFixture);
 
       let integral = BigNumber.from(0);
@@ -104,6 +104,7 @@ describe("PoolGomboc", function () {
         t0_balance = await poolGomboc.balanceOf(owner.address);
         // console.log("update_integral t0_supply" + t0_supply);
       }
+
       await time.increase(WEEK);
       let despostAmount = BigNumber.from(10);
 

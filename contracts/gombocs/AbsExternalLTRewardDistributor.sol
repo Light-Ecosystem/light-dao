@@ -20,15 +20,15 @@ abstract contract AbsExternalLTRewardDistributor {
     address private _gombocAddress;
 
     /**
-     * @dev Indicates that the contract is in the process of being initialized.
+     * @dev Indicates that the contract has been initialized.
      */
-    bool private _initializing;
+    bool private _initialized;
 
     event RewardsDistributed(uint256 claimableTokens);
 
     function _init(address stHopeGomboc, address minter, address ltToken) internal {
-        require(_initializing, "Initializable: contract is not initializing");
-        _initializing = false;
+        require(!_initialized, "Initializable: contract is already initialized");
+        _initialized = true;
         _stHopeGomboc = stHopeGomboc;
         _minter = minter;
         _ltToken = ltToken;

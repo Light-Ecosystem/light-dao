@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/IGombocController.sol";
 import "./interfaces/IVotingEscrow.sol";
+import "light-lib/contracts/LibTime.sol";
 
 contract GombocController is Ownable2Step, IGombocController {
     // 7 * 86400 seconds - all future times are rounded by week
@@ -81,7 +82,7 @@ contract GombocController is Ownable2Step, IGombocController {
 
         token = tokenAddress;
         votingEscrow = votingEscrowAddress;
-        timeTotal = (block.timestamp / _WEEK) * _WEEK;
+        timeTotal = LibTime.timesRoundedByWeek(block.timestamp);
     }
 
     /**
@@ -110,7 +111,7 @@ contract GombocController is Ownable2Step, IGombocController {
         gombocs[_int128ToUint256(n)] = addr;
 
         _gombocTypes[addr] = gombocType + 1;
-        uint256 nextTime = ((block.timestamp + _WEEK) / _WEEK) * _WEEK;
+        uint256 nextTime = LibTime.timesRoundedByWeek(block.timestamp + _WEEK);
 
         if (weight > 0) {
             uint256 _typeWeight = _getTypeWeight(gombocType);
@@ -233,7 +234,7 @@ contract GombocController is Ownable2Step, IGombocController {
 
         uint256 slope = uint256(IVotingEscrow(votingEscrow).getLastUserSlope(msg.sender));
         uint256 lockEnd = IVotingEscrow(votingEscrow).lockedEnd(msg.sender);
-        uint256 nextTime = ((block.timestamp + _WEEK) / _WEEK) * _WEEK;
+        uint256 nextTime = LibTime.timesRoundedByWeek(block.timestamp + _WEEK);
         require(lockEnd > nextTime, "GC003");
         require(userWeight >= 0 && userWeight <= 10000, "GC004");
         require(block.timestamp >= lastUserVote[msg.sender][gombocAddress] + _WEIGHT_VOTE_DELAY, "GC005");
@@ -486,7 +487,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @return Value of relative weight normalized to 1e18
      */
     function _gombocRelativeWeight(address addr, uint256 time) internal view returns (uint256) {
-        uint256 t = (time / _WEEK) * _WEEK;
+        uint256 t = LibTime.timesRoundedByWeek(time);
         uint256 _totalWeight = pointsTotal[t];
         if (_totalWeight <= 0) {
             return 0;
@@ -506,7 +507,7 @@ contract GombocController is Ownable2Step, IGombocController {
         uint256 typeWeight = _getTypeWeight(gombocType);
         uint256 oldSum = _getSum(gombocType);
         uint256 _totalWeight = _getTotal();
-        uint256 nextTime = ((block.timestamp + _WEEK) / _WEEK) * _WEEK;
+        uint256 nextTime = LibTime.timesRoundedByWeek(block.timestamp + _WEEK);
 
         pointsWeight[addr][nextTime].bias = weight;
         timeWeight[addr] = nextTime;
@@ -531,7 +532,7 @@ contract GombocController is Ownable2Step, IGombocController {
         uint256 oldWeight = _getTypeWeight(typeId);
         uint256 oldSum = _getSum(typeId);
         uint256 _totalWeight = _getTotal();
-        uint256 nextTime = ((block.timestamp + _WEEK) / _WEEK) * _WEEK;
+        uint256 nextTime = LibTime.timesRoundedByWeek(block.timestamp + _WEEK);
 
         _totalWeight = _totalWeight + oldSum * weight - oldSum * oldWeight;
         pointsTotal[nextTime] = _totalWeight;

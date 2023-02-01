@@ -8,6 +8,7 @@ import "../interfaces/ILT.sol";
 import "../interfaces/IGombocController.sol";
 import "../interfaces/IVotingEscrow.sol";
 import "../interfaces/IMinter.sol";
+import "light-lib/contracts/LibTime.sol";
 
 abstract contract AbsGomboc is Ownable2StepUpgradeable {
     event Deposit(address indexed provider, uint256 value);
@@ -161,10 +162,10 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
         if (block.timestamp > _st._periodTime) {
             uint256 _workingSupply = workingSupply;
             uint256 _prevWeekTime = _st._periodTime;
-            uint256 _weekTime = Math.min(((_st._periodTime + _WEEK) / _WEEK) * _WEEK, block.timestamp);
+            uint256 _weekTime = Math.min(LibTime.timesRoundedByWeek(_st._periodTime + _WEEK), block.timestamp);
             for (uint256 i; i < 500; i++) {
                 uint256 _dt = _weekTime - _prevWeekTime;
-                uint256 _w = controller.gombocRelativeWeight(address(this), (_prevWeekTime / _WEEK) * _WEEK);
+                uint256 _w = controller.gombocRelativeWeight(address(this), LibTime.timesRoundedByWeek(_prevWeekTime));
 
                 if (_workingSupply > 0) {
                     if (_st.prevFutureEpoch >= _prevWeekTime && _st.prevFutureEpoch < _weekTime) {

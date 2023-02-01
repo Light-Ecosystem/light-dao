@@ -85,7 +85,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
 
         address staker = _msgSender();
         // checking amount
-        uint256 balanceOfUser = balanceOf(staker);
+        uint256 balanceOfUser = lpBalanceOf(staker);
         require(balanceOfUser >= amount, "INVALID_AMOUNT");
 
         _checkpoint(staker);

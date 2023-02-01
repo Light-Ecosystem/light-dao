@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IFeeDistributor.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
+import "light-lib/contracts/LibTime.sol";
 
 struct Point {
     int256 bias;
@@ -28,49 +29,73 @@ interface IVotingEscrow {
     function userPointHistory(address user, uint256 epoch) external view returns (Point memory);
 }
 
+interface StakingHOPE {
+    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external;
+}
+
 contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDistributor {
     uint256 constant WEEK = 7 * 86400;
     uint256 constant TOKEN_CHECKPOINT_DEADLINE = 86400;
 
-    uint256 public start_time;
-    uint256 public time_cursor;
+    uint256 public startTime;
+    uint256 public timeCursor;
 
     ///userAddress => timeCursor
-    mapping(address => uint256) public time_cursor_of;
+    mapping(address => uint256) public timeCursorOf;
     ///userAddress => epoch
-    mapping(address => uint256) user_epoch_of;
+    mapping(address => uint256) userEpochOf;
 
     ///lastTokenTime
-    uint256 public last_token_time;
+    uint256 public lastTokenTime;
     /// tokensPreWeek
-    uint256[1000000000000000] tokens_per_week;
+    uint256[1000000000000000] tokensPerWeek;
 
+    ///HOPE Token address
     address public token;
-    uint256 public token_last_balance;
-    address public voting_escrow;
+    /// staking hope address
+    address public stHOPE;
+    /// VeLT contract address
+    address public votingEscrow;
+
+    uint256 public tokenLastBalance;
 
     // VE total supply at week bounds
-    uint256[1000000000000000] public ve_supply;
+    uint256[1000000000000000] public veSupply;
 
-    bool public can_checkpoint_token;
-    address public emergency_return;
+    bool public canCheckpointToken;
+    address public emergencyReturn;
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @notice Contract constructor
-     * @param _voting_escrow VotingEscrow contract address
-     * @param _start_time Epoch time for fee distribution to start
-     * @param _token Fee token address list
-     * @param _emergency_return Address to transfer `_token` balance to if this contract is killed
+     * @param _votingEscrow VotingEscrow contract address
+     * @param _startTime Epoch time for fee distribution to start
+     * @param _token HOPE token address
+     * @param _stHOPE stakingHOPE  address
+     * @param _emergencyReturn Address to transfer `_token` balance to if this contract is killed
      */
-    function initialize(address _voting_escrow, uint256 _start_time, address _token, address _emergency_return) external initializer {
+    function initialize(
+        address _votingEscrow,
+        uint256 _startTime,
+        address _token,
+        address _stHOPE,
+        address _emergencyReturn
+    ) external initializer {
         __Ownable2Step_init();
 
-        uint256 t = (_start_time / WEEK) * WEEK;
-        start_time = t;
-        last_token_time = t;
-        time_cursor = t;
-        voting_escrow = _voting_escrow;
-        emergency_return = _emergency_return;
+        uint256 t = LibTime.timesRoundedByWeek(_startTime);
+        startTime = t;
+        lastTokenTime = t;
+        timeCursor = t;
+        emergencyReturn = _emergencyReturn;
+
+        token = _token;
+        stHOPE = _stHOPE;
+        votingEscrow = _votingEscrow;
     }
 
     /**
@@ -80,45 +105,45 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
          by the contract owner. Beyond initial distro, it can be enabled for anyone
          to call
      */
-    function checkpoint_token() external {
+    function checkpointToken() external {
         require(
-            (msg.sender == owner()) || (can_checkpoint_token && (block.timestamp > last_token_time + TOKEN_CHECKPOINT_DEADLINE)),
+            (msg.sender == owner()) || (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)),
             "can not checkpoint now"
         );
-        _checkpoint_token();
+        _checkpointToken();
     }
 
-    function _checkpoint_token() internal {
+    function _checkpointToken() internal {
         uint256 token_balance = IERC20Upgradeable(token).balanceOf(address(this));
-        uint256 to_distribute = token_balance - token_last_balance;
-        token_last_balance = token_balance;
+        uint256 toDistribute = token_balance - tokenLastBalance;
+        tokenLastBalance = token_balance;
 
-        uint256 t = last_token_time;
-        uint256 since_last = block.timestamp - t;
-        last_token_time = block.timestamp;
-        uint256 this_week = (t / WEEK) * WEEK;
-        uint256 next_week = 0;
+        uint256 t = lastTokenTime;
+        uint256 sinceLast = block.timestamp - t;
+        lastTokenTime = block.timestamp;
+        uint256 thisWeek = LibTime.timesRoundedByWeek(t);
+        uint256 nextWeek = 0;
 
         for (uint i = 0; i < 20; i++) {
-            next_week = this_week + WEEK;
-            if (block.timestamp < next_week) {
-                if (since_last == 0 && block.timestamp == t) {
-                    tokens_per_week[this_week] += to_distribute;
+            nextWeek = thisWeek + WEEK;
+            if (block.timestamp < nextWeek) {
+                if (sinceLast == 0 && block.timestamp == t) {
+                    tokensPerWeek[thisWeek] += toDistribute;
                 } else {
-                    tokens_per_week[this_week] += (to_distribute * (block.timestamp - t)) / since_last;
+                    tokensPerWeek[thisWeek] += (toDistribute * (block.timestamp - t)) / sinceLast;
                 }
                 break;
             } else {
-                if (since_last == 0 && next_week == t) {
-                    tokens_per_week[this_week] += to_distribute;
+                if (sinceLast == 0 && nextWeek == t) {
+                    tokensPerWeek[thisWeek] += toDistribute;
                 } else {
-                    tokens_per_week[this_week] += (to_distribute * (next_week - t)) / since_last;
+                    tokensPerWeek[thisWeek] += (toDistribute * (nextWeek - t)) / sinceLast;
                 }
             }
-            t = next_week;
-            this_week = next_week;
+            t = nextWeek;
+            thisWeek = nextWeek;
         }
-        emit CheckpointToken(block.timestamp, to_distribute);
+        emit CheckpointToken(block.timestamp, toDistribute);
     }
 
     /**
@@ -127,10 +152,10 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      * @param _timestamp Epoch time
      * @return uint256 veLT balance
      */
-    function ve_for_at(address _user, uint256 _timestamp) external view returns (uint256) {
-        uint256 max_user_epoch = IVotingEscrow(voting_escrow).userPointEpoch(_user);
-        uint256 epoch = _find_timestamp_user_epoch(voting_escrow, _user, _timestamp, max_user_epoch);
-        Point memory pt = IVotingEscrow(voting_escrow).userPointHistory(_user, epoch);
+    function veForAt(address _user, uint256 _timestamp) external view returns (uint256) {
+        uint256 maxUserEpoch = IVotingEscrow(votingEscrow).userPointEpoch(_user);
+        uint256 epoch = _findTimestampUserEpoch(votingEscrow, _user, _timestamp, maxUserEpoch);
+        Point memory pt = IVotingEscrow(votingEscrow).userPointHistory(_user, epoch);
         return Math.max(uint256(pt.bias) - uint256(pt.slope) * (_timestamp - pt.ts), 0);
     }
 
@@ -140,21 +165,21 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
          new epoch week. This function may be called independently
          of a claim, to reduce claiming gas costs.
      */
-    function checkpoint_total_supply() external {
-        _checkpoint_total_supply();
+    function checkpointTotalSupply() external {
+        _checkpointTotalSupply();
     }
 
-    function _checkpoint_total_supply() internal {
-        address ve = voting_escrow;
-        uint256 t = time_cursor;
-        uint256 rounded_timestamp = (block.timestamp / WEEK) * WEEK;
+    function _checkpointTotalSupply() internal {
+        address ve = votingEscrow;
+        uint256 t = timeCursor;
+        uint256 roundedTimestamp = LibTime.timesRoundedByWeek(block.timestamp);
         IVotingEscrow(ve).checkpointSupply();
 
         for (int i = 0; i < 20; i++) {
-            if (t > rounded_timestamp) {
+            if (t > roundedTimestamp) {
                 break;
             } else {
-                uint256 epoch = _find_timestamp_epoch(ve, t);
+                uint256 epoch = _findTimestampEpoch(ve, t);
                 Point memory pt = IVotingEscrow(ve).supplyPointHistory(epoch);
                 uint256 dt = 0;
                 if (t > pt.ts) {
@@ -162,14 +187,14 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
                     /// Then make dt 0
                     dt = t - pt.ts;
                 }
-                ve_supply[t] = Math.max(uint256(pt.bias) - uint256(pt.slope) * dt, 0);
+                veSupply[t] = Math.max(uint256(pt.bias) - uint256(pt.slope) * dt, 0);
             }
             t += WEEK;
         }
-        time_cursor = t;
+        timeCursor = t;
     }
 
-    function _find_timestamp_epoch(address ve, uint256 _timestamp) internal view returns (uint256) {
+    function _findTimestampEpoch(address ve, uint256 _timestamp) internal view returns (uint256) {
         uint256 _min = 0;
         uint256 _max = IVotingEscrow(ve).epoch();
         for (int i = 0; i < 128; i++) {
@@ -187,14 +212,9 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         return _min;
     }
 
-    function _find_timestamp_user_epoch(
-        address ve,
-        address user,
-        uint256 _timestamp,
-        uint256 max_user_epoch
-    ) internal view returns (uint256) {
+    function _findTimestampUserEpoch(address ve, address user, uint256 _timestamp, uint256 maxUserEpoch) internal view returns (uint256) {
         uint256 _min = 0;
-        uint256 _max = max_user_epoch;
+        uint256 _max = maxUserEpoch;
         for (int i = 0; i < 128; i++) {
             if (_min >= _max) {
                 break;
@@ -210,88 +230,86 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         return _min;
     }
 
-    function _claim(address addr, address ve, uint256 _last_token_time) internal returns (uint256) {
-        ///Minimal user_epoch is 0 (if user had no point)
-        uint256 user_epoch = 0;
-        uint256 to_distribute = 0;
+    function _claim(address addr, address ve, uint256 _lastTokenTime) internal returns (uint256) {
+        ///Minimal userEpoch is 0 (if user had no point)
+        uint256 userEpoch = 0;
+        uint256 toDistribute = 0;
 
-        uint256 max_user_epoch = IVotingEscrow(ve).userPointEpoch(addr);
-        uint256 _start_time = start_time;
+        uint256 maxUserEpoch = IVotingEscrow(ve).userPointEpoch(addr);
+        uint256 _startTime = startTime;
 
-        if (max_user_epoch == 0) {
+        if (maxUserEpoch == 0) {
             /// No lock = no fees
             return 0;
         }
 
-        uint256 week_cursor = time_cursor_of[addr];
-        if (week_cursor == 0) {
+        uint256 weekCursor = timeCursorOf[addr];
+        if (weekCursor == 0) {
             /// Need to do the initial binary search
-            user_epoch = _find_timestamp_user_epoch(ve, addr, _start_time, max_user_epoch);
+            userEpoch = _findTimestampUserEpoch(ve, addr, _startTime, maxUserEpoch);
         } else {
-            user_epoch = user_epoch_of[addr];
+            userEpoch = userEpochOf[addr];
+        }
+        if (userEpoch == 0) {
+            userEpoch = 1;
         }
 
-        if (user_epoch == 0) {
-            user_epoch = 1;
+        Point memory userPoint = IVotingEscrow(ve).userPointHistory(addr, userEpoch);
+        if (weekCursor == 0) {
+            weekCursor = LibTime.timesRoundedByWeek(userPoint.ts + WEEK - 1);
         }
 
-        Point memory user_point = IVotingEscrow(ve).userPointHistory(addr, user_epoch);
-
-        if (week_cursor == 0) {
-            week_cursor = ((user_point.ts + WEEK - 1) / WEEK) * WEEK;
-        }
-
-        if (week_cursor >= _last_token_time) {
+        if (weekCursor >= _lastTokenTime) {
             return 0;
         }
 
-        if (week_cursor < _start_time) {
-            week_cursor = _start_time;
+        if (weekCursor < _startTime) {
+            weekCursor = _startTime;
         }
-        Point memory old_user_point = Point({bias: 0, slope: 0, ts: 0, blk: 0});
+        Point memory oldUserPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
 
         /// Iterate over weeks
         for (int i = 0; i < 50; i++) {
-            if (week_cursor >= _last_token_time) {
+            if (weekCursor >= _lastTokenTime) {
                 break;
             }
 
-            if (week_cursor >= user_point.ts && user_epoch <= max_user_epoch) {
-                user_epoch += 1;
-                old_user_point = user_point;
-                if (user_epoch > max_user_epoch) {
-                    user_point = Point({bias: 0, slope: 0, ts: 0, blk: 0});
+            if (weekCursor >= userPoint.ts && userEpoch <= maxUserEpoch) {
+                userEpoch += 1;
+                oldUserPoint = userPoint;
+                if (userEpoch > maxUserEpoch) {
+                    userPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
                 } else {
-                    user_point = IVotingEscrow(ve).userPointHistory(addr, user_epoch);
+                    userPoint = IVotingEscrow(ve).userPointHistory(addr, userEpoch);
                 }
             } else {
                 // Calc
                 // + i * 2 is for rounding errors
-                uint256 dt = week_cursor - old_user_point.ts;
-                uint256 balance_of = Math.max(uint256(old_user_point.bias) - dt * uint256(old_user_point.slope), 0);
-                if (balance_of == 0 && user_epoch > max_user_epoch) {
+                uint256 dt = weekCursor - oldUserPoint.ts;
+                uint256 balanceOf = Math.max(uint256(oldUserPoint.bias) - dt * uint256(oldUserPoint.slope), 0);
+                if (balanceOf == 0 && userEpoch > maxUserEpoch) {
                     break;
                 }
-                if (balance_of > 0) {
-                    to_distribute += (balance_of * tokens_per_week[week_cursor]) / ve_supply[week_cursor];
+                if (balanceOf > 0) {
+                    toDistribute += (balanceOf * tokensPerWeek[weekCursor]) / veSupply[weekCursor];
                 }
-                week_cursor += WEEK;
+                weekCursor += WEEK;
             }
         }
 
-        user_epoch = Math.min(max_user_epoch, user_epoch - 1);
-        user_epoch_of[addr] = user_epoch;
-        time_cursor_of[addr] = week_cursor;
+        userEpoch = Math.min(maxUserEpoch, userEpoch - 1);
+        userEpochOf[addr] = userEpoch;
+        timeCursorOf[addr] = weekCursor;
 
-        emit Claimed(addr, to_distribute, user_epoch, max_user_epoch);
+        emit Claimed(addr, toDistribute, userEpoch, maxUserEpoch);
 
-        return to_distribute;
+        return toDistribute;
     }
 
     /**
      * @notice Claim fees for `_addr`
-     *  @dev Each call to claim look at a maximum of 50 user veCRV points.
-         For accounts with many veCRV related actions, this function
+     *  @dev Each call to claim look at a maximum of 50 user veLT points.
+         For accounts with many veLT related actions, this function
          may need to be called more than once to claim all available
          fees. In the `Claimed` event that fires, if `claim_epoch` is
          less than `max_epoch`, the account may claim again.
@@ -300,27 +318,24 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      *
      */
     function claim(address _addr) external whenNotPaused returns (uint256) {
-        if (block.timestamp >= time_cursor) {
-            _checkpoint_total_supply();
+        if (block.timestamp >= timeCursor) {
+            _checkpointTotalSupply();
         }
-        return _doClaim(_addr);
-    }
 
-    function _doClaim(address _addr) internal returns (uint256) {
         if (_addr == address(0)) {
             _addr = msg.sender;
         }
-        uint256 _last_token_time = last_token_time;
-        if (can_checkpoint_token && (block.timestamp > _last_token_time + TOKEN_CHECKPOINT_DEADLINE)) {
-            _checkpoint_token();
-            _last_token_time = block.timestamp;
+        uint256 _lastTokenTime = lastTokenTime;
+        if (canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
+            _checkpointToken();
+            _lastTokenTime = block.timestamp;
         }
 
-        _last_token_time = (_last_token_time / WEEK) * WEEK;
-        uint256 amount = _claim(_addr, voting_escrow, _last_token_time);
+        _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
+        uint256 amount = _claim(_addr, votingEscrow, _lastTokenTime);
         if (amount != 0) {
-            IERC20Upgradeable(token).transfer(_addr, amount);
-            token_last_balance -= amount;
+            stakingHOPEAndTransfer2User(_addr, amount);
+            tokenLastBalance -= amount;
         }
         return amount;
     }
@@ -333,19 +348,19 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      * @param _receivers List of addresses to claim for. Claiming terminates at the first `ZERO_ADDRESS`.
      * @return uint256 claim totol fee
      */
-    function claim_many(address[] memory _receivers) external whenNotPaused returns (uint256) {
-        if (block.timestamp >= time_cursor) {
-            _checkpoint_total_supply();
+    function claimMany(address[] memory _receivers) external whenNotPaused returns (uint256) {
+        if (block.timestamp >= timeCursor) {
+            _checkpointTotalSupply();
         }
 
-        uint256 _last_token_time = last_token_time;
+        uint256 _lastTokenTime = lastTokenTime;
 
-        if (can_checkpoint_token && (block.timestamp > _last_token_time + TOKEN_CHECKPOINT_DEADLINE)) {
-            _checkpoint_token();
-            _last_token_time = block.timestamp;
+        if (canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
+            _checkpointToken();
+            _lastTokenTime = block.timestamp;
         }
 
-        _last_token_time = (_last_token_time / WEEK) * WEEK;
+        _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
         uint256 total = 0;
 
         for (uint256 i = 0; i < _receivers.length; i++) {
@@ -353,15 +368,15 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
             if (addr == address(0)) {
                 break;
             }
-            uint256 amount = _claim(addr, voting_escrow, _last_token_time);
+            uint256 amount = _claim(addr, votingEscrow, _lastTokenTime);
             if (amount != 0) {
-                IERC20Upgradeable(token).transfer(addr, amount);
+                stakingHOPEAndTransfer2User(addr, amount);
                 total += amount;
             }
+        }
 
-            if (total != 0) {
-                token_last_balance -= total;
-            }
+        if (total != 0) {
+            tokenLastBalance -= total;
         }
 
         return total;
@@ -370,9 +385,9 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
     /**
      * @notice Toggle permission for checkpointing by any account
      */
-    function toggle_allow_checkpoint_token() external onlyOwner {
-        bool flag = !can_checkpoint_token;
-        can_checkpoint_token = !can_checkpoint_token;
+    function toggleAllowCheckpointToken() external onlyOwner {
+        bool flag = !canCheckpointToken;
+        canCheckpointToken = !canCheckpointToken;
         emit ToggleAllowCheckpointToken(flag);
     }
 
@@ -381,17 +396,22 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      * @dev Tokens are sent to the emergency return address.
      * @return bool success
      */
-    function recover_balance() external onlyOwner returns (bool) {
+    function recoverBalance() external onlyOwner returns (bool) {
         uint256 amount = IERC20Upgradeable(token).balanceOf(address(this));
-        TransferHelper.doTransferOut(token, emergency_return, amount);
+        TransferHelper.doTransferOut(token, emergencyReturn, amount);
         return true;
     }
 
-    function pause() public onlyOwner {
+    function pause() external onlyOwner {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() external onlyOwner {
         _unpause();
+    }
+
+    function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {
+        StakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        TransferHelper.doTransferOut(stHOPE, to, amount);
     }
 }

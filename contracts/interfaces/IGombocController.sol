@@ -21,6 +21,13 @@ interface IGombocController {
         uint256 end;
     }
 
+    struct UserPoint {
+        uint256 bias;
+        uint256 slope;
+        uint256 ts;
+        uint256 blk;
+    }
+
     event AddType(string name, int128 type_id);
 
     event NewTypeWeight(int128 indexed type_id, uint256 time, uint256 weight, uint256 total_weight);

@@ -67,7 +67,7 @@ contract HOPESalesAgent is IHOPESalesAgent, Ownable2Step, Pausable {
         require(toValue <= this.remainingCredit(), "AG004");
 
         address buyer = _msgSender();
-        TransferHelper.doTransferInV2(permit2, cy.token, fromValue, buyer, nonce, deadline, signature);
+        TransferHelper.doTransferIn(permit2, cy.token, fromValue, buyer, nonce, deadline, signature);
         IHOPE(hopeToken).mint(buyer, toValue);
 
         emit Buy(fromCurrency, buyer, fromValue, toValue, block.timestamp);

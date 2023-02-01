@@ -55,7 +55,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
         // checking amount
         uint256 balanceOfUser = IERC20(stakedToken).balanceOf(staker);
         require(balanceOfUser >= amount, "INVALID_AMOUNT");
-        TransferHelper.doTransferInV2(permit2Address, stakedToken, amount, staker, nonce, deadline, signature);
+        TransferHelper.doTransferIn(permit2Address, stakedToken, amount, staker, nonce, deadline, signature);
 
         _checkpoint(staker);
 

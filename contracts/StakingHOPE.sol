@@ -4,10 +4,10 @@ pragma solidity 0.8.17;
 
 import "./interfaces/IStaking.sol";
 import "./gombocs/AbsGomboc.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
-contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
+contract StakingHOPE is IStaking, ERC20, AbsGomboc {
     uint256 internal constant _LOCK_TIME = 28;
 
     // staking token contract
@@ -32,16 +32,10 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(address _stakedToken, address _minter, address _permit2Address) external initializer {
+    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("Staked HOPE UNI", "stHOPE") AbsGomboc(_minter) {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
-        _abs_init(_minter);
-        __ERC20_init("Staked HOPE UNI", "stHOPE");
+
         stakedToken = _stakedToken;
         permit2Address = _permit2Address;
     }
@@ -59,9 +53,9 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
 
         address staker = _msgSender();
         // checking amount
-        uint256 balanceOfUser = IERC20Upgradeable(stakedToken).balanceOf(staker);
+        uint256 balanceOfUser = IERC20(stakedToken).balanceOf(staker);
         require(balanceOfUser >= amount, "INVALID_AMOUNT");
-        TransferHelper.doTransferInV2(permit2Address, stakedToken, amount, staker, nonce, deadline, signature);
+        TransferHelper.doTransferIn(permit2Address, stakedToken, amount, staker, nonce, deadline, signature);
 
         _checkpoint(staker);
 
@@ -85,7 +79,7 @@ contract StakingHOPE is IStaking, ERC20Upgradeable, AbsGomboc {
 
         address staker = _msgSender();
         // checking amount
-        uint256 balanceOfUser = balanceOf(staker);
+        uint256 balanceOfUser = lpBalanceOf(staker);
         require(balanceOfUser >= amount, "INVALID_AMOUNT");
 
         _checkpoint(staker);

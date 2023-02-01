@@ -3781,7 +3781,7 @@ levn@^0.4.1:
 
 "light-lib@github:Light-Ecosystem/light-lib":
   version "1.0.0"
-  resolved "git+ssh://git@github.com/Light-Ecosystem/light-lib.git#cc564c955053e1c43132fbd0fe78826221a6a16f"
+  resolved "git+ssh://git@github.com/Light-Ecosystem/light-lib.git#51df9dc6a68069c04c09afcdcc584dcde28f166a"
 
 "light-permit2@github:Light-Ecosystem/light-permit2":
   version "1.0.0"

@@ -14,29 +14,41 @@ interface ILightGomboc {
  *  the contract which escrow stHOPE should inherit `AbsExternalLTReward`
  */
 abstract contract AbsExternalLTRewardDistributor {
-    address private constant _STHOPE_GOMBOC = address(0);
-    address private constant _MINTER = address(0);
-    address private constant _LTToken = address(0);
+    address private _stHopeGomboc;
+    address private _minter;
+    address private _ltToken;
+    address private _gombocAddress;
 
-    address private gombocAddress;
+    /**
+     * @dev Indicates that the contract has been initialized.
+     */
+    bool private _initialized;
 
     event RewardsDistributed(uint256 claimableTokens);
 
-    function refreshGombocRewards() external {
-        require(gombocAddress != address(0), "please set gombocAddress first");
+    function _init(address stHopeGomboc, address minter, address ltToken) internal {
+        require(!_initialized, "Initializable: contract is already initialized");
+        _initialized = true;
+        _stHopeGomboc = stHopeGomboc;
+        _minter = minter;
+        _ltToken = ltToken;
+    }
 
-        uint256 claimableTokens = ILightGomboc(_STHOPE_GOMBOC).claimableTokens(address(this));
+    function refreshGombocRewards() external {
+        require(_gombocAddress != address(0), "please set gombocAddress first");
+
+        uint256 claimableTokens = ILightGomboc(_stHopeGomboc).claimableTokens(address(this));
         require(claimableTokens > 0, "Noting Token to Deposit");
 
-        IMinter(_MINTER).mint(_STHOPE_GOMBOC);
+        IMinter(_minter).mint(_stHopeGomboc);
 
-        IERC20(_LTToken).approve(_STHOPE_GOMBOC, claimableTokens);
-        ILightGomboc(gombocAddress).depositRewardToken(_LTToken, claimableTokens);
+        IERC20(_ltToken).approve(_stHopeGomboc, claimableTokens);
+        ILightGomboc(_gombocAddress).depositRewardToken(_ltToken, claimableTokens);
 
         emit RewardsDistributed(claimableTokens);
     }
 
-    function _setGombocAddress(address _gombocAddress) internal {
-        gombocAddress = _gombocAddress;
+    function _setGombocAddress(address gombocAddress) internal {
+        _gombocAddress = gombocAddress;
     }
 }

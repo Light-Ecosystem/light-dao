@@ -2,14 +2,15 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/ILT.sol";
 import "../interfaces/IGombocController.sol";
 import "../interfaces/IVotingEscrow.sol";
 import "../interfaces/IMinter.sol";
+import "light-lib/contracts/LibTime.sol";
 
-abstract contract AbsGomboc is Ownable2StepUpgradeable {
+abstract contract AbsGomboc is Ownable2Step {
     event Deposit(address indexed provider, uint256 value);
     event Withdraw(address indexed provider, uint256 value);
     event UpdateLiquidityLimit(
@@ -30,17 +31,14 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
     bool public isKilled;
 
     //Contracts
-    IMinter public minter;
+    IMinter public immutable minter;
     // lt_token
-    ILT public ltToken;
+    ILT public immutable ltToken;
     //IERC20 public template;
-    IGombocController public controller;
-    IVotingEscrow public votingEscrow;
+    IGombocController public immutable controller;
+    IVotingEscrow public immutable votingEscrow;
 
     uint256 public futureEpochTime;
-
-    //    // caller -> recipient -> can deposit
-    //    mapping(address => mapping(address => bool)) public approvedToDeposit;
 
     mapping(address => uint256) public workingBalances;
     uint256 public workingSupply;
@@ -73,7 +71,7 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      * @param _lp_addr Liquidity Pool contract address
      * @param _minter Minter contract address
      */
-    function _abs_init(address _minter) internal onlyInitializing {
+    constructor(address _minter) {
         require(_minter != address(0), "invalid votingEscrowAddress");
 
         minter = IMinter(_minter);
@@ -161,10 +159,10 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
         if (block.timestamp > _st._periodTime) {
             uint256 _workingSupply = workingSupply;
             uint256 _prevWeekTime = _st._periodTime;
-            uint256 _weekTime = Math.min(((_st._periodTime + _WEEK) / _WEEK) * _WEEK, block.timestamp);
+            uint256 _weekTime = Math.min(LibTime.timesRoundedByWeek(_st._periodTime + _WEEK), block.timestamp);
             for (uint256 i; i < 500; i++) {
                 uint256 _dt = _weekTime - _prevWeekTime;
-                uint256 _w = controller.gombocRelativeWeight(address(this), (_prevWeekTime / _WEEK) * _WEEK);
+                uint256 _w = controller.gombocRelativeWeight(address(this), LibTime.timesRoundedByWeek(_prevWeekTime));
 
                 if (_workingSupply > 0) {
                     if (_st.prevFutureEpoch >= _prevWeekTime && _st.prevFutureEpoch < _weekTime) {
@@ -268,9 +266,4 @@ abstract contract AbsGomboc is Ownable2StepUpgradeable {
      * @notice The total amount of LP tokens that are currently deposited into the Gomboc.
      */
     function lpTotalSupply() public view virtual returns (uint256);
-
-    // @dev This empty reserved space is put in place to allow future versions to add new
-    // variables without shifting down storage in the inheritance chain.
-    // See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
-    uint256[49] private __gap;
 }

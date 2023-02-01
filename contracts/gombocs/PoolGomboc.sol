@@ -3,20 +3,17 @@
 pragma solidity 0.8.17;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./AbsGomboc.sol";
 
-contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
+contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     uint256 private constant _MAX_REWARDS = 8;
-
     string public name;
     string public symbol;
     uint256 public decimals;
-
-    address public lpToken;
+    address public immutable lpToken;
     // permit2 contract
-    address public permit2Address;
+    address public immutable permit2Address;
     mapping(address => uint256) public balanceOf;
     uint256 public totalSupply;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -55,21 +52,15 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuardUpgradeable {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
-    function initialize(address _lpAddr, address _minter, address _permit2Address) external initializer {
+    constructor(address _lpAddr, address _minter, address _permit2Address) AbsGomboc(_minter) {
         require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
-        _abs_init(_minter);
 
         permit2Address = _permit2Address;
         lpToken = _lpAddr;
         symbol = IERC20Metadata(_lpAddr).symbol();
         decimals = IERC20Metadata(_lpAddr).decimals();
-        name = string(abi.encodePacked(symbol, "-Gomboc"));
+        name = string(abi.encodePacked(symbol, " Gomboc"));
     }
 
     /***

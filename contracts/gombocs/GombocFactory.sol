@@ -4,13 +4,16 @@ pragma solidity 0.8.17;
 
 import "./PoolGomboc.sol";
 
-contract GombocFactory {
+contract GombocFactory is Ownable2Step {
     event Deploy(address addr);
 
-    // todo init address
-    address internal constant _MINTER = 0x393B2E10bdB74E3A20F410C0896cC5EBa7312EED;
-    // todo init address
-    address internal constant _PERMIT2_ADDRESS = 0x7b230b9d46dCC38dfbfc2ca3E89655166704f808;
+    address immutable miner;
+    address immutable permit2;
+
+    constructor(address _minter, address _permit2Address) {
+        miner = _minter;
+        permit2 = _permit2Address;
+    }
 
     /***
      * @notice Returns the address of the newly deployed contract
@@ -20,9 +23,8 @@ contract GombocFactory {
      * @param
      * @return
      */
-    function deploy(address _lpAddr, bytes32 _salt) public payable returns (address) {
-        PoolGomboc poolGomboc = new PoolGomboc{salt: _salt}();
-        poolGomboc.initialize(_lpAddr, _MINTER, _PERMIT2_ADDRESS);
+    function deploy(address _lpAddr, bytes32 _salt) public payable onlyOwner returns (address) {
+        PoolGomboc poolGomboc = new PoolGomboc{salt: _salt}(_lpAddr, miner, permit2);
         address poolGombocAddress = address(poolGomboc);
         require(poolGombocAddress == getAddress(_lpAddr, _salt), "not equal");
         return poolGombocAddress;
@@ -37,7 +39,7 @@ contract GombocFactory {
                             bytes1(0xff),
                             address(this),
                             _salt,
-                            keccak256(abi.encodePacked(type(PoolGomboc).creationCode, abi.encode(_lpAddr, _MINTER, _PERMIT2_ADDRESS)))
+                            keccak256(abi.encodePacked(type(PoolGomboc).creationCode, abi.encode(_lpAddr, miner, permit2)))
                         )
                     )
                 )
@@ -53,8 +55,8 @@ contract GombocFactory {
      * @param
      * @return
      */
-    function getBytecode(address _lpAddr) public pure returns (bytes memory) {
+    function getBytecode(address _lpAddr) public view returns (bytes memory) {
         bytes memory bytecode = type(PoolGomboc).creationCode;
-        return abi.encodePacked(bytecode, abi.encode(_lpAddr, _MINTER, _PERMIT2_ADDRESS));
+        return abi.encodePacked(bytecode, abi.encode(_lpAddr, miner, permit2));
     }
 }

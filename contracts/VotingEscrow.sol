@@ -305,7 +305,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         // _locked.end > block.timestamp (always)
         _checkpoint(_beneficiary, _oldLocked, _locked);
         if (_value != 0) {
-            TransferHelper.doTransferInV2(permit2Address, token, _value, _provider, nonce, deadline, signature);
+            TransferHelper.doTransferIn(permit2Address, token, _value, _provider, nonce, deadline, signature);
         }
 
         emit Deposit(_provider, _beneficiary, _value, uint256(_locked.amount), _locked.end, _type, block.timestamp);

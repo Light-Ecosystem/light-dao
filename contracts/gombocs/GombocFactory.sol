@@ -4,7 +4,7 @@ pragma solidity 0.8.17;
 
 import "./PoolGomboc.sol";
 
-contract GombocFactory {
+contract GombocFactory is Ownable2Step {
     event Deploy(address addr);
 
     address immutable miner;
@@ -23,7 +23,7 @@ contract GombocFactory {
      * @param
      * @return
      */
-    function deploy(address _lpAddr, bytes32 _salt) public payable returns (address) {
+    function deploy(address _lpAddr, bytes32 _salt) public payable onlyOwner returns (address) {
         PoolGomboc poolGomboc = new PoolGomboc{salt: _salt}(_lpAddr, miner, permit2);
         address poolGombocAddress = address(poolGomboc);
         require(poolGombocAddress == getAddress(_lpAddr, _salt), "not equal");

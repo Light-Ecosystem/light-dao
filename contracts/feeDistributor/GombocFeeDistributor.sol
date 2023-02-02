@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IGombocFeeDistributor.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "light-lib/contracts/LibTime.sol";
+import "hardhat/console.sol";
 
 struct Point {
     int256 bias;
@@ -32,7 +33,7 @@ interface IGombocController {
     function gombocRelativeWeight(address gombocAddress, uint256 time) external view returns (uint256);
 }
 
-interface StakingHOPE {
+interface IStakingHOPE {
     function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external;
 }
 
@@ -46,19 +47,18 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     /// gombocAddress => userAddress => timeCursor
     mapping(address => mapping(address => uint256)) public timeCursorOf;
     /// gombocAddress => userAddress => epoch
-    mapping(address => mapping(address => uint256)) userEpochOf;
+    mapping(address => mapping(address => uint256)) public userEpochOf;
 
     /// lastTokenTime
     uint256 public lastTokenTime;
     /// tokensPreWeek
-    uint256[1000000000000000] tokensPerWeek;
+    uint256[1000000000000000] public tokensPerWeek;
 
     ///HOPE Token address
     address public token;
     /// staking hope address
     address public stHOPE;
     uint256 public tokenLastBalance;
-    address public stakingGomboc;
     address public gombocController;
 
     // gombocAddress => VE total supply at week bounds
@@ -74,7 +74,6 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
 
     /**
      * @notice Contract constructor
-     * @param _stakingGomboc Gomboc contract address
      * @param _gombocController GombocController contract address
      * @param _startTime Epoch time for fee distribution to start
      * @param _token Fee token address list
@@ -82,7 +81,6 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
      * @param _emergencyReturn Address to transfer `_token` balance to if this contract is killed
      */
     function initialize(
-        address _stakingGomboc,
         address _gombocController,
         uint256 _startTime,
         address _token,
@@ -98,7 +96,6 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         token = _token;
         stHOPE = _stHOPE;
         timeCursor = t;
-        stakingGomboc = _stakingGomboc;
         gombocController = _gombocController;
         emergencyReturn = _emergencyReturn;
     }
@@ -111,10 +108,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
          to call
      */
     function checkpointToken() external {
-        require(
-            (msg.sender == owner()) || (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)),
-            "can not checkpoint now"
-        );
+        require((msg.sender == owner()) || (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)), "FD001");
         _checkpointToken();
     }
 
@@ -165,6 +159,31 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         return Math.max(uint256(pt.bias) - uint256(pt.slope) * (_timestamp - pt.ts), 0);
     }
 
+    /**
+     * @notice Get the VeLT voting percentage for `_user` in _gomboc  at `_timestamp`
+     * @param _gomboc Address to query voting gomboc
+     * @param _user Address to query voting
+     * @param _timestamp Epoch time
+     * @return value of voting precentage normalized to 1e18
+     */
+    function vePrecentageForAt(address _gomboc, address _user, uint256 _timestamp) external view returns (uint256) {
+        _timestamp = LibTime.timesRoundedByWeek(_timestamp);
+        uint256 veForAtValue = this.veForAt(_gomboc, _user, _timestamp);
+        SimplePoint memory pt = IGombocController(gombocController).pointsWeight(_gomboc, _timestamp);
+        return (veForAtValue * 1e18) / pt.bias;
+    }
+
+    /**
+     * @notice Get the HOPE balance for _gomboc  at `_weekCursor`
+     * @param _gomboc Address to query voting gomboc
+     * @param _weekCursor week cursor
+     */
+    function gombocBalancePreWeek(address _gomboc, uint256 _weekCursor) external view returns (uint256) {
+        _weekCursor = LibTime.timesRoundedByWeek(_weekCursor);
+        uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(_gomboc, _weekCursor);
+        return (tokensPerWeek[_weekCursor] * relativeWeight) / 1e18;
+    }
+
     function _findTimestampUserEpoch(
         address _gomboc,
         address user,
@@ -188,81 +207,92 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         return _min;
     }
 
-    function _claim(address gomboc, address addr, uint256 _lastTokenTime) internal returns (uint256) {
-        ///Minimal userEpoch is 0 (if user had no point)
-        uint256 userEpoch = 0;
-        uint256 toDistribute = 0;
+    /// avalid deep stack
+    struct ClaimParam {
+        uint256 userEpoch;
+        uint256 toDistribute;
+        uint256 maxUserEpoch;
+        uint256 weekCursor;
+        Point userPoint;
+        Point oldUserPoint;
+    }
 
-        uint256 maxUserEpoch = IGombocController(gombocController).lastVoteVeLtPointEpoch(addr, gomboc);
+    function _claim(address gomboc, address addr, uint256 _lastTokenTime) internal returns (uint256) {
+        ClaimParam memory param;
+
+        ///Minimal userEpoch is 0 (if user had no point)
+        param.userEpoch = 0;
+        param.toDistribute = 0;
+
+        param.maxUserEpoch = IGombocController(gombocController).lastVoteVeLtPointEpoch(addr, gomboc);
         uint256 _startTime = startTime;
-        if (maxUserEpoch == 0) {
+        if (param.maxUserEpoch == 0) {
             /// No lock = no fees
             return 0;
         }
 
-        uint256 weekCursor = timeCursorOf[gomboc][addr];
-        if (weekCursor == 0) {
+        param.weekCursor = timeCursorOf[gomboc][addr];
+        if (param.weekCursor == 0) {
             /// Need to do the initial binary search
-            userEpoch = _findTimestampUserEpoch(gomboc, addr, _startTime, maxUserEpoch);
+            param.userEpoch = _findTimestampUserEpoch(gomboc, addr, _startTime, param.maxUserEpoch);
         } else {
-            userEpoch = userEpochOf[gomboc][addr];
+            param.userEpoch = userEpochOf[gomboc][addr];
+        }
+        if (param.userEpoch == 0) {
+            param.userEpoch = 1;
         }
 
-        if (userEpoch == 0) {
-            userEpoch = 1;
+        param.userPoint = IGombocController(gombocController).voteVeLtPointHistory(addr, gomboc, param.userEpoch);
+        if (param.weekCursor == 0) {
+            param.weekCursor = LibTime.timesRoundedByWeek(param.userPoint.ts + WEEK - 1);
         }
 
-        Point memory userPoint = IGombocController(gombocController).voteVeLtPointHistory(addr, gomboc, userEpoch);
-        if (weekCursor == 0) {
-            weekCursor = LibTime.timesRoundedByWeek(userPoint.ts + WEEK - 1);
-        }
-
-        if (weekCursor >= _lastTokenTime) {
+        if (param.weekCursor >= _lastTokenTime) {
             return 0;
         }
 
-        if (weekCursor < _startTime) {
-            weekCursor = _startTime;
+        if (param.weekCursor < _startTime) {
+            param.weekCursor = _startTime;
         }
-        Point memory oldUserPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
+        param.oldUserPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
 
         /// Iterate over weeks
         for (int i = 0; i < 50; i++) {
-            if (weekCursor >= _lastTokenTime) {
+            if (param.weekCursor >= _lastTokenTime) {
                 break;
             }
-            if (weekCursor >= userPoint.ts && userEpoch <= maxUserEpoch) {
-                userEpoch += 1;
-                oldUserPoint = userPoint;
-                if (userEpoch > maxUserEpoch) {
-                    userPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
+            if (param.weekCursor >= param.userPoint.ts && param.userEpoch <= param.maxUserEpoch) {
+                param.userEpoch += 1;
+                param.oldUserPoint = param.userPoint;
+                if (param.userEpoch > param.maxUserEpoch) {
+                    param.userPoint = Point({bias: 0, slope: 0, ts: 0, blk: 0});
                 } else {
-                    userPoint = IGombocController(gombocController).voteVeLtPointHistory(addr, gomboc, userEpoch);
+                    param.userPoint = IGombocController(gombocController).voteVeLtPointHistory(addr, gomboc, param.userEpoch);
                 }
             } else {
                 // Calc
                 // + i * 2 is for rounding errors
-                uint256 dt = weekCursor - oldUserPoint.ts;
-                uint256 balanceOf = Math.max(uint256(oldUserPoint.bias) - dt * uint256(oldUserPoint.slope), 0);
-                if (balanceOf == 0 && userEpoch > maxUserEpoch) {
+                uint256 dt = param.weekCursor - param.oldUserPoint.ts;
+                uint256 balanceOf = Math.max(uint256(param.oldUserPoint.bias) - dt * uint256(param.oldUserPoint.slope), 0);
+                if (balanceOf == 0 && param.userEpoch > param.maxUserEpoch) {
                     break;
                 }
                 if (balanceOf > 0) {
-                    SimplePoint memory pt = IGombocController(gombocController).pointsWeight(gomboc, weekCursor);
-                    uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(gomboc, weekCursor);
-                    toDistribute += (((balanceOf * tokensPerWeek[weekCursor]) / pt.bias) * relativeWeight) / 1e18;
+                    SimplePoint memory pt = IGombocController(gombocController).pointsWeight(gomboc, param.weekCursor);
+                    uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(gomboc, param.weekCursor);
+                    param.toDistribute += ((balanceOf * tokensPerWeek[param.weekCursor] * relativeWeight) / pt.bias) / 1e18;
                 }
-                weekCursor += WEEK;
+                param.weekCursor += WEEK;
             }
         }
 
-        userEpoch = Math.min(maxUserEpoch, userEpoch - 1);
-        userEpochOf[gomboc][addr] = userEpoch;
-        timeCursorOf[gomboc][addr] = weekCursor;
+        param.userEpoch = Math.min(param.maxUserEpoch, param.userEpoch - 1);
+        userEpochOf[gomboc][addr] = param.userEpoch;
+        timeCursorOf[gomboc][addr] = param.weekCursor;
 
-        emit Claimed(gomboc, addr, toDistribute, userEpoch, maxUserEpoch);
+        emit Claimed(gomboc, addr, param.toDistribute, param.userEpoch, param.maxUserEpoch);
 
-        return toDistribute;
+        return param.toDistribute;
     }
 
     /**
@@ -301,8 +331,9 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
      * @dev Used to claim for many accounts at once, or to make
          multiple claims for the same address when that address
          has significant veLT history
+       @param  gomboc  Address to claim fee of gomboc
      * @param _receivers List of addresses to claim for. Claiming terminates at the first `ZERO_ADDRESS`.
-     * @return uint256 claim totol fee
+     * @return uint256 claim total fee
      */
     function claimMany(address gomboc, address[] memory _receivers) external whenNotPaused returns (uint256) {
         uint256 _lastTokenTime = lastTokenTime;
@@ -325,10 +356,49 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
                 stakingHOPEAndTransfer2User(addr, amount);
                 total += amount;
             }
+        }
 
-            if (total != 0) {
-                tokenLastBalance -= total;
+        if (total != 0) {
+            tokenLastBalance -= total;
+        }
+
+        return total;
+    }
+
+    /**
+     * @notice Make multiple fee claims in a single call
+     * @dev Used to claim for many accounts at once, or to make
+         multiple claims for the same address when that address
+         has significant veLT history
+       @param  gombocList  List of gombocs to claim
+     * @param receiver address to claim for.
+     * @return uint256 claim total fee
+     */
+    function claimManyGomboc(address[] memory gombocList, address receiver) external whenNotPaused returns (uint256) {
+        uint256 _lastTokenTime = lastTokenTime;
+
+        if (canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
+            _checkpointToken();
+            _lastTokenTime = block.timestamp;
+        }
+
+        _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < gombocList.length; i++) {
+            address gomboc = gombocList[i];
+            if (gomboc == address(0)) {
+                break;
             }
+            uint256 amount = _claim(gomboc, receiver, _lastTokenTime);
+            if (amount != 0) {
+                total += amount;
+            }
+        }
+
+        if (total != 0) {
+            tokenLastBalance -= total;
+            stakingHOPEAndTransfer2User(receiver, total);
         }
 
         return total;
@@ -355,7 +425,8 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     }
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {
-        StakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        IERC20Upgradeable(token).approve(stHOPE, amount);
+        IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
         TransferHelper.doTransferOut(stHOPE, to, amount);
     }
 

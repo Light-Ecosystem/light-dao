@@ -26,6 +26,14 @@ interface IFeeDistributor {
     function veForAt(address _user, uint256 _timestamp) external view returns (uint256);
 
     /**
+     * @notice Get the VeLT voting percentage for `_user` in _gomboc  at `_timestamp`
+     * @param _user Address to query voting
+     * @param _timestamp Epoch time
+     * @return value of voting precentage normalized to 1e18
+     */
+    function vePrecentageForAt(address _user, uint256 _timestamp) external view returns (uint256);
+
+    /**
      * @notice Update the veLT total supply checkpoint
      * @dev The checkpoint is also updated by the first claimant each
      *    new epoch week. This function may be called independently

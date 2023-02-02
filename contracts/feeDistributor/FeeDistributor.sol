@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IFeeDistributor.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "light-lib/contracts/LibTime.sol";
+import "hardhat/console.sol";
 
 struct Point {
     int256 bias;
@@ -29,7 +30,7 @@ interface IVotingEscrow {
     function userPointHistory(address user, uint256 epoch) external view returns (Point memory);
 }
 
-interface StakingHOPE {
+interface IStakingHOPE {
     function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external;
 }
 
@@ -43,12 +44,12 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
     ///userAddress => timeCursor
     mapping(address => uint256) public timeCursorOf;
     ///userAddress => epoch
-    mapping(address => uint256) userEpochOf;
+    mapping(address => uint256) public userEpochOf;
 
     ///lastTokenTime
     uint256 public lastTokenTime;
     /// tokensPreWeek
-    uint256[1000000000000000] tokensPerWeek;
+    uint256[1000000000000000] public tokensPerWeek;
 
     ///HOPE Token address
     address public token;
@@ -106,17 +107,14 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
          to call
      */
     function checkpointToken() external {
-        require(
-            (msg.sender == owner()) || (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)),
-            "can not checkpoint now"
-        );
+        require((msg.sender == owner()) || (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)), "FD001");
         _checkpointToken();
     }
 
     function _checkpointToken() internal {
-        uint256 token_balance = IERC20Upgradeable(token).balanceOf(address(this));
-        uint256 toDistribute = token_balance - tokenLastBalance;
-        tokenLastBalance = token_balance;
+        uint256 tokenBalance = IERC20Upgradeable(token).balanceOf(address(this));
+        uint256 toDistribute = tokenBalance - tokenLastBalance;
+        tokenLastBalance = tokenBalance;
 
         uint256 t = lastTokenTime;
         uint256 sinceLast = block.timestamp - t;
@@ -160,6 +158,22 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
     }
 
     /**
+     * @notice Get the VeLT voting percentage for `_user` in _gomboc  at `_timestamp`
+     * @param _user Address to query voting
+     * @param _timestamp Epoch time
+     * @return value of voting precentage normalized to 1e18
+     */
+    function vePrecentageForAt(address _user, uint256 _timestamp) external view returns (uint256) {
+        _timestamp = LibTime.timesRoundedByWeek(_timestamp);
+        uint256 veForAtValue = this.veForAt(_user, _timestamp);
+        uint256 supply = veSupply[_timestamp];
+        if (supply == 0) {
+            return 0;
+        }
+        return (veForAtValue * 1e18) / supply;
+    }
+
+    /**
      * @notice Update the veLT total supply checkpoint
      * @dev The checkpoint is also updated by the first claimant each
          new epoch week. This function may be called independently
@@ -170,17 +184,16 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
     }
 
     function _checkpointTotalSupply() internal {
-        address ve = votingEscrow;
         uint256 t = timeCursor;
         uint256 roundedTimestamp = LibTime.timesRoundedByWeek(block.timestamp);
-        IVotingEscrow(ve).checkpointSupply();
+        IVotingEscrow(votingEscrow).checkpointSupply();
 
         for (int i = 0; i < 20; i++) {
             if (t > roundedTimestamp) {
                 break;
             } else {
-                uint256 epoch = _findTimestampEpoch(ve, t);
-                Point memory pt = IVotingEscrow(ve).supplyPointHistory(epoch);
+                uint256 epoch = _findTimestampEpoch(votingEscrow, t);
+                Point memory pt = IVotingEscrow(votingEscrow).supplyPointHistory(epoch);
                 uint256 dt = 0;
                 if (t > pt.ts) {
                     /// If the point is at 0 epoch, it can actually be earlier than the first deposit
@@ -271,6 +284,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         /// Iterate over weeks
         for (int i = 0; i < 50; i++) {
             if (weekCursor >= _lastTokenTime) {
+                // console.log("weekCursor >= _lastTokenTime", weekCursor, _lastTokenTime);
                 break;
             }
 
@@ -291,6 +305,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
                     break;
                 }
                 if (balanceOf > 0) {
+                    // console.log(balanceOf, tokensPerWeek[weekCursor], weekCursor, toDistribute);
                     toDistribute += (balanceOf * tokensPerWeek[weekCursor]) / veSupply[weekCursor];
                 }
                 weekCursor += WEEK;
@@ -411,7 +426,8 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
     }
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {
-        StakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        IERC20Upgradeable(token).approve(stHOPE, amount);
+        IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
         TransferHelper.doTransferOut(stHOPE, to, amount);
     }
 }

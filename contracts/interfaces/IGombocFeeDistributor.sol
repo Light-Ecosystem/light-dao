@@ -18,6 +18,15 @@ interface IGombocFeeDistributor {
     function checkpointToken() external;
 
     /**
+     * @notice Get the VeLT voting percentage for `_user` in _gomboc  at `_timestamp`
+     * @param _gomboc Address to query voting gomboc
+     * @param _user Address to query voting
+     * @param _timestamp Epoch time
+     * @return value of voting precentage normalized to 1e18
+     */
+    function vePrecentageForAt(address _gomboc, address _user, uint256 _timestamp) external view returns (uint256);
+
+    /**
      * @notice Get the veLT balance for `_user` at `_timestamp`
      * @param _gomboc Address to query voting gomboc
      * @param _user Address to query balance for
@@ -25,6 +34,13 @@ interface IGombocFeeDistributor {
      * @return uint256 veLT balance
      */
     function veForAt(address _gomboc, address _user, uint256 _timestamp) external view returns (uint256);
+
+    /**
+     * @notice Get the HOPE balance for _gomboc  at `_weekCursor`
+     * @param _gomboc Address to query voting gomboc
+     * @param _weekCursor week cursor
+     */
+    function gombocBalancePreWeek(address _gomboc, uint256 _weekCursor) external view returns (uint256);
 
     /**
      * @notice Claim fees for `_addr`

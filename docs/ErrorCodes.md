@@ -75,3 +75,6 @@
 `HS003` : `Rate must greater than zero`
 `HS004` : `Invalid param, it is different from contract symbol`
 `HS005` : `Please redeem balance before delete the currency`
+
+## FeeDistributor related
+`FD001` : `can not checkpoint now`

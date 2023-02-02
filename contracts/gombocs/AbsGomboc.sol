@@ -29,6 +29,8 @@ abstract contract AbsGomboc is Ownable2Step {
     uint256 internal constant _WEEK = _DAY * 7;
 
     bool public isKilled;
+    // pool lp token
+    address public immutable lpToken;
 
     //Contracts
     IMinter public immutable minter;
@@ -71,9 +73,10 @@ abstract contract AbsGomboc is Ownable2Step {
      * @param _lp_addr Liquidity Pool contract address
      * @param _minter Minter contract address
      */
-    constructor(address _minter) {
+    constructor(address _minter, address _lpToken) {
         require(_minter != address(0), "invalid votingEscrowAddress");
 
+        lpToken = _lpToken;
         minter = IMinter(_minter);
         address _ltToken = minter.token();
         ltToken = ILT(_ltToken);

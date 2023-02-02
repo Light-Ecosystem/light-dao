@@ -10,8 +10,6 @@ import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 contract StakingHOPE is IStaking, ERC20, AbsGomboc {
     uint256 internal constant _LOCK_TIME = 28;
 
-    // staking token contract
-    address public stakedToken;
     // permit2 contract
     address public permit2Address;
 
@@ -32,11 +30,14 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("HOPE Staking", "stHOPE") AbsGomboc(_minter) {
+    constructor(
+        address _stakedToken,
+        address _minter,
+        address _permit2Address
+    ) ERC20("HOPE Staking", "stHOPE") AbsGomboc(_minter, _stakedToken) {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
 
-        stakedToken = _stakedToken;
         permit2Address = _permit2Address;
     }
 
@@ -53,9 +54,9 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
 
         address staker = _msgSender();
         // checking amount
-        uint256 balanceOfUser = IERC20(stakedToken).balanceOf(staker);
+        uint256 balanceOfUser = IERC20(lpToken).balanceOf(staker);
         require(balanceOfUser >= amount, "INVALID_AMOUNT");
-        TransferHelper.doTransferIn(permit2Address, stakedToken, amount, staker, nonce, deadline, signature);
+        TransferHelper.doTransferIn(permit2Address, lpToken, amount, staker, nonce, deadline, signature);
 
         _checkpoint(staker);
 
@@ -182,7 +183,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
         }
 
         _burn(redeemer, amountToRedeem);
-        TransferHelper.doTransferOut(stakedToken, redeemer, amountToRedeem);
+        TransferHelper.doTransferOut(lpToken, redeemer, amountToRedeem);
         _updateLiquidityLimit(redeemer, lpBalanceOf(redeemer), lpTotalSupply());
 
         _unstakeTotal = _unstakeTotal - amountToRedeem;
@@ -223,7 +224,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
 
         if (amountToRedeem > 0) {
             _burn(redeemer, amountToRedeem);
-            TransferHelper.doTransferOut(stakedToken, redeemer, amountToRedeem);
+            TransferHelper.doTransferOut(lpToken, redeemer, amountToRedeem);
             _updateLiquidityLimit(redeemer, lpBalanceOf(redeemer), lpTotalSupply());
 
             _unstakeTotal = _unstakeTotal - amountToRedeem;

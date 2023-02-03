@@ -1,8 +1,17 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import '@openzeppelin/hardhat-upgrades';
+import 'hardhat-contract-sizer';
 
 const config: HardhatUserConfig = {
+
+  contractSizer: {
+    alphaSort: false,
+    disambiguatePaths: false,
+    runOnCompile: true,
+    strict: true,
+    // only: [':ERC20$'],
+  },
   solidity: {
     compilers: [
       {

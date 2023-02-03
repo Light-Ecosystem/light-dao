@@ -27,5 +27,5 @@ sh scripts/deploy_light_dao.sh
 npx hardhat run scripts/deploy_gomboc_factory.ts  --network xxx
  
 # Deploy the PoolGomboc contract through the factory contract
-npx hardhat run scripts/deploy_gomboc_by_gomboc_factory.ts --network xxx
+npx hardhat run scripts/deploy_gomboc_by_factory.ts --network xxx
 ```

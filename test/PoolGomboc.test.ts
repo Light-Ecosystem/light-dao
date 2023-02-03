@@ -20,6 +20,7 @@ describe("PoolGomboc", function() {
     const PoolGomboc = await ethers.getContractFactory("PoolGomboc");
     const TestLP = await ethers.getContractFactory("MockLP");
     const Minter = await ethers.getContractFactory("Minter");
+    const GombocFactory = await ethers.getContractFactory("GombocFactory");
 
     // init 1000
     const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000); //Not using the actual InsureDAO contract
@@ -50,10 +51,22 @@ describe("PoolGomboc", function() {
     const minter = await Minter.deploy(lt.address, gombocController.address);
     await minter.deployed();
 
-    const poolGomboc = await PoolGomboc.deploy(mockLpToken.address, minter.address, permit2.address);
-    await poolGomboc.deployed();
-    const periodTime = await time.latest();
+    // deploy pool gomboc
+    const poolGombocImplementation = await PoolGomboc.deploy();
+    await poolGombocImplementation.deployed();
 
+    // deploy gomboc factory
+    const gombocFactory = await GombocFactory.deploy(poolGombocImplementation.address, minter.address, permit2.address);
+    await gombocFactory.deployed();
+
+    // deploy pool gomboc by Factory
+    await gombocFactory.createPool(mockLpToken.address);
+    // get pool address
+    const poolGombocAddress = await gombocFactory.getPool(mockLpToken.address);
+    // load pool gomboc
+    const poolGomboc =  PoolGomboc.attach(poolGombocAddress);
+
+    const periodTime = await time.latest();
     return { lt, permit2, veLT, gombocController, mockLpToken, minter, poolGomboc, owner, alice, bob, periodTime };
   }
 

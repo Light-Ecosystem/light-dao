@@ -8,6 +8,8 @@ interface IGombocFeeDistributor {
 
     event Claimed(address indexed gomboc, address indexed recipient, uint256 amount, uint256 claimEpoch, uint256 maxEpoch);
 
+    event RecoverBalance(address indexed token, address indexed emergencyReturn, uint256 amount);
+
     /**
      * @notice Update the token checkpoint
      * @dev Calculates the total number of tokens to be distributed in a given week.
@@ -66,6 +68,24 @@ interface IGombocFeeDistributor {
      * @return uint256 claim totol fee
      */
     function claimMany(address gomboc, address[] memory _receivers) external returns (uint256);
+
+    /**
+     * @notice Make multiple fee claims in a single call
+     * @dev Used to claim for many accounts at once, or to make
+         multiple claims for the same address when that address
+         has significant veLT history
+       @param  gombocList  List of gombocs to claim
+     * @param receiver address to claim for.
+     * @return uint256 claim total fee
+     */
+    function claimManyGomboc(address[] memory gombocList, address receiver) external returns (uint256);
+
+    /**
+     * @notice Receive HOPE into the contract and trigger a token checkpoint
+     * @param amount burn amount
+     * @return bool success
+     */
+    function burn(uint256 amount) external returns (bool);
 
     /**
      * @notice Toggle permission for checkpointing by any account

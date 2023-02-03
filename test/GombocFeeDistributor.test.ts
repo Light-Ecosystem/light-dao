@@ -1,11 +1,8 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { PermitSigHelper } from "./PermitSigHelper";
 import { BigNumber } from "ethers";
-import { SourceLocation } from "hardhat/internal/hardhat-network/stack-traces/model";
-import exp from "constants";
 
 describe("GombocFeeDistributor", function () {
 
@@ -75,7 +72,7 @@ describe("GombocFeeDistributor", function () {
 
         //deploy feeDistributor contract
         let startTime = await time.latest();
-        const gombocFeeDistributor = await upgrades.deployProxy(GombocFeeDistributor, [gombocController.address, startTime, hopeToken.address, stakingHope.address, alice.address]);
+        const gombocFeeDistributor = await upgrades.deployProxy(GombocFeeDistributor, [gombocController.address, startTime, hopeToken.address, stakingHope.address, bob.address]);
         await gombocFeeDistributor.deployed();
 
         ///add gomboc to gombocController
@@ -122,7 +119,8 @@ describe("GombocFeeDistributor", function () {
 
             let lastTokenTime = await gombocFeeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(gombocFeeDistributor.address, amount);
+            await hopeToken.approve(gombocFeeDistributor.address, ethers.constants.MaxUint256);
+            await gombocFeeDistributor.burn(amount);
 
             let nextTime = lastTokenTime.toNumber() + WEEK - 2000;
             await time.setNextBlockTimestamp(nextTime);
@@ -138,7 +136,8 @@ describe("GombocFeeDistributor", function () {
 
             let lastTokenTime = await gombocFeeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(gombocFeeDistributor.address, amount);
+            await hopeToken.approve(gombocFeeDistributor.address, ethers.constants.MaxUint256);
+            await gombocFeeDistributor.burn(amount);
             await gombocFeeDistributor.checkpointToken();
             expect(await gombocFeeDistributor.tokenLastBalance()).to.equal(amount);
             expect(await gombocFeeDistributor.tokensPerWeek(lastTokenTime)).to.equal(amount);
@@ -158,7 +157,8 @@ describe("GombocFeeDistributor", function () {
 
             let lastTokenTime = await gombocFeeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(gombocFeeDistributor.address, amount);
+            await hopeToken.approve(gombocFeeDistributor.address, ethers.constants.MaxUint256);
+            await gombocFeeDistributor.burn(amount);
 
             let nextTime = lastTokenTime.toNumber() + WEEK;
             await time.setNextBlockTimestamp(nextTime);
@@ -174,7 +174,8 @@ describe("GombocFeeDistributor", function () {
 
             let lastTokenTime = await gombocFeeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(gombocFeeDistributor.address, amount);
+            await hopeToken.approve(gombocFeeDistributor.address, ethers.constants.MaxUint256);
+            await gombocFeeDistributor.burn(amount);
 
             let nextTime = lastTokenTime.toNumber() + WEEK * 1.5;
             await time.setNextBlockTimestamp(nextTime);
@@ -449,6 +450,7 @@ describe("GombocFeeDistributor", function () {
 
             await hopeToken.transfer(gombocFeeDistributor.address, ethers.utils.parseEther("100"));
             let balance = await hopeToken.balanceOf(gombocFeeDistributor.address);
+            await gombocFeeDistributor.setEmergencyReturn(alice.address);
             await gombocFeeDistributor.recoverBalance();
             expect(await hopeToken.balanceOf(alice.address)).to.be.equal(balance);
             expect(await hopeToken.balanceOf(gombocFeeDistributor.address)).to.be.equal(0);

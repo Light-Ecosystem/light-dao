@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -405,6 +404,21 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     }
 
     /**
+     * @notice Receive HOPE into the contract and trigger a token checkpoint
+     * @param amount burn amount
+     * @return bool success
+     */
+    function burn(uint256 amount) external whenNotPaused returns (bool) {
+        if (amount != 0) {
+            IERC20Upgradeable(token).transferFrom(msg.sender, address(this), amount);
+            if (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
+                _checkpointToken();
+            }
+        }
+        return true;
+    }
+
+    /**
      * @notice Toggle permission for checkpointing by any account
      */
     function toggleAllowCheckpointToken() external onlyOwner {
@@ -421,7 +435,16 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     function recoverBalance() external onlyOwner returns (bool) {
         uint256 amount = IERC20Upgradeable(token).balanceOf(address(this));
         TransferHelper.doTransferOut(token, emergencyReturn, amount);
+        emit RecoverBalance(token, emergencyReturn, amount);
         return true;
+    }
+
+    /**
+     * @notice Set the token emergency return address
+     * @param _addr emergencyReturn address
+     */
+    function setEmergencyReturn(address _addr) external onlyOwner {
+        emergencyReturn = _addr;
     }
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {

@@ -72,7 +72,7 @@ describe("FeeDistributor", function () {
 
         //deploy feeDistributor contract
         let startTime = await time.latest();
-        const feeDistributor = await upgrades.deployProxy(FeeDistributor, [veLT.address, startTime, hopeToken.address, stakingHope.address, alice.address]);
+        const feeDistributor = await upgrades.deployProxy(FeeDistributor, [veLT.address, startTime, hopeToken.address, stakingHope.address, bob.address]);
         await feeDistributor.deployed();
 
         const WEEK = 7 * 86400;
@@ -101,7 +101,8 @@ describe("FeeDistributor", function () {
 
             let lastTokenTime = await feeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(feeDistributor.address, amount);
+            await hopeToken.approve(feeDistributor.address, ethers.constants.MaxUint256);
+            await feeDistributor.burn(amount);
 
             let nextTime = lastTokenTime.toNumber() + WEEK - 2000;
             await time.setNextBlockTimestamp(nextTime);
@@ -117,13 +118,14 @@ describe("FeeDistributor", function () {
 
             let lastTokenTime = await feeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(feeDistributor.address, amount);
+            await hopeToken.approve(feeDistributor.address, ethers.constants.MaxUint256);
+            await feeDistributor.burn(amount);
             await feeDistributor.checkpointToken();
             expect(await feeDistributor.tokenLastBalance()).to.equal(amount);
             expect(await feeDistributor.tokensPerWeek(lastTokenTime)).to.equal(amount);
 
             let nextTime = lastTokenTime.toNumber() + WEEK - 4000;
-            await hopeToken.transfer(feeDistributor.address, amount);
+            await feeDistributor.burn(amount);
             await time.setNextBlockTimestamp(nextTime);
             await feeDistributor.checkpointToken();
 
@@ -137,7 +139,8 @@ describe("FeeDistributor", function () {
 
             let lastTokenTime = await feeDistributor.lastTokenTime();
             let amount = ethers.utils.parseEther("1000");
-            await hopeToken.transfer(feeDistributor.address, amount);
+            await hopeToken.approve(feeDistributor.address, ethers.constants.MaxUint256);
+            await feeDistributor.burn(amount);
 
             let nextTime = lastTokenTime.toNumber() + WEEK;
             await time.setNextBlockTimestamp(nextTime);
@@ -442,6 +445,8 @@ describe("FeeDistributor", function () {
         it("recoverBalance success", async function () {
             const { owner, alice, bob, feeDistributor, hopeToken, WEEK, veLT, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
             await hopeToken.transfer(feeDistributor.address, ethers.utils.parseEther("100"));
+
+            await feeDistributor.setEmergencyReturn(alice.address);
             let balance = await hopeToken.balanceOf(feeDistributor.address);
             await feeDistributor.recoverBalance();
             expect(await hopeToken.balanceOf(alice.address)).to.be.equal(balance);

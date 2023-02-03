@@ -28,8 +28,13 @@ echo "set lt minter_______________"
 npx hardhat run scripts/dao/6.LT_set_minter.ts --network $_netwrok
 echo "set lt minter_______________\n"
 
-#echo "deploy pool gomboc factory_______________"
-#npx hardhat run scripts/dao/7.deploy_gomboc_factory.ts --network $_netwrok
-#echo "deploy pool gomboc factory_______________\n"
+
+echo "deploy pool gomboc _______________"
+npx hardhat run scripts/dao/7.deploy_pool_gomboc.ts --network $_netwrok
+echo "deploy pool gomboc _______________\n"
+
+echo "deploy pool gomboc factory_______________"
+npx hardhat run scripts/dao/8.deploy_gomboc_factory.ts --network $_netwrok
+echo "deploy pool gomboc factory_______________\n"
 
 echo 'end to deploy all lt dao contract.............'

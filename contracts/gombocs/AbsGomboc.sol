@@ -30,15 +30,15 @@ abstract contract AbsGomboc is Ownable2Step {
 
     bool public isKilled;
     // pool lp token
-    address public immutable lpToken;
+    address public lpToken;
 
     //Contracts
-    IMinter public immutable minter;
+    IMinter public minter;
     // lt_token
-    ILT public immutable ltToken;
+    ILT public ltToken;
     //IERC20 public template;
-    IGombocController public immutable controller;
-    IVotingEscrow public immutable votingEscrow;
+    IGombocController public controller;
+    IVotingEscrow public votingEscrow;
 
     uint256 public futureEpochTime;
 
@@ -67,25 +67,6 @@ abstract contract AbsGomboc is Ownable2Step {
     mapping(address => uint256) public integrateFraction; //Mintable Token amount (include minted amount)
 
     uint256 public inflationRate;
-
-    /***
-     * @notice Contract init
-     * @param _lp_addr Liquidity Pool contract address
-     * @param _minter Minter contract address
-     */
-    constructor(address _minter, address _lpToken) {
-        require(_minter != address(0), "invalid votingEscrowAddress");
-
-        lpToken = _lpToken;
-        minter = IMinter(_minter);
-        address _ltToken = minter.token();
-        ltToken = ILT(_ltToken);
-        controller = IGombocController(minter.controller());
-        votingEscrow = IVotingEscrow(controller.votingEscrow());
-        periodTimestamp[0] = block.timestamp;
-        inflationRate = ltToken.rate();
-        futureEpochTime = ltToken.futureEpochTimeWrite();
-    }
 
     /***
      * @notice Calculate limits which depend on the amount of lp Token per-user.

@@ -9,6 +9,8 @@ interface SwapPair {
     function burn(address to) external returns (uint amount0, uint amount1);
 
     function balanceOf(address account) external returns (uint256);
+
+    function transferFrom(address from, address to, uint value) external returns (bool);
 }
 
 contract SwapFeeToVault is Ownable2Step, Pausable {
@@ -21,7 +23,10 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     function withdrawAdminFee(address pool) external whenNotPaused {
         uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
         require(tokenPBalance > 0, "balance zero");
-        SwapPair(pool).burn(address(this));
+
+        SwapPair pair = SwapPair(pool);
+        pair.transferFrom(this, pair, tokenPBalance);
+        pair.burn(this);
     }
 
     function withdrawMany(address[] memory pools) external whenNotPaused {

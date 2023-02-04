@@ -25,8 +25,8 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         require(tokenPBalance > 0, "balance zero");
 
         SwapPair pair = SwapPair(pool);
-        pair.transferFrom(this, pair, tokenPBalance);
-        pair.burn(this);
+        pair.transferFrom(address(this), address(pair), tokenPBalance);
+        pair.burn(address(this));
     }
 
     function withdrawMany(address[] memory pools) external whenNotPaused {

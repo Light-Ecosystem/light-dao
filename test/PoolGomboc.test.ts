@@ -23,7 +23,7 @@ describe("PoolGomboc", function() {
     const GombocFactory = await ethers.getContractFactory("GombocFactory");
 
     // init 1000
-    const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000); //Not using the actual InsureDAO contract
+    const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, 1000000); //Not using the actual InsureDAO contract
 
 
     const lt = await upgrades.deployProxy(MyERC20LT, ["LT Dao Token", "LT"]);
@@ -34,19 +34,11 @@ describe("PoolGomboc", function() {
     const Permit2Contract = await ethers.getContractFactory("Permit2");
     const permit2 = await Permit2Contract.deploy();
 
-    await lt.approve(permit2.address, ethers.constants.MaxUint256);
-
     const veLT = await VeLT.deploy(lt.address, permit2.address);
     await veLT.deployed();
 
     const gombocController = await GombocController.deploy(lt.address, veLT.address);
     await gombocController.deployed();
-    // await gombocController.initialize(eRC20LT.address, veLT.address);
-
-    await lt.approve(permit2.address, ethers.constants.MaxUint256);
-    await lt.connect(alice).approve(permit2.address, ethers.constants.MaxUint256);
-    await lt.connect(bob).approve(permit2.address, ethers.constants.MaxUint256);
-
 
     const minter = await Minter.deploy(lt.address, gombocController.address);
     await minter.deployed();
@@ -74,7 +66,7 @@ describe("PoolGomboc", function() {
   describe("test pool gomboc", function() {
 
     it("test gomboc integral ", async function() {
-      const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime } = await loadFixture(deployOneYearLockFixture);
+      const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime ,permit2} = await loadFixture(deployOneYearLockFixture);
 
       let integral = BigNumber.from(0);
       let t0 = BigNumber.from(periodTime);
@@ -123,7 +115,12 @@ describe("PoolGomboc", function() {
 
       await mockLpToken.approve(poolGomboc.address, despostAmount);
       // deposit
-      await poolGomboc["deposit(uint256)"](despostAmount);
+      let random = ethers.utils.randomBytes(32);
+      let NONCE = BigNumber.from(random);
+      const DEADLINE = await time.latest() + 60 * 60;
+      const sig = await PermitSigHelper.signature(owner, mockLpToken.address, permit2.address, poolGomboc.address, despostAmount, NONCE, DEADLINE);
+      await mockLpToken.approve(permit2.address, despostAmount);
+      await poolGomboc["deposit(uint256,uint256,uint256,bytes)"](despostAmount, NONCE, DEADLINE, sig);
       await updateIntegral();
 
       await poolGomboc.userCheckpoint(owner.address);
@@ -333,22 +330,34 @@ describe("PoolGomboc", function() {
       await lt.approve(veLT.address, (await mockLpToken.balanceOf(owner.address)).div(BigNumber.from("2")));
       await lt.connect(bob).approve(veLT.address, ethers.constants.MaxUint256);
       await mockLpToken.transfer(bob.address, (await mockLpToken.balanceOf(owner.address)).div(BigNumber.from("2")));
-      await mockLpToken.approve(poolGomboc.address, ethers.constants.MaxUint256);
-      await mockLpToken.connect(bob).approve(poolGomboc.address, ethers.constants.MaxUint256);
 
       // Alice deposits to escrow. She now has a BOOST
       let t = await time.latest();
       const DEADLINE = await time.latest() + 60 * 60;
       let random = ethers.utils.randomBytes(32);
       let NONCE = BigNumber.from(random);
-      const sig = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, transferAmount, NONCE, DEADLINE);
-      veLT.createLock(transferAmount, t + WEEK * 2, NONCE, DEADLINE, sig);
+      let sig = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, transferAmount, NONCE, DEADLINE);
+      await lt.approve(permit2.address, transferAmount);
+      await veLT.createLock(transferAmount, t + WEEK * 2, NONCE, DEADLINE, sig);
 
 
       let depositAmount = ethers.utils.parseEther("4");
+
       // owner and Bob deposit some liquidity
-      await poolGomboc["deposit(uint256,address)"](depositAmount, owner.address);
-      await poolGomboc.connect(bob)["deposit(uint256,address)"](depositAmount, bob.address);
+      random = ethers.utils.randomBytes(32);
+      NONCE = BigNumber.from(random);
+      sig = await PermitSigHelper.signature(owner, mockLpToken.address, permit2.address, poolGomboc.address, depositAmount, NONCE, DEADLINE);
+      await lt.approve(permit2.address, depositAmount);
+      await mockLpToken.approve(permit2.address, depositAmount);
+      await poolGomboc["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount,NONCE, DEADLINE, sig, owner.address);
+
+      random = ethers.utils.randomBytes(32);
+      NONCE = BigNumber.from(random);
+      sig = await PermitSigHelper.signature(bob, mockLpToken.address, permit2.address, poolGomboc.address, depositAmount, NONCE, DEADLINE);
+      await mockLpToken.connect(bob).approve(permit2.address, depositAmount);
+      await poolGomboc.connect(bob)["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount,NONCE, DEADLINE, sig, bob.address)
+      //await poolGomboc.connect(bob)["deposit(uint256,address)"](depositAmount, bob.address);
+
       let now = await time.latest();
 
       expect(await veLT.balanceOfAtTime(owner.address, now)).to.not.equal(ethers.constants.Zero);

@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: LGPL-3.0
+pragma solidity >=0.8.0 <0.9.0;
+
+import "@openzeppelin/contracts/access/Ownable2Step.sol";
+
+contract BurnerManager is Ownable2Step {
+    event AddBurner(address indexed newBurner, address indexed oldBurner);
+
+    /// tokenAddress => burnerAddress
+    mapping(address => address) public burners;
+
+    /**
+     * @notice Contract constructor
+     */
+    constructor() {}
+
+    /**
+     * @notice Set burner of `token` to `burner` address
+     * @param token token address
+     * @param burner burner address
+     */
+    function setBurner(address token, address burner) external onlyOwner returns (bool) {
+        return _setBurner(token, burner);
+    }
+
+    /**
+     * @notice Set burner of `token` to `burner` address
+     * @param tokens token address
+     * @param burnerList token address
+     */
+    function setManyBurner(address[] memory tokens, address[] memory burnerList) external onlyOwner returns (bool) {
+        require(tokens.length == burnerList.length, "invalid param");
+
+        for (uint256 i = 0; i < tokens.length; i++) {
+            _setBurner(tokens[i], burnerList[i]);
+        }
+
+        return true;
+    }
+
+    function _setBurner(address token, address burner) internal returns (bool) {
+        require(token != address(0), "CE000");
+        require(burner != address(0), "CE000");
+
+        address oldBurner = burners[token];
+        burners[token] = burner;
+
+        emit AddBurner(burner, oldBurner);
+
+        return true;
+    }
+}

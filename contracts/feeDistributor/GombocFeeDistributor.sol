@@ -51,7 +51,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     /// lastTokenTime
     uint256 public lastTokenTime;
     /// tokensPreWeek
-    uint256[1000000000000000] public tokensPerWeek;
+    mapping(uint256 => uint256) public tokensPerWeek;
 
     ///HOPE Token address
     address public token;
@@ -59,9 +59,6 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     address public stHOPE;
     uint256 public tokenLastBalance;
     address public gombocController;
-
-    // gombocAddress => VE total supply at week bounds
-    mapping(address => uint256[1000000000000000]) public veSupply;
 
     bool public canCheckpointToken;
     address public emergencyReturn;
@@ -410,7 +407,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
      */
     function burn(uint256 amount) external whenNotPaused returns (bool) {
         if (amount != 0) {
-            IERC20Upgradeable(token).transferFrom(msg.sender, address(this), amount);
+            require(IERC20Upgradeable(token).transferFrom(msg.sender, address(this), amount), "TRANSFER_FROM_FAILED");
             if (canCheckpointToken && (block.timestamp > lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
                 _checkpointToken();
             }
@@ -448,7 +445,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     }
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {
-        IERC20Upgradeable(token).approve(stHOPE, amount);
+        require(IERC20Upgradeable(token).approve(stHOPE, amount), "APPROVE_FAILED");
         IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
         TransferHelper.doTransferOut(stHOPE, to, amount);
     }

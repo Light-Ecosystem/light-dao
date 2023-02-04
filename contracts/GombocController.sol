@@ -28,7 +28,7 @@ contract GombocController is Ownable2Step, IGombocController {
     mapping(int128 => string) public gombocTypeNames;
 
     // Needed for enumeration
-    address[10000000000] public gombocs;
+    mapping(uint256 => address) public gombocs;
 
     // we increment values by 1 prior to storing them here so we can rely on a value
     // of zero as meaning the gomboc has not been set
@@ -64,7 +64,7 @@ contract GombocController is Ownable2Step, IGombocController {
     // typeId -> time -> slope
     mapping(int128 => mapping(uint256 => uint256)) public changesSum;
     //typeId -> last scheduled time (next week)
-    uint256[1000000000] public timeSum;
+    mapping(uint256 => uint256) public timeSum;
 
     // time -> total weight
     mapping(uint256 => uint256) public pointsTotal;
@@ -74,7 +74,7 @@ contract GombocController is Ownable2Step, IGombocController {
     // typeId -> time -> type weight
     mapping(int128 => mapping(uint256 => uint256)) public pointsTypeWeight;
     // typeId -> last scheduled time (next week)
-    uint256[1000000000] public timeTypeWeight;
+    mapping(uint256 => uint256) public timeTypeWeight;
 
     /**
      * @notice Contract constructor

@@ -3107,7 +3107,7 @@ har-validator@~5.1.3:
 
 hardhat-contract-sizer@^2.7.0:
   version "2.7.0"
-  resolved "https://mirrors.huaweicloud.com/repository/npm/hardhat-contract-sizer/-/hardhat-contract-sizer-2.7.0.tgz#d892a741135628a77d25709a29ae164f2750b7eb"
+  resolved "https://registry.npmmirror.com/hardhat-contract-sizer/-/hardhat-contract-sizer-2.7.0.tgz#d892a741135628a77d25709a29ae164f2750b7eb"
   integrity sha512-QcncKiEku9TInKH++frfCPaYaVvw6OR5C5dNUcb05WozeVOJGspbWbHOkOlfiaZUbEKTvHA6OY9LtMMvja9nzQ==
   dependencies:
     chalk "^4.0.0"

@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface SwapPair {
+    function mintFee() external;
+
     function burn(address to) external returns (uint amount0, uint amount1);
 
     function balanceOf(address account) external returns (uint256);
@@ -21,12 +23,13 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     }
 
     function withdrawAdminFee(address pool) external whenNotPaused {
-        uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
-        require(tokenPBalance > 0, "balance zero");
-
         SwapPair pair = SwapPair(pool);
-        pair.transferFrom(address(this), address(pair), tokenPBalance);
-        pair.burn(address(this));
+        pair.mintFee();
+        uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
+        if (tokenPBalance > 0) {
+            pair.transferFrom(address(this), address(pair), tokenPBalance);
+            pair.burn(address(this));
+        }
     }
 
     function withdrawMany(address[] memory pools) external whenNotPaused {

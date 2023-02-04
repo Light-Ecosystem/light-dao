@@ -11,9 +11,8 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     string public name;
     string public symbol;
     uint256 public decimals;
-    address public immutable lpToken;
     // permit2 contract
-    address public immutable permit2Address;
+    address public permit2Address;
     mapping(address => uint256) public balanceOf;
     uint256 public totalSupply;
     mapping(address => mapping(address => uint256)) public allowance;
@@ -28,6 +27,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     mapping(address => mapping(address => uint256)) public rewardIntegralFor;
     // claimant -> default reward receiver
     mapping(address => address) public rewardsReceiver;
+    address public factory;
 
     struct Reward {
         address token;
@@ -52,12 +52,27 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
-    constructor(address _lpAddr, address _minter, address _permit2Address) AbsGomboc(_minter) {
-        require(_lpAddr != address(0), "StakingHope::initialize: invalid lpToken address");
-        require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
+    constructor() {
+        factory = address(0xdead);
+    }
+
+    // called once by the factory at time of deployment
+    function initialize(address _lpAddr, address _minter, address _permit2Address) external {
+        require(factory == address(0), "PoolGomboc: FORBIDDEN");
+        // sufficient check
+        factory = msg.sender;
+
+        lpToken = _lpAddr;
+        minter = IMinter(_minter);
+        address _ltToken = minter.token();
+        ltToken = ILT(_ltToken);
+        controller = IGombocController(minter.controller());
+        votingEscrow = IVotingEscrow(controller.votingEscrow());
+        periodTimestamp[0] = block.timestamp;
+        inflationRate = ltToken.rate();
+        futureEpochTime = ltToken.futureEpochTimeWrite();
 
         permit2Address = _permit2Address;
-        lpToken = _lpAddr;
         symbol = IERC20Metadata(_lpAddr).symbol();
         decimals = IERC20Metadata(_lpAddr).decimals();
         name = string(abi.encodePacked(symbol, " Gomboc"));

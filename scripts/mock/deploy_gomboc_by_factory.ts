@@ -14,15 +14,8 @@ async function main() {
   console.log(gombocFactoryAddress)
   const gombocFactory = await ethers.getContractAt("GombocFactory", gombocFactoryAddress);
 
-  // deploy gomboc
-  const salt = ethers.utils.formatBytes32String("poolGomboc");
-  console.log("salt", salt);
-
-  await gombocFactory.deploy(mockLPToken, salt);
-
-  const poolGombocAddress = await gombocFactory.getAddress(mockLPToken, salt);
-  console.log('PoolGombocAddress address is', poolGombocAddress);
-
+  // deploy gomboc pool
+  await gombocFactory.createPool(mockLPToken);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

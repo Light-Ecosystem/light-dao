@@ -79,13 +79,15 @@ contract Minter {
         ///Gomnoc not adde
         require(IGombocController(controller).gombocTypes(gombocAddr) >= 0, "CE000");
 
-        LiquidityGomboc(gombocAddr).userCheckpoint(_for);
+        bool success = LiquidityGomboc(gombocAddr).userCheckpoint(_for);
+        require(success, "CHECK FAILED");
         uint256 totalMint = LiquidityGomboc(gombocAddr).integrateFraction(_for);
         uint256 toMint = totalMint - minted[_for][gombocAddr];
 
         if (toMint != 0) {
             minted[_for][gombocAddr] = totalMint;
-            ILT(token).mint(_for, toMint);
+            bool success = ILT(token).mint(_for, toMint);
+            require(success, "MINT FAILED");
             emit Minted(_for, gombocAddr, toMint);
         }
     }

@@ -55,7 +55,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
      * @param deadline
      * @param signature
      */
-    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external {
+    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external returns (bool){
         require(amount != 0, "INVALID_ZERO_AMOUNT");
 
         address staker = _msgSender();
@@ -71,6 +71,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
         _updateLiquidityLimit(staker, lpBalanceOf(staker), lpTotalSupply());
 
         emit Staking(staker, amount);
+        return true;
     }
 
     /***
@@ -168,7 +169,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
      * @param
      * @return
      */
-    function redeemAll() external {
+    function redeemAll() external returns (uint256){
         address redeemer = _msgSender();
         uint256 amountToRedeem = unstakedBalanceOf(redeemer);
         require(amountToRedeem != 0, "No redeemable amount");
@@ -195,6 +196,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
         _unstakeTotal = _unstakeTotal - amountToRedeem;
 
         emit Redeem(redeemer, amountToRedeem);
+        return amountToRedeem;
     }
 
     /***
@@ -203,7 +205,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
      * @param maxIndex
      * @return
      */
-    function redeemByMaxIndex(uint256 maxIndex) external {
+    function redeemByMaxIndex(uint256 maxIndex) external returns(uint256){
         address redeemer = _msgSender();
 
         uint256 allToRedeemAmount = unstakedBalanceOf(redeemer);
@@ -236,6 +238,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
             _unstakeTotal = _unstakeTotal - amountToRedeem;
             emit Redeem(redeemer, amountToRedeem);
         }
+        return amountToRedeem;
     }
 
     function lpBalanceOf(address _addr) public view override returns (uint256) {

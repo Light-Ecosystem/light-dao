@@ -63,15 +63,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         // sufficient check
         factory = msg.sender;
 
-        lpToken = _lpAddr;
-        minter = IMinter(_minter);
-        address _ltToken = minter.token();
-        ltToken = ILT(_ltToken);
-        controller = IGombocController(minter.controller());
-        votingEscrow = IVotingEscrow(controller.votingEscrow());
-        periodTimestamp[0] = block.timestamp;
-        inflationRate = ltToken.rate();
-        futureEpochTime = ltToken.futureEpochTimeWrite();
+        _init(_lpAddr, _minter);
 
         permit2Address = _permit2Address;
         symbol = IERC20Metadata(_lpAddr).symbol();
@@ -85,7 +77,14 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
      * @param _value Number of tokens to deposit
      * @param _addr Address to deposit for
      */
-    function _deposit(uint256 _value, uint256 _nonce, uint256 _deadline, bytes memory _signature, address _addr, bool _claimRewards_) private {
+    function _deposit(
+        uint256 _value,
+        uint256 _nonce,
+        uint256 _deadline,
+        bytes memory _signature,
+        address _addr,
+        bool _claimRewards_
+    ) private {
         _checkpoint(_addr);
 
         if (_value != 0) {

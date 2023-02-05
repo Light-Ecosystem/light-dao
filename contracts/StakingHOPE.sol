@@ -34,15 +34,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
 
-        lpToken = _stakedToken;
-        minter = IMinter(_minter);
-        address _ltToken = minter.token();
-        ltToken = ILT(_ltToken);
-        controller = IGombocController(minter.controller());
-        votingEscrow = IVotingEscrow(controller.votingEscrow());
-        periodTimestamp[0] = block.timestamp;
-        inflationRate = ltToken.rate();
-        futureEpochTime = ltToken.futureEpochTimeWrite();
+        _init(_stakedToken, _minter);
 
         permit2Address = _permit2Address;
     }

@@ -68,6 +68,26 @@ abstract contract AbsGomboc is Ownable2Step {
 
     uint256 public inflationRate;
 
+    /**
+     * @dev Indicates that the contract has been initialized.
+     */
+    bool private _initialized;
+
+    function _init(address _lpAddr, address _minter) internal {
+        require(!_initialized, "Initializable: contract is already initialized");
+        _initialized = true;
+
+        lpToken = _lpAddr;
+        minter = IMinter(_minter);
+        address _ltToken = minter.token();
+        ltToken = ILT(_ltToken);
+        controller = IGombocController(minter.controller());
+        votingEscrow = IVotingEscrow(controller.votingEscrow());
+        periodTimestamp[0] = block.timestamp;
+        inflationRate = ltToken.rate();
+        futureEpochTime = ltToken.futureEpochTimeWrite();
+    }
+
     /***
      * @notice Calculate limits which depend on the amount of lp Token per-user.
      *        Effectively it calculates working balances to apply amplification

@@ -19,4 +19,10 @@ export class Constants {
     static readonly GOMBOC_FACTORY = "GOMBOC_FACTORY";
     static readonly MOCK_SWAP = "MOCK_SWAP";
     static readonly SmartWalletWhitelist = "Smart_Wallet_Whitelist";
+    static readonly BurnerManager = "Burner_Manager";
+    static readonly SwapFeeToVault = "Swap_FeeTo_Vault";
+    static readonly FeeDistributor = "Fee_Distributor";
+    static readonly GombocFeeDistributor = "Gomboc_Fee_Distributor";
+    static readonly UnderlyingBurner = "Underly_ingBurner";
+
 }

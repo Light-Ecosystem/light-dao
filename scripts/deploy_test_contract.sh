@@ -17,6 +17,10 @@ echo "deploy all hope contract"
 sh scripts/deploy_hope.sh $_netwrok
 echo "deploy all hope contract_______________\n"
 
+echo "deploy all fee distributor contract"
+sh scripts/deploy_feeDistributor.sh $_netwrok
+echo "deploy all fee distributor contract_______________\n"
+
 echo "deploy mock admin_______________"
 npx hardhat run scripts/mock/mock_admin.ts --network $_netwrok
 echo "deploy mock admin_______________\n"

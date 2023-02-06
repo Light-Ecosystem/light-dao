@@ -30,11 +30,20 @@ describe("VotingEscrow", function () {
         const veLT = await VeLT.deploy(eRC20LT.address, permit2.address);
         await veLT.deployed();
 
+        const VotingEscrowBoxMock = await ethers.getContractFactory("VotingEscrowBoxMock");
+        const votingEscrowBoxMock = await VotingEscrowBoxMock.deploy(eRC20LT.address, veLT.address);
+        await votingEscrowBoxMock.deployed();
+
+        const SmartWalletWhitelist = await ethers.getContractFactory("SmartWalletWhitelist");
+        const smartWalletWhitelist = await SmartWalletWhitelist.deploy();
+
+        await veLT.setSmartWalletChecker(smartWalletWhitelist.address);
+
         const WEEK = 7 * 86400;
         const MAXTIME = 4 * 365 * 86400;
         const BASE_RATE = 10000;
 
-        return { veLT, eRC20LT, permit2, owner, otherAccount, WEEK, MAXTIME, BASE_RATE };
+        return { veLT, eRC20LT, permit2, votingEscrowBoxMock, smartWalletWhitelist, owner, otherAccount, WEEK, MAXTIME, BASE_RATE };
     }
 
     describe("create lock", function () {
@@ -85,22 +94,26 @@ describe("VotingEscrow", function () {
             await expect(veLT.createLock(1000, ti + WEEK * 10, NONCE, DEADLINE, sig)).to.revertedWith("VE001");
         });
 
+        it("should revert right error when lock is contract", async function () {
+            const { veLT, eRC20LT, owner, permit2, otherAccount, smartWalletWhitelist, votingEscrowBoxMock, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
 
-        // it("create lock  success111", async function () {
-        //     const { veLT, eRC20LT, owner, permit2, otherAccount, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
+            let ti = await time.latest();
+            await eRC20LT.transfer(votingEscrowBoxMock.address, 20000000);
+            await expect(votingEscrowBoxMock.createLock(1000, ti + WEEK * 10)).to.revertedWith("Smart contract depositors not allowed");
+        });
 
-        //     let value = ethers.utils.parseEther('1');
-        //     let lockTime = 1693114159;
-        //     let DEADLINE = 1693114159;
-        //     let NONCE = BigNumber.from(ethers.utils.randomBytes(32));
-        //     // NONCE = BigNumber.from("12778218774815255949624976221294104492028877813736581432151906219706945250029");
-        //     console.log("NONCE", NONCE.toString());
-        //     const sig = await PermitSigHelper.signature(owner, eRC20LT.address, permit2.address, veLT.address, value, NONCE, DEADLINE);
+        it("create lock when lock is contract", async function () {
+            const { veLT, eRC20LT, owner, permit2, otherAccount, smartWalletWhitelist, votingEscrowBoxMock, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
 
-        //     console.log("VeLT balance of:", await veLT.balanceOf(owner.address));
-        //     await veLT.createLock(value, lockTime, NONCE, DEADLINE, sig);
-        //     console.log("VeLT balance of:", await veLT.balanceOf(owner.address));
-        // })
+            let ti = await time.latest();
+            let lockTime = ti + WEEK * 10;
+            await smartWalletWhitelist.approveWallet(votingEscrowBoxMock.address);
+            await eRC20LT.transfer(votingEscrowBoxMock.address, 20000000);
+            votingEscrowBoxMock.createLock(1000, lockTime)
+            expect(await veLT.supply()).to.equal(1000);
+            expect(await eRC20LT.balanceOf(veLT.address)).to.equal(1000);
+            expect(await veLT.lockedEnd(votingEscrowBoxMock.address)).to.equal(lockTime - (lockTime % WEEK));
+        });
 
         it("create lock  success", async function () {
             const { veLT, eRC20LT, owner, permit2, otherAccount, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
@@ -211,6 +224,32 @@ describe("VotingEscrow", function () {
             const sig1 = await PermitSigHelper.signature(owner, eRC20LT.address, permit2.address, veLT.address, value, NONCE1, DEADLINE);
             await time.increase(WEEK * 2);
             await expect(veLT.increaseAmount(value, NONCE1, DEADLINE, sig1)).to.revertedWith("VE005");
+        });
+
+        it("should revert right error when lock is contract", async function () {
+            const { veLT, eRC20LT, owner, permit2, otherAccount, smartWalletWhitelist, votingEscrowBoxMock, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
+
+            await eRC20LT.transfer(votingEscrowBoxMock.address, 20000000);
+            await expect(votingEscrowBoxMock.increaseAmount(1000)).to.revertedWith("Smart contract depositors not allowed");
+        });
+
+        it("increaseAmount when lock is contract", async function () {
+            const { veLT, eRC20LT, owner, permit2, otherAccount, smartWalletWhitelist, votingEscrowBoxMock, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
+
+            let value = ethers.utils.parseEther('1000');
+            let ti = await time.latest();
+            let lockTime = ti + WEEK * 10;
+            await smartWalletWhitelist.approveWallet(votingEscrowBoxMock.address);
+            await eRC20LT.transfer(votingEscrowBoxMock.address, value.mul(2));
+            await votingEscrowBoxMock.createLock(value, lockTime);
+            await votingEscrowBoxMock.increaseAmount(value);
+
+            expect(await veLT.supply()).to.equal(value.mul(2));
+            expect(await eRC20LT.balanceOf(veLT.address)).to.equal(value.mul(2));
+            expect(await veLT.lockedEnd(votingEscrowBoxMock.address)).to.equal(lockTime - (lockTime % WEEK));
+            expect(await veLT.userPointEpoch(votingEscrowBoxMock.address)).to.equal(2);
+            let point = await veLT.userPointHistory(votingEscrowBoxMock.address, 2);
+            expect(point).to.have.property('slope').to.equal(value.mul(2).div(MAXTIME * BASE_RATE));
         });
 
 
@@ -351,6 +390,33 @@ describe("VotingEscrow", function () {
             await expect(veLT.increaseUnlockTime(lockTime)).to.revertedWith("VE009");
         });
 
+        it("should revert right error when lock is contract", async function () {
+            const { veLT, eRC20LT, owner, permit2, otherAccount, smartWalletWhitelist, votingEscrowBoxMock, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
+
+            await eRC20LT.transfer(votingEscrowBoxMock.address, 20000000);
+            let lockTime = await time.latest() + MAXTIME + WEEK;
+            await expect(votingEscrowBoxMock.increaseUnlockTime(lockTime)).to.revertedWith("Smart contract depositors not allowed");
+        });
+
+        it("increaseUnlockTime when lock is contract", async function () {
+            const { veLT, eRC20LT, owner, permit2, otherAccount, smartWalletWhitelist, votingEscrowBoxMock, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);
+
+            let value = ethers.utils.parseEther('1000');
+            let ti = await time.latest();
+            let lockTime = ti + WEEK * 10;
+            await smartWalletWhitelist.approveWallet(votingEscrowBoxMock.address);
+            await eRC20LT.transfer(votingEscrowBoxMock.address, value.mul(2));
+            await votingEscrowBoxMock.createLock(value, lockTime);
+
+            lockTime = await time.latest() + MAXTIME;
+            await votingEscrowBoxMock.increaseUnlockTime(lockTime);
+
+            expect(await eRC20LT.balanceOf(veLT.address)).to.equal(value);
+            expect(await veLT.lockedEnd(votingEscrowBoxMock.address)).to.equal(lockTime - (lockTime % WEEK));
+            expect(await veLT.userPointEpoch(votingEscrowBoxMock.address)).to.equal(2);
+            let point = await veLT.userPointHistory(votingEscrowBoxMock.address, 2);
+            expect(point).to.have.property('slope').to.equal(value.div(MAXTIME * BASE_RATE));
+        });
 
         it("increaseUnlockTime", async function () {
             const { veLT, eRC20LT, owner, permit2, otherAccount, WEEK, MAXTIME, BASE_RATE } = await loadFixture(deployOneYearLockFixture);

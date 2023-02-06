@@ -8,7 +8,7 @@ interface IStaking {
     event RewardsAccrued(address user, uint256 amount);
     event RewardsClaimed(address indexed user, uint256 amount);
 
-    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external;
+    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external returns (bool);
 
-    function redeemAll() external;
+    function redeemAll() external returns (uint256);
 }

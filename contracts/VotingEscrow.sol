@@ -35,6 +35,15 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
+/// Interface for checking whether address belongs to a whitelisted
+/// type of a smart wallet.
+/// When new types are added - the whole contract is changed
+/// The check() method is modifying to be able to use caching
+/// for individual wallet addresses
+interface SmartWalletChecker {
+    function check(address _wallet) external view returns (bool);
+}
+
 contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     // We cannot really do block numbers per se b/c slope is per time, not per block
     // and per block could be fairly bad b/c Ethereum changes blocktimes.
@@ -71,6 +80,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     string public name;
     string public symbol;
     uint256 public immutable decimals;
+    address public smartWalletChecker;
 
     constructor(address _tokenAddr, address _permit2Address) {
         require(_permit2Address != address(0), "CE000");
@@ -337,6 +347,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     }
 
     function createLock(uint256 _value, uint256 _unlockTime, uint256 nonce, uint256 deadline, bytes memory signature) external override {
+        _assertNotContract(msg.sender);
         _createLock(msg.sender, _value, _unlockTime, nonce, deadline, signature);
     }
 
@@ -372,6 +383,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
      * @param _value Amount of tokens to deposit and add to the lock
      */
     function increaseAmount(uint256 _value, uint256 nonce, uint256 deadline, bytes memory signature) external override {
+        _assertNotContract(msg.sender);
         _increaseAmount(msg.sender, _value, nonce, deadline, signature);
     }
 
@@ -417,6 +429,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
      * @param _unlockTime New epoch time for unlocking
      */
     function increaseUnlockTime(uint256 _unlockTime) external override nonReentrant {
+        _assertNotContract(msg.sender);
         LockedBalance memory _locked = locked[msg.sender];
         _unlockTime = (_unlockTime / WEEK) * WEEK; // Locktime is rounded down to weeks
 
@@ -694,5 +707,28 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         // Now dt contains info on how far are we beyond point
 
         return _supplyAt(_point, _point.ts + dt);
+    }
+
+    /**
+     * @notice Set an external contract to check for approved smart contract wallets
+     * @param _check  Address of Smart contract checker
+     */
+    function setSmartWalletChecker(address _check) external onlyOwner {
+        smartWalletChecker = _check;
+    }
+
+    /**
+     * @notice Check if the call is from a whitelisted smart contract, revert if not
+     * @param addr Address to be checked
+     */
+    function _assertNotContract(address addr) internal view {
+        if (addr != tx.origin) {
+            if (smartWalletChecker != address(0)) {
+                if (SmartWalletChecker(smartWalletChecker).check(addr)) {
+                    return;
+                }
+            }
+            revert("Smart contract depositors not allowed");
+        }
     }
 }

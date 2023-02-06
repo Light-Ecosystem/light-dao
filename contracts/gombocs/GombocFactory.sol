@@ -22,8 +22,7 @@ contract GombocFactory is Ownable2Step {
         require(_minter != address(0), "GombocFactory: invalid minter address");
         require(_permit2Address != address(0), "GombocFactory: invalid permit2 address");
 
-
-    poolGombocImplementation = _poolGombocImplementation;
+        poolGombocImplementation = _poolGombocImplementation;
         miner = _minter;
         permit2 = _permit2Address;
     }

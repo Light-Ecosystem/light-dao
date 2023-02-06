@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "./AbsGomboc.sol";
 
 contract PoolGomboc is AbsGomboc, ReentrancyGuard {
@@ -62,15 +63,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         // sufficient check
         factory = msg.sender;
 
-        lpToken = _lpAddr;
-        minter = IMinter(_minter);
-        address _ltToken = minter.token();
-        ltToken = ILT(_ltToken);
-        controller = IGombocController(minter.controller());
-        votingEscrow = IVotingEscrow(controller.votingEscrow());
-        periodTimestamp[0] = block.timestamp;
-        inflationRate = ltToken.rate();
-        futureEpochTime = ltToken.futureEpochTimeWrite();
+        _init(_lpAddr, _minter);
 
         permit2Address = _permit2Address;
         symbol = IERC20Metadata(_lpAddr).symbol();
@@ -84,7 +77,14 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
      * @param _value Number of tokens to deposit
      * @param _addr Address to deposit for
      */
-    function _deposit(uint256 _value, address _addr, bool _claimRewards_) private {
+    function _deposit(
+        uint256 _value,
+        uint256 _nonce,
+        uint256 _deadline,
+        bytes memory _signature,
+        address _addr,
+        bool _claimRewards_
+    ) private {
         _checkpoint(_addr);
 
         if (_value != 0) {
@@ -101,23 +101,57 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
             _updateLiquidityLimit(_addr, newBalance, _totalSupply);
 
-            IERC20Metadata(lpToken).transferFrom(msg.sender, address(this), _value);
+            TransferHelper.doTransferIn(permit2Address, lpToken, _value, msg.sender, _nonce, _deadline, _signature);
         }
 
         emit Deposit(_addr, _value);
         emit Transfer(address(0), _addr, _value);
     }
 
-    function deposit(uint256 _value) external nonReentrant {
-        _deposit(_value, msg.sender, false);
+    /***
+     * @notice Deposit `_value` LP tokens
+     * @dev Depositting also claims pending reward tokens
+     * @param _value Number of tokens to deposit
+     * @param _nonce
+     * @param _deadline
+     * @param _signature
+     */
+    function deposit(uint256 _value, uint256 _nonce, uint256 _deadline, bytes memory _signature) external nonReentrant {
+        _deposit(_value, _nonce, _deadline, _signature, msg.sender, false);
     }
 
-    function deposit(uint256 _value, address _addr) external nonReentrant {
-        _deposit(_value, _addr, false);
+    /***
+     * @notice Deposit `_value` LP tokens
+     * @dev Depositting also claims pending reward tokens
+     * @param _value Number of tokens to deposit
+     * @param _nonce
+     * @param _deadline
+     * @param _signature
+     * @param _addr Address to deposit for
+     */
+    function deposit(uint256 _value, uint256 _nonce, uint256 _deadline, bytes memory _signature, address _addr) external nonReentrant {
+        _deposit(_value, _nonce, _deadline, _signature, _addr, false);
     }
 
-    function deposit(uint256 _value, address _addr, bool _claimRewards_) external nonReentrant {
-        _deposit(_value, _addr, _claimRewards_);
+    /***
+     * @notice Deposit `_value` LP tokens
+     * @dev Depositting also claims pending reward tokens
+     * @param _value Number of tokens to deposit
+     * @param _nonce
+     * @param _deadline
+     * @param _signature
+     * @param _addr Address to deposit for
+     * @param _claimRewards_ receiver
+     */
+    function deposit(
+        uint256 _value,
+        uint256 _nonce,
+        uint256 _deadline,
+        bytes memory _signature,
+        address _addr,
+        bool _claimRewards_
+    ) external nonReentrant {
+        _deposit(_value, _nonce, _deadline, _signature, _addr, _claimRewards_);
     }
 
     /***

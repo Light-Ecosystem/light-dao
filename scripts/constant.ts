@@ -18,4 +18,5 @@ export class Constants {
     static readonly LP_TOKEN_MOCK = "LP_TOKEN_MOCK";
     static readonly GOMBOC_FACTORY = "GOMBOC_FACTORY";
     static readonly MOCK_SWAP = "MOCK_SWAP";
+    static readonly SmartWalletWhitelist = "Smart_Wallet_Whitelist";
 }

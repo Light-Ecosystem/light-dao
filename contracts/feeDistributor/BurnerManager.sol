@@ -2,12 +2,13 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "../interfaces/IBurner.sol";
 
 contract BurnerManager is Ownable2Step {
-    event AddBurner(address indexed newBurner, address indexed oldBurner);
+    event AddBurner(IBurner indexed newBurner, IBurner indexed oldBurner);
 
     /// tokenAddress => burnerAddress
-    mapping(address => address) public burners;
+    mapping(address => IBurner) public burners;
 
     /**
      * @notice Contract constructor
@@ -19,7 +20,7 @@ contract BurnerManager is Ownable2Step {
      * @param token token address
      * @param burner burner address
      */
-    function setBurner(address token, address burner) external onlyOwner returns (bool) {
+    function setBurner(address token, IBurner burner) external onlyOwner returns (bool) {
         return _setBurner(token, burner);
     }
 
@@ -28,7 +29,7 @@ contract BurnerManager is Ownable2Step {
      * @param tokens token address
      * @param burnerList token address
      */
-    function setManyBurner(address[] memory tokens, address[] memory burnerList) external onlyOwner returns (bool) {
+    function setManyBurner(address[] memory tokens, IBurner[] memory burnerList) external onlyOwner returns (bool) {
         require(tokens.length == burnerList.length, "invalid param");
 
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -38,11 +39,11 @@ contract BurnerManager is Ownable2Step {
         return true;
     }
 
-    function _setBurner(address token, address burner) internal returns (bool) {
+    function _setBurner(address token, IBurner burner) internal returns (bool) {
         require(token != address(0), "CE000");
-        require(burner != address(0), "CE000");
+        require(burner != IBurner(address(0)), "CE000");
 
-        address oldBurner = burners[token];
+        IBurner oldBurner = burners[token];
         burners[token] = burner;
 
         emit AddBurner(burner, oldBurner);

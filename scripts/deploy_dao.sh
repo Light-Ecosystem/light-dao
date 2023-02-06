@@ -37,4 +37,8 @@ echo "deploy pool gomboc factory_______________"
 npx hardhat run scripts/dao/8.deploy_gomboc_factory.ts --network $_netwrok
 echo "deploy pool gomboc factory_______________\n"
 
+echo "deploy SmartWalletWhitelist contract"
+npx hardhat run scripts/dao/9.deploy_smartWalletWhitelist.ts --network $_netwrok
+echo "deploy SmartWalletWhitelist contract_______________\n"
+
 echo 'end to deploy all lt dao contract.............'

@@ -47,7 +47,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         if (amount > 0) {
             IBurner burner = burnerManager.burners(address(token));
             require(burner != IBurner(address(0)), "SFTV00");
-            burner.burn(token, amount);
+            burner.burn(underlyingBurner, token, amount);
         }
     }
 

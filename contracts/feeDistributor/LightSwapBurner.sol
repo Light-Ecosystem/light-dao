@@ -34,7 +34,7 @@ contract LightSwapBurner is IBurner, Ownable2Step {
         routers = _routers;
     }
 
-    function burn(IERC20 token, uint amount) external {
+    function burn(address to, IERC20 token, uint amount) external {
         ISwapRouter bestRouter = routers[0];
         uint bestExpected = 0;
         address[] memory path = new address[](2);
@@ -55,6 +55,6 @@ contract LightSwapBurner is IBurner, Ownable2Step {
             approved[bestRouter][token] = true;
         }
 
-        bestRouter.swapExactTokensForTokens(amount, 0, path, msg.sender, block.timestamp);
+        bestRouter.swapExactTokensForTokens(amount, 0, path, to, block.timestamp);
     }
 }

@@ -35,7 +35,12 @@ contract LightSwapBurner is IBurner, Ownable2Step {
     }
 
     function burn(address to, IERC20 token, uint amount) external {
-        require(token.transferFrom(msg.sender, address(this), amount), "LSB00");
+        if (token == HOPE) {
+            require(token.transferFrom(msg.sender, to, amount), "LSB00");
+            return;
+        }
+
+        require(token.transferFrom(msg.sender, address(this), amount), "LSB01");
 
         ISwapRouter bestRouter = routers[0];
         uint bestExpected = 0;

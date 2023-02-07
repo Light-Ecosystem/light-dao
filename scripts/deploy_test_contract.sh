@@ -41,4 +41,8 @@ echo "daploy swap_______________"
 npx hardhat run scripts/mock/deploy_mock_swap.ts --network $_netwrok
 echo "deploy swap_______________\n"
 
+echo "set usdt/usdc/dai burner_______________"
+npx hardhat run scripts/mock/mock_set_usdt_burner.ts --network $_netwrok
+echo "set usdt/usdc/dai burner_______________\n"
+
 echo 'end to deploy all test contract.............'

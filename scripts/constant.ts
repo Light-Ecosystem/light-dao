@@ -24,5 +24,7 @@ export class Constants {
     static readonly FeeDistributor = "Fee_Distributor";
     static readonly GombocFeeDistributor = "Gomboc_Fee_Distributor";
     static readonly UnderlyingBurner = "Underly_ingBurner";
+    static readonly LightSwapBurner = "Light_SwapBurner";
+
 
 }

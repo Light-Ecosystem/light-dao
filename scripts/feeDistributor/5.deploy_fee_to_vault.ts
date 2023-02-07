@@ -9,10 +9,11 @@ import { Constants } from "../constant";
 async function main() {
 
   let burnerManager = FileUtils.getContractAddress(Constants.BurnerManager);
+  let underlyingBurner = FileUtils.getContractAddress(Constants.UnderlyingBurner);
 
   //deloy SwapFeeToVault  contract
   const SwapFeeToVault = await ethers.getContractFactory("SwapFeeToVault");
-  const swapFeeToVault = await SwapFeeToVault.deploy(burnerManager);
+  const swapFeeToVault = await SwapFeeToVault.deploy(burnerManager, underlyingBurner);
   await swapFeeToVault.deployed();
   console.log("swapFeeToVault: ", swapFeeToVault.address);
   FileUtils.saveFrontendFiles(swapFeeToVault.address, "SwapFeeToVault", Constants.SwapFeeToVault);

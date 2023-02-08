@@ -8,7 +8,7 @@ const config: HardhatUserConfig = {
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: false,
-    runOnCompile: true,
+    runOnCompile: false,
     strict: true,
     // only: [':ERC20$'],
   },

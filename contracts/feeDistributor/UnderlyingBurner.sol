@@ -10,6 +10,18 @@ interface IFeeDistributor {
     function burn(uint256 amount) external returns (bool);
 }
 
+interface ISwapRouter {
+    function getAmountsOut(uint amountIn, address[] memory path) external view returns (uint[] memory amounts);
+
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+}
+
 contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
     event ToFeeDistributor(address indexed feeDistributor, uint256 amount);
 
@@ -19,6 +31,9 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
     address public gombocFeeDistributor;
     address public emergencyReturn;
     address public hopeToken;
+
+    ISwapRouter[] public routers;
+    mapping(ISwapRouter => mapping(IERC20Upgradeable => bool)) public approved;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -76,6 +91,40 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
         TransferHelper.doTransferOut(token, emergencyReturn, amount);
         emit RecoverBalance(token, emergencyReturn, amount);
         return true;
+    }
+
+    /**
+     * @notice Set routers
+     * @param _routers routers implment ISwapRouter
+     */
+    function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
+        routers = _routers;
+    }
+
+    function burn(IERC20Upgradeable token, uint amount) external {
+        require(address(token) != hopeToken, "HOPE dosent need burn");
+
+        ISwapRouter bestRouter = routers[0];
+        uint bestExpected = 0;
+        address[] memory path = new address[](2);
+        path[0] = address(token);
+        path[1] = address(hopeToken);
+
+        for (uint i = 0; i < routers.length; i++) {
+            uint[] memory expected = routers[i].getAmountsOut(amount, path);
+            if (expected[0] > bestExpected) {
+                bestExpected = expected[0];
+                bestRouter = routers[i];
+            }
+        }
+
+        if (!approved[bestRouter][token]) {
+            bool success = IERC20Upgradeable(token).approve(address(bestRouter), type(uint).max);
+            require(success, "LSB01");
+            approved[bestRouter][token] = true;
+        }
+
+        bestRouter.swapExactTokensForTokens(amount, 0, path, address(this), block.timestamp);
     }
 
     /**

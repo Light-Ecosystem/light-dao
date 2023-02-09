@@ -176,7 +176,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
      */
     function gombocBalancePreWeek(address _gomboc, uint256 _weekCursor) external view returns (uint256) {
         _weekCursor = LibTime.timesRoundedByWeek(_weekCursor);
-        uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(_gomboc, _weekCursor - WEEK);
+        uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(_gomboc, _weekCursor);
         return (tokensPerWeek[_weekCursor] * relativeWeight) / 1e18;
     }
 
@@ -257,8 +257,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
             if (param.weekCursor >= _lastTokenTime) {
                 break;
             }
-            uint gombocTime = param.weekCursor - WEEK;
-            if (gombocTime >= param.userPoint.ts && param.userEpoch <= param.maxUserEpoch) {
+            if (param.weekCursor >= param.userPoint.ts && param.userEpoch <= param.maxUserEpoch) {
                 param.userEpoch += 1;
                 param.oldUserPoint = param.userPoint;
                 if (param.userEpoch > param.maxUserEpoch) {
@@ -269,14 +268,14 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
             } else {
                 // Calc
                 // + i * 2 is for rounding errors
-                uint256 dt = gombocTime - param.oldUserPoint.ts;
+                uint256 dt = param.weekCursor - param.oldUserPoint.ts;
                 uint256 balanceOf = Math.max(uint256(param.oldUserPoint.bias) - dt * uint256(param.oldUserPoint.slope), 0);
                 if (balanceOf == 0 && param.userEpoch > param.maxUserEpoch) {
                     break;
                 }
                 if (balanceOf > 0) {
-                    SimplePoint memory pt = IGombocController(gombocController).pointsWeight(gomboc, gombocTime);
-                    uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(gomboc, gombocTime);
+                    SimplePoint memory pt = IGombocController(gombocController).pointsWeight(gomboc, param.weekCursor);
+                    uint256 relativeWeight = IGombocController(gombocController).gombocRelativeWeight(gomboc, param.weekCursor);
                     param.toDistribute += ((balanceOf * tokensPerWeek[param.weekCursor] * relativeWeight) / pt.bias) / 1e18;
                 }
                 param.weekCursor += WEEK;

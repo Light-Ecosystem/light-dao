@@ -293,7 +293,7 @@ describe("GombocFeeDistributor", function () {
             await gombocController.checkpointGomboc(stakingHope.address);
 
             /// check gombocBalancePreWeek
-            let relativeWeight = await gombocController.gombocRelativeWeight(stakingHope.address, lastTokenTime - WEEK);
+            let relativeWeight = await gombocController.gombocRelativeWeight(stakingHope.address, lastTokenTime);
             let gombocBalance = await gombocFeeDistributor.gombocBalancePreWeek(stakingHope.address, lastTokenTime);
             let timeCursor = lastTokenTime - lastTokenTime % WEEK;
             let tokensPerWeek = await gombocFeeDistributor.tokensPerWeek(timeCursor)

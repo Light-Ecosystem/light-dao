@@ -2,13 +2,17 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-contract-sizer';
+import "hardhat-gas-reporter"
 
 const config: HardhatUserConfig = {
 
+  gasReporter: {
+    enabled: false
+  },
   contractSizer: {
     alphaSort: false,
     disambiguatePaths: false,
-    runOnCompile: true,
+    runOnCompile: false,
     strict: true,
     // only: [':ERC20$'],
   },

@@ -153,7 +153,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         uint256 maxUserEpoch = IVotingEscrow(votingEscrow).userPointEpoch(_user);
         uint256 epoch = _findTimestampUserEpoch(votingEscrow, _user, _timestamp, maxUserEpoch);
         Point memory pt = IVotingEscrow(votingEscrow).userPointHistory(_user, epoch);
-        return Math.max(uint256(pt.bias) - uint256(pt.slope) * (_timestamp - pt.ts), 0);
+        return _getPointBalanceOf(pt.bias, pt.slope, _timestamp - pt.ts);
     }
 
     /**
@@ -199,7 +199,8 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
                     /// Then make dt 0
                     dt = t - pt.ts;
                 }
-                veSupply[t] = Math.max(uint256(pt.bias) - uint256(pt.slope) * dt, 0);
+                _getPointBalanceOf(pt.bias, pt.slope, dt);
+                veSupply[t] = _getPointBalanceOf(pt.bias, pt.slope, dt);
             }
             t += WEEK;
         }
@@ -283,7 +284,6 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         /// Iterate over weeks
         for (int i = 0; i < 50; i++) {
             if (weekCursor >= _lastTokenTime) {
-                // console.log("weekCursor >= _lastTokenTime", weekCursor, _lastTokenTime);
                 break;
             }
 
@@ -299,12 +299,11 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
                 // Calc
                 // + i * 2 is for rounding errors
                 uint256 dt = weekCursor - oldUserPoint.ts;
-                uint256 balanceOf = Math.max(uint256(oldUserPoint.bias) - dt * uint256(oldUserPoint.slope), 0);
+                uint256 balanceOf = _getPointBalanceOf(oldUserPoint.bias, oldUserPoint.slope, dt);
                 if (balanceOf == 0 && userEpoch > maxUserEpoch) {
                     break;
                 }
                 if (balanceOf > 0) {
-                    // console.log(balanceOf, tokensPerWeek[weekCursor], weekCursor, toDistribute);
                     toDistribute += (balanceOf * tokensPerWeek[weekCursor]) / veSupply[weekCursor];
                 }
                 weekCursor += WEEK;
@@ -318,6 +317,15 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         emit Claimed(addr, toDistribute, userEpoch, maxUserEpoch);
 
         return toDistribute;
+    }
+
+    function _getPointBalanceOf(int256 bias, int256 slope, uint256 dt) internal pure returns (uint256) {
+        uint256 currentBias = uint256(slope) * dt;
+        uint256 oldBias = uint256(bias);
+        if (currentBias > oldBias) {
+            return 0;
+        }
+        return oldBias - currentBias;
     }
 
     /**

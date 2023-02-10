@@ -152,7 +152,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         uint256 maxUserEpoch = IGombocController(gombocController).lastVoteVeLtPointEpoch(_user, _gomboc);
         uint256 epoch = _findTimestampUserEpoch(_gomboc, _user, _timestamp, maxUserEpoch);
         Point memory pt = IGombocController(gombocController).voteVeLtPointHistory(_user, _gomboc, epoch);
-        return Math.max(uint256(pt.bias) - uint256(pt.slope) * (_timestamp - pt.ts), 0);
+        return _getPointBalanceOf(pt.bias, pt.slope, _timestamp - pt.ts);
     }
 
     /**
@@ -269,7 +269,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
                 // Calc
                 // + i * 2 is for rounding errors
                 uint256 dt = param.weekCursor - param.oldUserPoint.ts;
-                uint256 balanceOf = Math.max(uint256(param.oldUserPoint.bias) - dt * uint256(param.oldUserPoint.slope), 0);
+                uint256 balanceOf = _getPointBalanceOf(param.oldUserPoint.bias, param.oldUserPoint.slope, dt);
                 if (balanceOf == 0 && param.userEpoch > param.maxUserEpoch) {
                     break;
                 }
@@ -448,6 +448,15 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         require(IERC20Upgradeable(token).approve(stHOPE, amount), "APPROVE_FAILED");
         IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
         TransferHelper.doTransferOut(stHOPE, to, amount);
+    }
+
+    function _getPointBalanceOf(int256 bias, int256 slope, uint256 dt) internal pure returns (uint256) {
+        uint256 currentBias = uint256(slope) * dt;
+        uint256 oldBias = uint256(bias);
+        if (currentBias > oldBias) {
+            return 0;
+        }
+        return oldBias - currentBias;
     }
 
     function pause() public onlyOwner {

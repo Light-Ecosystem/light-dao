@@ -211,6 +211,24 @@ describe("GombocFeeDistributor", function () {
 
     describe("veForAt && vePrecentageForAt && gombocBalancePreWeek", async function () {
 
+        it("veForAt is zero", async function () {
+            const { owner, alice, bob, gombocFeeDistributor, hopeToken, stakingHope, gombocController, WEEK, veLT, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
+
+            /// prepre veLT data for owner
+            const DEADLINE = await time.latest() + 60 * 60 * 24 * 365;
+            let NONCE = BigNumber.from(ethers.utils.randomBytes(32));
+            let value = ethers.utils.parseEther("100000");
+            const sig = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, value, NONCE, DEADLINE);
+            let lockTime = await time.latest() + 10 * WEEK;
+            await veLT.createLock(value, lockTime, NONCE, DEADLINE, sig);
+            ///voting stakingHope gomboc
+            gombocController.voteForGombocWeights(stakingHope.address, 5000);
+
+            let timestamp = await time.latest() + 15 * WEEK;
+            let veFor = await gombocFeeDistributor.veForAt(stakingHope.address, owner.address, timestamp);
+            expect(veFor).to.equal(0);
+        })
+
         it("veForAt", async function () {
             const { owner, alice, bob, gombocFeeDistributor, hopeToken, stakingHope, gombocController, WEEK, veLT, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
 

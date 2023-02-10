@@ -256,6 +256,22 @@ describe("FeeDistributor", function () {
 
     describe("veForAt && vePrecentageForAt", async function () {
 
+        it("veForAt is zero ", async function () {
+            const { owner, alice, bob, feeDistributor, hopeToken, stakingHope, WEEK, veLT, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
+
+            /// prepre veLT data
+            const DEADLINE = await time.latest() + 60 * 60 * 24 * 365;
+            let NONCE = BigNumber.from(ethers.utils.randomBytes(32));
+            let value = ethers.utils.parseEther("100000");
+            const sig = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, value, NONCE, DEADLINE);
+            let lockTime = await time.latest() + 10 * WEEK;
+            await veLT.createLock(value, lockTime, NONCE, DEADLINE, sig);
+
+            let timestamp = await time.latest() + 12 * WEEK;
+            let veFor = await feeDistributor.veForAt(owner.address, timestamp);
+            expect(veFor).to.be.equal(0);
+        })
+
         it("veForAt", async function () {
             const { owner, alice, bob, feeDistributor, hopeToken, stakingHope, WEEK, veLT, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
 

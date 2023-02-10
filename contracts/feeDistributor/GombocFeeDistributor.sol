@@ -166,6 +166,9 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         _timestamp = LibTime.timesRoundedByWeek(_timestamp);
         uint256 veForAtValue = this.veForAt(_gomboc, _user, _timestamp);
         SimplePoint memory pt = IGombocController(gombocController).pointsWeight(_gomboc, _timestamp);
+        if (pt.bias == 0) {
+            return 0;
+        }
         return (veForAtValue * 1e18) / pt.bias;
     }
 

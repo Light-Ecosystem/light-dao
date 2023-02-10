@@ -222,7 +222,7 @@ describe("GombocFeeDistributor", function () {
             let lockTime = await time.latest() + 10 * WEEK;
             await veLT.createLock(value, lockTime, NONCE, DEADLINE, sig);
             ///voting stakingHope gomboc
-            gombocController.voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.voteForGombocWeights(stakingHope.address, 5000);
 
             let timestamp = await time.latest() + 15 * WEEK;
             let veFor = await gombocFeeDistributor.veForAt(stakingHope.address, owner.address, timestamp);
@@ -244,8 +244,8 @@ describe("GombocFeeDistributor", function () {
             const sig1 = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, value, NONCE1, DEADLINE);
             await veLT.createLockFor(alice.address, value, lockTime, NONCE1, DEADLINE, sig1);
             ///voting stakingHope gomboc
-            gombocController.voteForGombocWeights(stakingHope.address, 5000);
-            gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
 
             let timestamp = await time.latest() + WEEK;
             let veFor = await gombocFeeDistributor.veForAt(stakingHope.address, owner.address, timestamp);
@@ -272,8 +272,8 @@ describe("GombocFeeDistributor", function () {
             const sig1 = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, value, NONCE1, DEADLINE);
             await veLT.createLockFor(alice.address, value, lockTime, NONCE1, DEADLINE, sig1);
             ///voting stakingHope gomboc
-            gombocController.voteForGombocWeights(stakingHope.address, 5000);
-            gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
 
             let timestamp = await time.latest() + WEEK;
             let precentage1 = await gombocFeeDistributor.vePrecentageForAt(stakingHope.address, owner.address, timestamp);
@@ -297,8 +297,8 @@ describe("GombocFeeDistributor", function () {
             const sig1 = await PermitSigHelper.signature(owner, lt.address, permit2.address, veLT.address, value, NONCE1, DEADLINE);
             await veLT.createLockFor(alice.address, value, lockTime, NONCE1, DEADLINE, sig1);
             ///voting stakingHope gomboc
-            gombocController.voteForGombocWeights(stakingHope.address, 5000);
-            gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.voteForGombocWeights(stakingHope.address, 5000);
+            await gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
 
             await time.increase(WEEK);
             await gombocFeeDistributor.checkpointToken();

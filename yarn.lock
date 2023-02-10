@@ -3113,7 +3113,7 @@ hardhat-contract-sizer@^2.7.0:
     chalk "^4.0.0"
     cli-table3 "^0.6.0"
 
-hardhat-gas-reporter@^1.0.8:
+hardhat-gas-reporter@^1.0.9:
   version "1.0.9"
   resolved "https://registry.npmmirror.com/hardhat-gas-reporter/-/hardhat-gas-reporter-1.0.9.tgz#9a2afb354bc3b6346aab55b1c02ca556d0e16450"
   integrity sha512-INN26G3EW43adGKBNzYWOlI3+rlLnasXTwW79YNnUhXPDa+yHESgt639dJEs37gCjhkbNKcRRJnomXEuMFBXJg==
@@ -3803,11 +3803,11 @@ levn@^0.4.1:
 
 "light-lib@github:Light-Ecosystem/light-lib":
   version "1.0.0"
-  resolved "git+ssh://git@github.com/Light-Ecosystem/light-lib.git#51df9dc6a68069c04c09afcdcc584dcde28f166a"
+  resolved "git+ssh://git@github.com/Light-Ecosystem/light-lib.git#4765138a38d189a484d635b05cec850a7b7a03e6"
 
 "light-permit2@github:Light-Ecosystem/light-permit2":
   version "1.0.0"
-  resolved "git+ssh://git@github.com/Light-Ecosystem/light-permit2.git#b9f4376f1e1cdd2c009af5ba4c52746dbee74e23"
+  resolved "git+ssh://git@github.com/Light-Ecosystem/light-permit2.git#a5ffec823c5c5c65e103dbecf72bf136c270a0ee"
   dependencies:
     solmate "^6.6.1"
 
@@ -5115,9 +5115,9 @@ solidity-coverage@^0.8.0:
     web3-utils "^1.3.6"
 
 solmate@^6.6.1:
-  version "6.6.1"
-  resolved "https://registry.npmmirror.com/solmate/-/solmate-6.6.1.tgz#f0907e1cdada6dd5fbfe11811ab545162b713197"
-  integrity sha512-WHvRXQvGtgR6R9nmkDTz/d+oULMqf/D33rlzQyadTX2SbuTmaW7ToEjGjGtWUVCQwZsZ/JP3vbOEVv7fB50btg==
+  version "6.7.0"
+  resolved "https://registry.npmmirror.com/solmate/-/solmate-6.7.0.tgz#5e07b62498babec273aceb322a3e45d0e058e042"
+  integrity sha512-iMPr+gKbKjXBB12a+Iz5Tua5r7T4yugHaGXDWSJbBZB4Gr3vLeUUvKeLyMxCWWqk1xlLhFDFFuAmOzeyVBuyvQ==
 
 source-map-support@^0.5.13:
   version "0.5.21"

@@ -13,7 +13,7 @@ interface SwapPair {
 
     function balanceOf(address account) external returns (uint256);
 
-    function transferFrom(address from, address to, uint value) external returns (bool);
+    function transfer(address to, uint value) external returns (bool);
 }
 
 contract SwapFeeToVault is Ownable2Step, Pausable {
@@ -30,7 +30,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         pair.mintFee();
         uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
         if (tokenPBalance > 0) {
-            pair.transferFrom(address(this), address(pair), tokenPBalance);
+            pair.transfer(address(pair), tokenPBalance);
             pair.burn(address(this));
         }
     }

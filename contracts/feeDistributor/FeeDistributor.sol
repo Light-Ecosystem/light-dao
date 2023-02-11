@@ -363,6 +363,17 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
     }
 
     /**
+     * @notice Claim fees for `_addr`
+     * @dev This function should be manually changed to "view" in the ABI
+     * @param _addr Address to claim fees for
+     * @return uint256 Amount of fees claimed in the call
+     *
+     */
+    function claimableToken(address _addr) external returns (uint256) {
+        return this.claim(_addr);
+    }
+
+    /**
      * @notice Make multiple fee claims in a single call
      * @dev Used to claim for many accounts at once, or to make
          multiple claims for the same address when that address

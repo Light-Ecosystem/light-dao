@@ -326,6 +326,17 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
     }
 
     /**
+     * @notice Claim fees for `_addr`
+     * @dev This function should be manually changed to "view" in the ABI
+     * @param _addr Address to claim fees for
+     * @return uint256 Amount of fees claimed in the call
+     *
+     */
+    function claimableTokens(address gomboc, address _addr) external whenNotPaused returns (uint256) {
+        return this.claim(gomboc, _addr);
+    }
+
+    /**
      * @notice Make multiple fee claims in a single call
      * @dev Used to claim for many accounts at once, or to make
          multiple claims for the same address when that address
@@ -366,10 +377,8 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
 
     /**
      * @notice Make multiple fee claims in a single call
-     * @dev Used to claim for many accounts at once, or to make
-         multiple claims for the same address when that address
-         has significant veLT history
-       @param  gombocList  List of gombocs to claim
+     * @dev This function should be manually changed to "view" in the ABI
+     *  @param  gombocList  List of gombocs to claim
      * @param receiver address to claim for.
      * @return uint256 claim total fee
      */
@@ -401,6 +410,19 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         }
 
         return total;
+    }
+
+    /**
+     * @notice Make multiple fee claims in a single call
+     * @dev Used to claim for many accounts at once, or to make
+         multiple claims for the same address when that address
+         has significant veLT history
+       @param  gombocList  List of gombocs to claim
+     * @param receiver address to claim for.
+     * @return uint256 claim total fee
+     */
+    function claimableTokenManyGomboc(address[] memory gombocList, address receiver) external whenNotPaused returns (uint256) {
+        return this.claimManyGomboc(gombocList, receiver);
     }
 
     /**

@@ -449,7 +449,7 @@ describe("GombocFeeDistributor", function () {
             /// ownerClaimBalance =  allStakingGombocBalance + mockGombocBalance/2
             let gombocBalance1 = await gombocFeeDistributor.gombocBalancePreWeek(stakingHope.address, lastTokenTime);
             let gombocBalance2 = await gombocFeeDistributor.gombocBalancePreWeek(mockGomboc.address, lastTokenTime);
-            await gombocFeeDistributor.claimManyGomboc([stakingHope.address, mockGomboc.address], owner.address);
+            await gombocFeeDistributor.claimManyGomboc([stakingHope.address, mockGomboc.address], owner.address, { gasLimit: 30000000 });
             let ownerVotingGombocPrecentage = await gombocFeeDistributor.vePrecentageForAt(mockGomboc.address, owner.address, lastTokenTime);
             let expectStHOPE = gombocBalance1.add(gombocBalance2.mul(ownerVotingGombocPrecentage).div(ethers.utils.parseEther("1")));
             expect(await stakingHope.balanceOf(owner.address)).to.be.equal(expectStHOPE);

@@ -21,6 +21,10 @@ describe("PoolGomboc", function() {
     const TestLP = await ethers.getContractFactory("MockLP");
     const Minter = await ethers.getContractFactory("Minter");
     const GombocFactory = await ethers.getContractFactory("GombocFactory");
+    const Ownership = await ethers.getContractFactory("Ownership");
+
+    const ownership = await Ownership.deploy();
+    await ownership.deployed();
 
     // init 1000
     const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, 1000000); //Not using the actual InsureDAO contract
@@ -48,25 +52,35 @@ describe("PoolGomboc", function() {
     await poolGombocImplementation.deployed();
 
     // deploy gomboc factory
+    await ownership.deployed();
     const gombocFactory = await GombocFactory.deploy(poolGombocImplementation.address, minter.address, permit2.address);
     await gombocFactory.deployed();
 
     // deploy pool gomboc by Factory
-    await gombocFactory.createPool(mockLpToken.address);
+    await gombocFactory.createPool(mockLpToken.address, ownership.address);
     // get pool address
     const poolGombocAddress = await gombocFactory.getPool(mockLpToken.address);
     // load pool gomboc
-    const poolGomboc =  PoolGomboc.attach(poolGombocAddress);
+    const poolGomboc = PoolGomboc.attach(poolGombocAddress);
 
     const periodTime = await time.latest();
-    return { lt, permit2, veLT, gombocController, mockLpToken, minter, poolGomboc, owner, alice, bob, periodTime };
+    return { lt, permit2, veLT, gombocController, mockLpToken, minter, poolGomboc, owner, alice, bob, periodTime, ownership };
   }
 
 
   describe("test pool gomboc", function() {
 
     it("test gomboc integral ", async function() {
-      const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime ,permit2} = await loadFixture(deployOneYearLockFixture);
+      const {
+        lt,
+        mockLpToken,
+        gombocController,
+        poolGomboc,
+        owner,
+        bob,
+        periodTime,
+        permit2
+      } = await loadFixture(deployOneYearLockFixture);
 
       let integral = BigNumber.from(0);
       let t0 = BigNumber.from(periodTime);
@@ -349,13 +363,13 @@ describe("PoolGomboc", function() {
       sig = await PermitSigHelper.signature(owner, mockLpToken.address, permit2.address, poolGomboc.address, depositAmount, NONCE, DEADLINE);
       await lt.approve(permit2.address, depositAmount);
       await mockLpToken.approve(permit2.address, depositAmount);
-      await poolGomboc["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount,NONCE, DEADLINE, sig, owner.address);
+      await poolGomboc["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount, NONCE, DEADLINE, sig, owner.address);
 
       random = ethers.utils.randomBytes(32);
       NONCE = BigNumber.from(random);
       sig = await PermitSigHelper.signature(bob, mockLpToken.address, permit2.address, poolGomboc.address, depositAmount, NONCE, DEADLINE);
       await mockLpToken.connect(bob).approve(permit2.address, depositAmount);
-      await poolGomboc.connect(bob)["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount,NONCE, DEADLINE, sig, bob.address)
+      await poolGomboc.connect(bob)["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount, NONCE, DEADLINE, sig, bob.address);
       //await poolGomboc.connect(bob)["deposit(uint256,address)"](depositAmount, bob.address);
 
       let now = await time.latest();
@@ -406,6 +420,16 @@ describe("PoolGomboc", function() {
       let d_bob = rewards_bob.sub(old_rewards_bob);
       expect(d_owner.sub(d_bob)).to.equal(ethers.constants.Zero);
     });
+
+  });
+
+  it("should ownership is right", async function() {
+    const { poolGomboc, ownership } = await loadFixture(deployOneYearLockFixture);
+
+    const gombocOwnership =  await poolGomboc.ownership();
+    expect(await poolGomboc.ownership()).to.equal(ownership.address);
+
+
 
   });
 

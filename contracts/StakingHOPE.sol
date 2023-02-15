@@ -30,11 +30,11 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("HOPE Staking", "stHOPE") {
+    constructor(address _stakedToken, address _minter, address _permit2Address, address _ownership) ERC20("HOPE Staking", "stHOPE") {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
 
-        _init(_stakedToken, _minter);
+        _init(_stakedToken, _minter, _ownership);
 
         permit2Address = _permit2Address;
     }
@@ -47,7 +47,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
      * @param deadline
      * @param signature
      */
-    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external override returns (bool){
+    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external override returns (bool) {
         require(amount != 0, "INVALID_ZERO_AMOUNT");
 
         address staker = _msgSender();
@@ -161,7 +161,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
      * @param
      * @return
      */
-    function redeemAll() external override returns (uint256){
+    function redeemAll() external override returns (uint256) {
         address redeemer = _msgSender();
         uint256 amountToRedeem = unstakedBalanceOf(redeemer);
         require(amountToRedeem != 0, "No redeemable amount");
@@ -197,7 +197,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
      * @param maxIndex
      * @return
      */
-    function redeemByMaxIndex(uint256 maxIndex) external returns(uint256){
+    function redeemByMaxIndex(uint256 maxIndex) external returns (uint256) {
         address redeemer = _msgSender();
 
         uint256 allToRedeemAmount = unstakedBalanceOf(redeemer);

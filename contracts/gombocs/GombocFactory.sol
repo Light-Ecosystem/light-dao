@@ -27,10 +27,10 @@ contract GombocFactory is Ownable2Step {
         permit2 = _permit2Address;
     }
 
-    function createPool(address _lpAddr) external onlyOwner returns (address pool) {
+    function createPool(address _lpAddr, address _ownership) external onlyOwner returns (address pool) {
         bytes32 salt = keccak256(abi.encodePacked(_lpAddr));
         pool = Clones.cloneDeterministic(poolGombocImplementation, salt);
-        IPoolGomboc(pool).initialize(_lpAddr, miner, permit2);
+        IPoolGomboc(pool).initialize(_lpAddr, miner, permit2, _ownership);
         getPool[_lpAddr] = pool;
         allPools.push(pool);
         emit PoolGombocCreated(_lpAddr, pool, allPools.length);

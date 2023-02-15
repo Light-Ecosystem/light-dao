@@ -2,15 +2,15 @@
 
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/ILT.sol";
 import "../interfaces/IGombocController.sol";
 import "../interfaces/IVotingEscrow.sol";
 import "../interfaces/IMinter.sol";
 import "light-lib/contracts/LibTime.sol";
+import "../interfaces/IOwnership.sol";
 
-abstract contract AbsGomboc is Ownable2Step {
+abstract contract AbsGomboc {
     event Deposit(address indexed provider, uint256 value);
     event Withdraw(address indexed provider, uint256 value);
     event UpdateLiquidityLimit(
@@ -72,8 +72,14 @@ abstract contract AbsGomboc is Ownable2Step {
      * @dev Indicates that the contract has been initialized.
      */
     bool private _initialized;
+    IOwnership public ownership;
 
-    function _init(address _lpAddr, address _minter) internal {
+    modifier onlyOwner() {
+        require(ownership.owner() == msg.sender, "Caller is not allowed to operate");
+        _;
+    }
+
+    function _init(address _lpAddr, address _minter, address _ownership) internal {
         require(!_initialized, "Initializable: contract is already initialized");
         _initialized = true;
 
@@ -86,6 +92,7 @@ abstract contract AbsGomboc is Ownable2Step {
         periodTimestamp[0] = block.timestamp;
         inflationRate = ltToken.rate();
         futureEpochTime = ltToken.futureEpochTimeWrite();
+        ownership = IOwnership(_ownership);
     }
 
     /***

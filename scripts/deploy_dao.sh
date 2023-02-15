@@ -4,6 +4,10 @@ echo 'begin to deploy all lt dao contract...........\n\n'
 
 _netwrok=$1
 
+echo "deploy ownership_______________"
+npx hardhat run scripts/dao/0.deploy_ownership.ts --network $_netwrok
+echo "deploy ownership_______________\n"
+
 echo "deploy permit2_______________"
 npx hardhat run scripts/dao/1.deploy_permit2.ts --network $_netwrok
 echo "deploy permit2_______________\n"

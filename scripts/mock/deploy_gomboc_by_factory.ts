@@ -9,13 +9,15 @@ async function main() {
 
   // mock lp token
   let mockLPToken = FileUtils.getContractAddress(Constants.LP_TOKEN_MOCK);
+  let ownership = FileUtils.getContractAddress(Constants.OWNERSHIP);
+
 
   let gombocFactoryAddress = FileUtils.getContractAddress(Constants.GOMBOC_FACTORY);
-  console.log(gombocFactoryAddress)
+  console.log(gombocFactoryAddress);
   const gombocFactory = await ethers.getContractAt("GombocFactory", gombocFactoryAddress);
 
   // deploy gomboc pool
-  await gombocFactory.createPool(mockLPToken);
+  await gombocFactory.createPool(mockLPToken, ownership);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

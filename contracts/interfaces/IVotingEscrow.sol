@@ -27,6 +27,8 @@ interface IVotingEscrow {
 
     event Supply(uint256 prevSupply, uint256 supply);
 
+    event SetSmartWalletChecker(address sender, address indexed newChecker, address oldChecker);
+
     /***
      * @dev Get the most recently recorded rate of voting power decrease for `_addr`
      * @param _addr Address of the user wallet

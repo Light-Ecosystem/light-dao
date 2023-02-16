@@ -52,6 +52,13 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+    event AddReward(address indexed sender, address indexed rewardToken, address indexed distributorAddress);
+    event ChangeRewardDistributor(
+        address sender,
+        address indexed rewardToken,
+        address indexed newDistributorAddress,
+        address oldDistributorAddress
+    );
 
     constructor() {
         factory = address(0xdead);
@@ -322,6 +329,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         rewardData[_rewardToken].distributor = _distributor;
         rewardTokens[_rewardCount] = _rewardToken;
         rewardCount = _rewardCount + 1;
+        emit AddReward(msg.sender, _rewardToken, _distributor);
     }
 
     function setRewardDistributor(address _rewardToken, address _distributor) external {
@@ -330,6 +338,7 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         require(currentDistributor != address(0), "currentDistributor the zero address");
         require(_distributor != address(0), "distributor the zero address");
         rewardData[_rewardToken].distributor = _distributor;
+        emit ChangeRewardDistributor(msg.sender, _rewardToken, _distributor, currentDistributor);
     }
 
     function depositRewardToken(address _rewardToken, uint256 _amount) external payable nonReentrant {

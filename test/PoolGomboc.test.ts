@@ -53,11 +53,11 @@ describe("PoolGomboc", function() {
 
     // deploy gomboc factory
     await ownership.deployed();
-    const gombocFactory = await GombocFactory.deploy(poolGombocImplementation.address, minter.address, permit2.address);
+    const gombocFactory = await GombocFactory.deploy(poolGombocImplementation.address, minter.address, permit2.address, ownership.address);
     await gombocFactory.deployed();
 
     // deploy pool gomboc by Factory
-    await gombocFactory.createPool(mockLpToken.address, ownership.address);
+    await gombocFactory.createPool(mockLpToken.address);
     // get pool address
     const poolGombocAddress = await gombocFactory.getPool(mockLpToken.address);
     // load pool gomboc

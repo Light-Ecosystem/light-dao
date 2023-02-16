@@ -10,6 +10,7 @@ contract GombocFactory is Ownable2Step {
     event PoolGombocCreated(address indexed lpAddr, address indexed poolGomboc, uint);
 
     address public immutable poolGombocImplementation;
+    address public immutable ownership;
     address public immutable miner;
     address public immutable permit2;
 
@@ -17,20 +18,21 @@ contract GombocFactory is Ownable2Step {
     mapping(address => address) public getPool;
     address[] public allPools;
 
-    constructor(address _poolGombocImplementation, address _minter, address _permit2Address) {
+    constructor(address _poolGombocImplementation, address _minter, address _permit2Address, address _ownership) {
         require(_poolGombocImplementation != address(0), "GombocFactory: invalid poolGomboc address");
         require(_minter != address(0), "GombocFactory: invalid minter address");
         require(_permit2Address != address(0), "GombocFactory: invalid permit2 address");
 
         poolGombocImplementation = _poolGombocImplementation;
+        ownership = _ownership;
         miner = _minter;
         permit2 = _permit2Address;
     }
 
-    function createPool(address _lpAddr, address _ownership) external onlyOwner returns (address pool) {
+    function createPool(address _lpAddr) external onlyOwner returns (address pool) {
         bytes32 salt = keccak256(abi.encodePacked(_lpAddr));
         pool = Clones.cloneDeterministic(poolGombocImplementation, salt);
-        IPoolGomboc(pool).initialize(_lpAddr, miner, permit2, _ownership);
+        IPoolGomboc(pool).initialize(_lpAddr, miner, permit2, ownership);
         getPool[_lpAddr] = pool;
         allPools.push(pool);
         emit PoolGombocCreated(_lpAddr, pool, allPools.length);

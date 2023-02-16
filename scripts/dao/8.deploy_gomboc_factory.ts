@@ -10,9 +10,10 @@ async function main() {
   let poolGomboc = FileUtils.getContractAddress(Constants.POOL_GOMBOC);
   let minter = FileUtils.getContractAddress(Constants.LT_MINTER);
   let permit2 = FileUtils.getContractAddress(Constants.PERMIT2);
+  let ownership = FileUtils.getContractAddress(Constants.OWNERSHIP);
 
   const GombocFactory = await ethers.getContractFactory("GombocFactory");
-  const gombocFactory = await GombocFactory.deploy(poolGomboc, minter, permit2);
+  const gombocFactory = await GombocFactory.deploy(poolGomboc, minter, permit2, ownership);
   await gombocFactory.deployed();
   console.log("GombocFactory address is", gombocFactory.address);
   FileUtils.saveFrontendFiles(gombocFactory.address, "GombocFactory", Constants.GOMBOC_FACTORY);

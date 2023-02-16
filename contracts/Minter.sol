@@ -47,7 +47,7 @@ contract Minter {
      * @param gombocAddressList List of `LiquidityGomboc` addresses
      */
     function mintMany(address[] memory gombocAddressList) external {
-        for (uint256 i = 0; i < gombocAddressList.length; i++) {
+        for (uint256 i = 0; i < gombocAddressList.length && i < 128; i++) {
             if (gombocAddressList[i] == address(0)) {
                 continue;
             }

@@ -183,7 +183,8 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
 
             _updateLiquidityLimit(msg.sender, newBalance, _totalSupply);
 
-            IERC20Metadata(lpToken).transfer(msg.sender, _value);
+            bool success = IERC20Metadata(lpToken).transfer(msg.sender, _value);
+            require(success, "TRANSFER FAILED");
         }
 
         emit Withdraw(msg.sender, _value);

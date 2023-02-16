@@ -714,7 +714,9 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
      * @param _check  Address of Smart contract checker
      */
     function setSmartWalletChecker(address _check) external onlyOwner {
+        address oldChecker = smartWalletChecker;
         smartWalletChecker = _check;
+        emit SetSmartWalletChecker(msg.sender, _check, oldChecker);
     }
 
     /**

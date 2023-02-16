@@ -13,6 +13,7 @@ interface LiquidityGomboc {
 
 contract Minter {
     event Minted(address indexed recipient, address gomboc, uint256 minted);
+    event ToogleApproveMint(address sender, address indexed mintingUser, bool status);
 
     address public immutable token;
     address public immutable controller;
@@ -46,7 +47,7 @@ contract Minter {
      * @param gombocAddressList List of `LiquidityGomboc` addresses
      */
     function mintMany(address[] memory gombocAddressList) external {
-        for (uint256 i = 0; i < gombocAddressList.length; i++) {
+        for (uint256 i = 0; i < gombocAddressList.length && i < 128; i++) {
             if (gombocAddressList[i] == address(0)) {
                 continue;
             }
@@ -73,6 +74,7 @@ contract Minter {
     function toggleApproveMint(address mintingUser) external {
         bool flag = allowedToMintFor[mintingUser][msg.sender];
         allowedToMintFor[mintingUser][msg.sender] = !flag;
+        emit ToogleApproveMint(msg.sender, mintingUser, !flag);
     }
 
     function _mintFor(address gombocAddr, address _for) internal {

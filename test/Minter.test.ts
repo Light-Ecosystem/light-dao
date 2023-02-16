@@ -84,7 +84,7 @@ describe("Minter", function () {
             expect(await eRC20LT.balanceOf(otherAccount.address)).to.equal(ethers.utils.parseEther("0"));
             expect(await minter.minted(otherAccount.address, mockGombocV2.address)).to.equal(ethers.utils.parseEther("0"));
 
-            await minter.connect(otherAccount).toggleApproveMint(owner.address);
+            await expect(await minter.connect(otherAccount).toggleApproveMint(owner.address)).to.emit(minter, "ToogleApproveMint").withArgs(otherAccount.address, owner.address, true);
             await minter.mintFor(mockGombocV2.address, otherAccount.address);
             expect(await eRC20LT.balanceOf(otherAccount.address)).to.equal(ethers.utils.parseEther("100"));
             expect(await minter.minted(otherAccount.address, mockGombocV2.address)).to.equal(ethers.utils.parseEther("100"));

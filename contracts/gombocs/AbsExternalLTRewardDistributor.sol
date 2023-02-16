@@ -27,6 +27,9 @@ abstract contract AbsExternalLTRewardDistributor {
     event RewardsDistributed(uint256 claimableTokens);
 
     function _init(address stHopeGomboc, address minter, address ltToken) internal {
+        require(stHopeGomboc != address(0), "CE000");
+        require(minter != address(0), "CE000");
+        require(ltToken != address(0), "CE000");
         require(!_initialized, "Initializable: contract is already initialized");
         _initialized = true;
         _stHopeGomboc = stHopeGomboc;

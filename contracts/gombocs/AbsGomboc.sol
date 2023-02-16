@@ -73,11 +73,14 @@ abstract contract AbsGomboc is Ownable2Step {
      */
     bool private _initialized;
 
-    function _init(address _lpAddr, address _minter) internal {
+    function _init(address _lpAddr, address _minter, address _owner) internal {
         require(_lpAddr != address(0), "CE000");
         require(_minter != address(0), "CE000");
+        require(_owner != address(0), "CE000");
         require(!_initialized, "Initializable: contract is already initialized");
         _initialized = true;
+
+        _transferOwnership(_owner);
 
         lpToken = _lpAddr;
         minter = IMinter(_minter);

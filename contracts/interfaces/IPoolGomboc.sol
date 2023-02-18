@@ -3,5 +3,5 @@
 pragma solidity 0.8.17;
 
 interface IPoolGomboc {
-    function initialize(address _lpAddr, address _minter, address _permit2Address) external;
+    function initialize(address _lpAddr, address _minter, address _permit2Address, address _owner) external;
 }

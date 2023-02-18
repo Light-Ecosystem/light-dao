@@ -34,7 +34,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
         require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
         require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
 
-        _init(_stakedToken, _minter);
+        _init(_stakedToken, _minter, _msgSender());
 
         permit2Address = _permit2Address;
     }

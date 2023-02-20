@@ -13,6 +13,8 @@ interface IStHope {
 }
 
 contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AbsConnetVault {
+    event RewardsDistributed(address distributer, address to, uint256 amount);
+
     address public minter;
     address private ltToken;
 
@@ -38,6 +40,6 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
         bool success = ERC20Upgradeable(ltToken).transfer(to, amount);
         require(success, "Transfer FAILED");
 
-        emit RewardsDistributed(amount);
+        emit RewardsDistributed(msg.sender, to, amount);
     }
 }

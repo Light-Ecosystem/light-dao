@@ -15,7 +15,6 @@ interface IConnet {
 
 abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable {
     event Deposit(address indexed from, uint256 amount);
-    event RewardsDistributed(uint256 claimableTokens);
     event ChangeConnet(address indexed newConnet);
 
     bytes32 public constant withrawAdminRole = keccak256("withraw_Admin_Role");

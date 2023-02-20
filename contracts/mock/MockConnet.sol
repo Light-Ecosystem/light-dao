@@ -29,7 +29,7 @@ contract MockConnet is Ownable2Step {
         IERC20(ltToken).transferFrom(msg.sender, address(this), amount);
     }
 
-    function deposit(address addr, uint256 amount) external returns (bool) {
+    function deposit(address token, address addr, uint256 amount) external returns (bool) {
         return true;
     }
 

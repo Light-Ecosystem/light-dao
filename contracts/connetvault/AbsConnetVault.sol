@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 interface IConnet {
     function depositRewardToken(uint256 amount) external;
 
-    function deposit(address addr, uint256 amount) external returns (bool);
+    function deposit(address token, address addr, uint256 amount) external returns (bool);
 }
 
 abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable {
@@ -62,7 +62,7 @@ abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable
         /// tranfer bToken to connnet
         _transfer(from, connet, amount);
         /// notify connet transfer info
-        IConnet(connet).deposit(from, amount);
+        IConnet(connet).deposit(token, from, amount);
 
         emit Deposit(from, amount);
 

@@ -30,17 +30,14 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
         _initialize(_permit2Address, _token, _connnet, _withdrawAdmin, _ownerAddress);
     }
 
-    function refreshGombocRewards() external whenNotPaused {
-        /// update cliamable LT of stHOPE rewards
-        uint256 claimableTokens = IStHope(token).claimableTokens(address(this));
-        require(claimableTokens > 0, "No claimable LT Token");
-        /// mint LT token for this contract
+    function transferLTRewards(address to, uint256 amount) external whenNotPaused {
+        require(msg.sender != connet, "forbidden");
+        /// mint stHopeGomboc reward for this contract
         IMinter(minter).mint(token);
-        /// approve connet and deposit LT Token to connet
-        bool success = ERC20Upgradeable(ltToken).approve(connet, claimableTokens);
-        require(success, "APPROVE FAILED");
-        IConnet(connet).depositRewardToken(claimableTokens);
+        /// transfer LT
+        bool success = ERC20Upgradeable(ltToken).transfer(to, amount);
+        require(success, "Transfer FAILED");
 
-        emit RewardsDistributed(claimableTokens);
+        emit RewardsDistributed(amount);
     }
 }

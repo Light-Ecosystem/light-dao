@@ -87,14 +87,14 @@ describe("ConnetVaultOfStHOPE", function () {
         });
     })
 
-    describe("refreshGombocRewards", async function () {
+    describe("transferLTRewards", async function () {
 
-        it("should revert right error when claimable token is zero", async function () {
+        it("should revert right error when lt token is zero", async function () {
             const { owner, alice, bob, connetVaultOfStHOPE, adminRole } = await loadFixture(deployOneYearLockFixture);
-            await expect(connetVaultOfStHOPE.refreshGombocRewards()).to.be.revertedWith("No claimable LT Token");
+            await expect(connetVaultOfStHOPE.transferLTRewards(bob.address, BigNumber.from("100"))).to.be.revertedWith("ERC20: transfer amount exceeds balance");
         });
 
-        it("refreshGombocRewards", async function () {
+        it("transferLTRewards", async function () {
             const { owner, alice, bob, connetVaultOfStHOPE, mockConnet, adminRole, hopeToken, stakingHope, permit2, lt } = await loadFixture(deployOneYearLockFixture);
 
             //staking hope
@@ -109,8 +109,8 @@ describe("ConnetVaultOfStHOPE", function () {
             expect(await lt.balanceOf(mockConnet.address)).to.be.equal(0);
             await time.increase(86400 * 10);
             await mockConnet.setLt(lt.address);
-            await connetVaultOfStHOPE.refreshGombocRewards();
-            expect(await lt.balanceOf(mockConnet.address) > 0).to.true;
+            await connetVaultOfStHOPE.transferLTRewards(bob.address, ethers.utils.parseEther("1000"));
+            expect(await lt.balanceOf(bob.address)).to.be.equal(ethers.utils.parseEther("1000"));
         });
     })
 

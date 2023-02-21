@@ -89,9 +89,9 @@ describe("ConnetVaultOfStHOPE", function () {
 
     describe("transferLTRewards", async function () {
 
-        it("should revert right error when lt token is zero", async function () {
+        it("should revert right error when caller is not connnet", async function () {
             const { owner, alice, bob, connetVaultOfStHOPE, adminRole } = await loadFixture(deployOneYearLockFixture);
-            await expect(connetVaultOfStHOPE.transferLTRewards(bob.address, BigNumber.from("100"))).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+            await expect(connetVaultOfStHOPE.transferLTRewards(bob.address, BigNumber.from("100"))).to.be.revertedWith("forbidden");
         });
 
         it("transferLTRewards", async function () {
@@ -109,7 +109,7 @@ describe("ConnetVaultOfStHOPE", function () {
             expect(await lt.balanceOf(mockConnet.address)).to.be.equal(0);
             await time.increase(86400 * 10);
             await mockConnet.setLt(lt.address);
-            await connetVaultOfStHOPE.transferLTRewards(bob.address, ethers.utils.parseEther("1000"));
+            await mockConnet.transferLTRewards(bob.address, ethers.utils.parseEther("1000"));
             expect(await lt.balanceOf(bob.address)).to.be.equal(ethers.utils.parseEther("1000"));
         });
     })

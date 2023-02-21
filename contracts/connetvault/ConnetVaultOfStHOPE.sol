@@ -32,8 +32,8 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
         _initialize(_permit2Address, _token, _connnet, _withdrawAdmin, _ownerAddress);
     }
 
-    function transferLTRewards(address to, uint256 amount) external whenNotPaused {
-        require(msg.sender != connet, "forbidden");
+    function transferLTRewards(address to, uint256 amount) external whenNotPaused returns (bool) {
+        require(msg.sender == connet, "forbidden");
         /// mint stHopeGomboc reward for this contract
         IMinter(minter).mint(token);
         /// transfer LT
@@ -41,5 +41,7 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
         require(success, "Transfer FAILED");
 
         emit RewardsDistributed(msg.sender, to, amount);
+
+        return true;
     }
 }

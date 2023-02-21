@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 interface IValut {
     function withdraw(address to, uint256 amount) external returns (uint256);
+
+    function transferLTRewards(address to, uint256 amount) external returns (bool);
 }
 
 interface IERC20 {
@@ -30,6 +32,11 @@ contract MockConnet is Ownable2Step {
     }
 
     function deposit(address token, address addr, uint256 amount) external returns (bool) {
+        return true;
+    }
+
+    function transferLTRewards(address to, uint256 amount) external onlyOwner returns (bool) {
+        IValut(valut).transferLTRewards(to, amount);
         return true;
     }
 

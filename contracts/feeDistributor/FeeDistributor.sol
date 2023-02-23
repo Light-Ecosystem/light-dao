@@ -456,6 +456,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      */
     function setEmergencyReturn(address _addr) external onlyOwner {
         emergencyReturn = _addr;
+        emit SetEmergencyReturn(_addr);
     }
 
     function pause() external onlyOwner {

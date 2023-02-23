@@ -18,6 +18,8 @@ interface ISwapRouter {
 }
 
 contract LightSwapBurner is IBurner, Ownable2Step {
+    event SetRouters(ISwapRouter[] _routers);
+
     ISwapRouter[] public routers;
     IERC20 public immutable HOPE;
     mapping(ISwapRouter => mapping(IERC20 => bool)) public approved;
@@ -32,6 +34,7 @@ contract LightSwapBurner is IBurner, Ownable2Step {
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
         routers = _routers;
+        emit SetRouters(_routers);
     }
 
     function burn(address to, IERC20 token, uint amount) external {

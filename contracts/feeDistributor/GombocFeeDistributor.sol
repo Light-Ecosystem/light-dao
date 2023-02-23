@@ -467,6 +467,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
      */
     function setEmergencyReturn(address _addr) external onlyOwner {
         emergencyReturn = _addr;
+        emit SetEmergencyReturn(_addr);
     }
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {

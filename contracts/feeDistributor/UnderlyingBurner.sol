@@ -27,6 +27,10 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
 
     event RecoverBalance(address indexed token, address indexed emergencyReturn, uint256 amount);
 
+    event SetEmergencyReturn(address indexed emergencyReturn);
+
+    event SetRouters(ISwapRouter[] _routers);
+
     address public feeDistributor;
     address public gombocFeeDistributor;
     address public emergencyReturn;
@@ -99,6 +103,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
         routers = _routers;
+        emit SetRouters(_routers);
     }
 
     function burn(IERC20Upgradeable token, uint amount) external {
@@ -133,6 +138,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      */
     function setEmergencyReturn(address _addr) external onlyOwner {
         emergencyReturn = _addr;
+        emit SetEmergencyReturn(_addr);
     }
 
     function pause() public onlyOwner {

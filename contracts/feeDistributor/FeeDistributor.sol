@@ -199,7 +199,6 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
                     /// Then make dt 0
                     dt = t - pt.ts;
                 }
-                _getPointBalanceOf(pt.bias, pt.slope, dt);
                 veSupply[t] = _getPointBalanceOf(pt.bias, pt.slope, dt);
             }
             t += WEEK;

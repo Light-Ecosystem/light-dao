@@ -57,6 +57,10 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
         address _gombocFeeDistributor,
         address _emergencyReturn
     ) external initializer {
+        require(_hopeToken != address(0), "Invalid Address");
+        require(_feeDistributor != address(0), "Invalid Address");
+        require(_gombocFeeDistributor != address(0), "Invalid Address");
+
         __Ownable2Step_init();
 
         hopeToken = _hopeToken;

@@ -83,6 +83,10 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         address _stHOPE,
         address _emergencyReturn
     ) external initializer {
+        require(_gombocController != address(0), "Invalid Address");
+        require(_token != address(0), "Invalid Address");
+        require(_stHOPE != address(0), "Invalid Address");
+
         __Ownable2Step_init();
 
         uint256 t = LibTime.timesRoundedByWeek(_startTime);

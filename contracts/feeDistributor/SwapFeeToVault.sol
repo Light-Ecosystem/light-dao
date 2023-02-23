@@ -21,6 +21,9 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     address public underlyingBurner;
 
     constructor(BurnerManager _burnerManager, address _underlyingBurner) {
+        require(address(_burnerManager) != address(0), "Invalid Address");
+        require(_underlyingBurner != address(0), "Invalid Address");
+
         burnerManager = _burnerManager;
         underlyingBurner = _underlyingBurner;
     }

@@ -85,6 +85,10 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         address _stHOPE,
         address _emergencyReturn
     ) external initializer {
+        require(_votingEscrow != address(0), "Invalid Address");
+        require(_token != address(0), "Invalid Address");
+        require(_stHOPE != address(0), "Invalid Address");
+
         __Ownable2Step_init();
 
         uint256 t = LibTime.timesRoundedByWeek(_startTime);

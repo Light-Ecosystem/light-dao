@@ -395,7 +395,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
         uint256 total = 0;
 
-        for (uint256 i = 0; i < _receivers.length; i++) {
+        for (uint256 i = 0; i < _receivers.length && i < 50; i++) {
             address addr = _receivers[i];
             if (addr == address(0)) {
                 break;

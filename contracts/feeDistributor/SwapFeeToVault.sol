@@ -36,7 +36,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     }
 
     function withdrawMany(address[] memory pools) external whenNotPaused {
-        for (uint256 i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length && i < 256; i++) {
             this.withdrawAdminFee(pools[i]);
         }
     }
@@ -57,7 +57,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     }
 
     function burnMany(IERC20[] calldata tokens) external {
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint i = 0; i < tokens.length && i < 128; i++) {
             _burn(tokens[i]);
         }
     }

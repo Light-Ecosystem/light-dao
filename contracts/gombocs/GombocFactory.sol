@@ -8,10 +8,11 @@ import "../interfaces/IPoolGomboc.sol";
 
 contract GombocFactory is Ownable2Step {
     event PoolGombocCreated(address indexed lpAddr, address indexed poolGomboc, uint);
+    event SetPermit2Address(address oldAddress, address newAddress);
 
     address public immutable poolGombocImplementation;
     address public immutable miner;
-    address public immutable permit2;
+    address public permit2;
     address public immutable onwer;
 
     // lpToken => poolGomboc
@@ -39,5 +40,16 @@ contract GombocFactory is Ownable2Step {
 
     function allPoolsLength() external view returns (uint) {
         return allPools.length;
+    }
+
+    /**
+     * @dev Set permit2 address, onlyOwner
+     * @param newAddress New permit2 address
+     */
+    function setPermit2Address(address newAddress) external onlyOwner {
+        require(newAddress != address(0), "CE000");
+        address oldAddress = permit2;
+        permit2 = newAddress;
+        emit SetPermit2Address(oldAddress, newAddress);
     }
 }

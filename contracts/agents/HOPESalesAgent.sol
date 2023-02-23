@@ -32,7 +32,7 @@ contract HOPESalesAgent is IHOPESalesAgent, Ownable2Step, Pausable {
     address public immutable hopeToken;
 
     // Permit2 contract
-    address public immutable permit2;
+    address public permit2;
 
     // Map of currencies available for purchase  currencySymbol => Currency
     mapping(string => Currency) public currencys;
@@ -161,6 +161,17 @@ contract HOPESalesAgent is IHOPESalesAgent, Ownable2Step, Pausable {
         delete currencys[symbol];
 
         emit DeleteCurrency(symbol);
+    }
+
+    /**
+     * @dev Set permit2 address, onlyOwner
+     * @param newAddress New permit2 address
+     */
+    function setPermit2Address(address newAddress) external onlyOwner {
+        require(newAddress != address(0), "CE000");
+        address oldAddress = permit2;
+        permit2 = newAddress;
+        emit SetPermit2Address(oldAddress, newAddress);
     }
 
     function _getToValue(uint256 fromValue, uint256 rate) internal view returns (uint256) {

@@ -46,6 +46,24 @@ describe("VotingEscrow", function () {
         return { veLT, eRC20LT, permit2, votingEscrowBoxMock, smartWalletWhitelist, owner, otherAccount, WEEK, MAXTIME, BASE_RATE };
     }
 
+    describe("Set permit2 address", async () => {
+        it("only owner can set", async () => {
+            const { otherAccount, veLT } = await loadFixture(deployOneYearLockFixture);
+            await expect(veLT.connect(otherAccount).setPermit2Address("0x000000000022D473030F116dDEE9F6B43aC78BA3")).to.be.revertedWith("Ownable: caller is not the owner");
+        })
+        it("can not set address zero", async () => {
+            const { veLT } = await loadFixture(deployOneYearLockFixture);
+            await expect(veLT.setPermit2Address(ethers.constants.AddressZero)).to.be.revertedWith("CE000");
+        })
+        it("set permit2 address success", async () => {
+            const { veLT, permit2 } = await loadFixture(deployOneYearLockFixture);
+            const newAddress = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+            await expect(veLT.setPermit2Address(newAddress)).to.be.emit(veLT, "SetPermit2Address")
+                .withArgs(permit2.address, newAddress);
+            expect(await veLT.permit2Address()).to.be.equal(newAddress);
+        })
+    })
+
     describe("create lock", function () {
 
         it("should revert right error when lock value is zero", async function () {

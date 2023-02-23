@@ -64,7 +64,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     /// LT token address
     address public immutable token;
     /// permit2 contract address
-    address public immutable permit2Address;
+    address public permit2Address;
     /// total locked LT value
     uint256 public supply;
 
@@ -717,6 +717,17 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         address oldChecker = smartWalletChecker;
         smartWalletChecker = _check;
         emit SetSmartWalletChecker(msg.sender, _check, oldChecker);
+    }
+
+    /**
+     * @dev Set permit2 address, onlyOwner
+     * @param newAddress New permit2 address
+     */
+    function setPermit2Address(address newAddress) external onlyOwner {
+        require(newAddress != address(0), "CE000");
+        address oldAddress = permit2Address;
+        permit2Address = newAddress;
+        emit SetPermit2Address(oldAddress, newAddress);
     }
 
     /**

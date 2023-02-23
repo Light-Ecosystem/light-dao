@@ -29,6 +29,11 @@ interface IHOPESalesAgent {
     event Redeem(string symbol, address indexed to, uint256 amount);
 
     /**
+     * @dev Emitted when set permit2 address.
+     */
+    event SetPermit2Address(address oldAddress, address newAddress);
+
+    /**
      * @dev Buy HOPE token
      * @notice user need to call fromCurrencyToken.approve(address(this),fromValue) before buy HOPE token;
      */

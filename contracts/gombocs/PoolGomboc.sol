@@ -65,12 +65,12 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
     }
 
     // called once by the factory at time of deployment
-    function initialize(address _lpAddr, address _minter, address _permit2Address) external {
+    function initialize(address _lpAddr, address _minter, address _permit2Address, address _owner) external {
         require(factory == address(0), "PoolGomboc: FORBIDDEN");
         // sufficient check
         factory = msg.sender;
 
-        _init(_lpAddr, _minter);
+        _init(_lpAddr, _minter, _owner);
 
         permit2Address = _permit2Address;
         symbol = IERC20Metadata(_lpAddr).symbol();
@@ -459,6 +459,17 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
      */
     function setRewardsReceiver(address _receiver) external {
         rewardsReceiver[msg.sender] = _receiver;
+    }
+
+    /**
+     * @dev Set permit2 address, onlyOwner
+     * @param newAddress New permit2 address
+     */
+    function setPermit2Address(address newAddress) external onlyOwner {
+        require(newAddress != address(0), "CE000");
+        address oldAddress = permit2Address;
+        permit2Address = newAddress;
+        emit SetPermit2Address(oldAddress, newAddress);
     }
 
     /***

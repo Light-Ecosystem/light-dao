@@ -114,6 +114,24 @@ describe("TokenhopeSalesAgent", function () {
         })
     })
 
+    describe("Set permit2 address", async () => {
+        it("only owner can set", async () => {
+            const { addr1, hopeSalesAgent } = await loadFixture(deploySaleFixture);
+            await expect(hopeSalesAgent.connect(addr1).setPermit2Address("0x000000000022D473030F116dDEE9F6B43aC78BA3")).to.be.revertedWith("Ownable: caller is not the owner");
+        })
+        it("can not set address zero", async () => {
+            const { hopeSalesAgent } = await loadFixture(deploySaleFixture);
+            await expect(hopeSalesAgent.setPermit2Address(ethers.constants.AddressZero)).to.be.revertedWith("CE000");
+        })
+        it("set permit2 address success", async () => {
+            const { hopeSalesAgent, permit2 } = await loadFixture(deploySaleFixture);
+            const newAddress = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+            await expect(hopeSalesAgent.setPermit2Address(newAddress)).to.be.emit(hopeSalesAgent, "SetPermit2Address")
+                .withArgs(permit2.address, newAddress);
+            expect(await hopeSalesAgent.permit2()).to.be.equal(newAddress);
+        })
+    })
+
     describe("Balance Of", async () => {
         it("return zero if address is zero", async () => {
             const { hopeSalesAgent } = await loadFixture(deploySaleFixture);

@@ -7,7 +7,7 @@ const { ethers } = require("hardhat");
 const { BigNumber } = require("ethers");
 
 
-describe("PoolGomboc", function() {
+describe("PoolGomboc", function () {
   const DAY = 86400;
   const WEEK = DAY * 7;
 
@@ -56,17 +56,33 @@ describe("PoolGomboc", function() {
     // get pool address
     const poolGombocAddress = await gombocFactory.getPool(mockLpToken.address);
     // load pool gomboc
-    const poolGomboc =  PoolGomboc.attach(poolGombocAddress);
-
+    const poolGomboc = PoolGomboc.attach(poolGombocAddress);
     const periodTime = await time.latest();
     return { lt, permit2, veLT, gombocController, mockLpToken, minter, poolGomboc, owner, alice, bob, periodTime };
   }
 
+  describe("Set permit2 address", async () => {
+    it("only owner can set", async () => {
+      const { alice, poolGomboc } = await loadFixture(deployOneYearLockFixture);
+      await expect(poolGomboc.connect(alice).setPermit2Address("0x000000000022D473030F116dDEE9F6B43aC78BA3")).to.be.revertedWith("Ownable: caller is not the owner");
+    })
+    it("can not set address zero", async () => {
+      const { poolGomboc } = await loadFixture(deployOneYearLockFixture);
+      await expect(poolGomboc.setPermit2Address(ethers.constants.AddressZero)).to.be.revertedWith("CE000");
+    })
+    it("set permit2 address success", async () => {
+      const { poolGomboc, permit2 } = await loadFixture(deployOneYearLockFixture);
+      const newAddress = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+      await expect(poolGomboc.setPermit2Address(newAddress)).to.be.emit(poolGomboc, "SetPermit2Address")
+        .withArgs(permit2.address, newAddress);
+      expect(await poolGomboc.permit2Address()).to.be.equal(newAddress);
+    })
+  })
 
-  describe("test pool gomboc", function() {
+  describe("test pool gomboc", function () {
 
-    it("test gomboc integral ", async function() {
-      const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime ,permit2} = await loadFixture(deployOneYearLockFixture);
+    it("test gomboc integral ", async function () {
+      const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime, permit2 } = await loadFixture(deployOneYearLockFixture);
 
       let integral = BigNumber.from(0);
       let t0 = BigNumber.from(periodTime);
@@ -151,164 +167,6 @@ describe("PoolGomboc", function() {
 
     });
 
-    // it("test random gomboc integral", async () => {
-    //   const { lt, mockLpToken, gombocController, poolGomboc, owner, bob, periodTime } = await loadFixture(deployOneYearLockFixture);
-    //
-    //   let owner_staked = BigNumber.from("0");
-    //   let bob_staked = BigNumber.from("0");
-    //   let integral = BigNumber.from("0");
-    //   let t0 = BigNumber.from(periodTime);
-    //   let t0_rate = await lt.rate();
-    //   //console.log("t0_rate: " + t0_rate);
-    //   let t0_supply = BigNumber.from("0");
-    //   let t0_balance = BigNumber.from("0");
-    //
-    //   let typeId = await gombocController.nGombocTypes();
-    //   await gombocController.addType("Liquidity", BigNumber.from("0"));
-    //   await gombocController.changeTypeWeight(typeId, ten_to_the_18);
-    //   await gombocController.addGomboc(poolGomboc.address, typeId, ten_to_the_18);
-    //
-    //   // console.log("bengin owner mock lp token balance: " + await mockLpToken.balanceOf(owner.address));
-    //   // console.log("bengin bob mock lp token balance: " + await mockLpToken.balanceOf(bob.address));
-    //
-    //   await mockLpToken.transfer(bob.address, (await mockLpToken.balanceOf(owner.address)).div(BigNumber.from("2")));
-    //
-    //   // console.log("after owner mock lp token balance: " + await mockLpToken.balanceOf(owner.address));
-    //   // console.log("after bob mock lp token balance: " + await mockLpToken.balanceOf(bob.address));
-    //
-    //   async function update_integral() {
-    //     let t1 = BigNumber.from(await time.latest());
-    //     let rate1 = await lt.rate();
-    //     let t_epoch = await lt.startEpochTime();
-    //     let rate_x_time;
-    //
-    //     if (t0 >= t_epoch) {
-    //       rate_x_time = t1.sub(t0).mul(rate1);
-    //     } else {
-    //       // (t_epoch - t0) * t0_rate + (t1 - t_epoch) * rate1
-    //       rate_x_time = t_epoch.sub(t0).mul(t0_rate).add(t1.sub(t_epoch).mul(rate1));
-    //     }
-    //
-    //     if (t0_supply.gt(BigNumber.from("0"))) {
-    //       // integral = integral + rate_x_time * t0_balance / t0_supply;
-    //       integral = integral.add(BigNumber.from(rate_x_time).mul(t0_balance).div(t0_supply));
-    //     }
-    //
-    //     t0_rate = rate1;
-    //     t0 = t1;
-    //     t0_supply = await poolGomboc.totalSupply();
-    //     t0_balance = await poolGomboc.balanceOf(owner.address);
-    //     // console.log("update_integral t0_supply" + t0_supply);
-    //     //console.log("update_integral owner balance" + t0_balance);
-    //   }
-    //
-    //   await time.increase(WEEK);
-    //
-    //   // Now let's have a loop where Bob always deposit or withdraws,and owner does so more rarely
-    //   for (let i = 0; i < 10; i++) {
-    //     // console.log("Math.random():" + Math.random());
-    //     let is_owner = Math.random() < 0.5;
-    //     let dt = BigNumber.from(Math.floor(Math.random() * 86400 * 73).toString()).add(BigNumber.from("1"));
-    //     console.log("dt: " + dt.toNumber());
-    //     await time.increase(dt.toNumber());
-    //     //await ethers.provider.send("evm_increaseTime", [dt.toNumber()]);
-    //
-    //     // For Bob
-    //     let is_withdraw = i > 0 && Math.random() < 0.5; //(i > 0) * (random() < 0.5)
-    //
-    //     if (is_withdraw) {
-    //       // withdraw
-    //       const bobBanlance = await poolGomboc.balanceOf(bob.address);
-    //       if (bobBanlance > 0) {
-    //         console.log("Bob Withdraws");
-    //         let amount = BigNumber.from(Math.floor(Math.random() * 10000).toString())
-    //           .mul(await poolGomboc.balanceOf(bob.address))
-    //           .div(BigNumber.from("10000"));
-    //         console.log("Bob Withdraws " + amount.div(BigNumber.from("10").pow("18")).toNumber());
-    //         // await poolGomboc.connect(bob).withdraw(amount);
-    //         await poolGomboc.connect(bob)["withdraw(uint256)"](amount);
-    //         await update_integral();
-    //         bob_staked = bob_staked.sub(amount);
-    //         console.log("--------------------> bob:" + bob_staked.div(BigNumber.from("10").pow("18")).toNumber());
-    //       }
-    //     } else {
-    //       // deposit
-    //       console.log("Bob deposit");
-    //       let amount = BigNumber.from(Math.floor(Math.random() * 10000).toString())
-    //         .mul(await mockLpToken.balanceOf(bob.address))
-    //         .div(BigNumber.from("10"))
-    //         .div(BigNumber.from("10000"));
-    //       console.log("Bob Deposits " + amount.div(BigNumber.from("10").pow("18")).toNumber());
-    //       await mockLpToken.connect(bob).approve(poolGomboc.address, amount);
-    //
-    //       // console.log("lt rate: " + await lt.rate());
-    //       // await poolGomboc.connect(bob).deposit(amount, bob.address);
-    //       await poolGomboc.connect(bob)["deposit(uint256,address)"](amount, bob.address);
-    //       // console.log("lt rate: " + await lt.rate());
-    //       // console.log("poolGomboc balanceOf bob: " + await poolGomboc.balanceOf(bob.address));
-    //
-    //       await update_integral();
-    //       bob_staked = bob_staked.add(amount);
-    //       console.log("--------------------> bob:" + bob_staked.div(BigNumber.from("10").pow("18")).toNumber());
-    //     }
-    //
-    //     if (is_owner) {
-    //       //For owner
-    //       let is_withdraw_owner = (await poolGomboc.balanceOf(owner.address)) > 0 && Math.random() > 0.5;
-    //       if (is_withdraw_owner) {
-    //         console.log("Owner Withdraws");
-    //         let amount_owner = BigNumber.from(Math.floor(Math.random() * 10000).toString())
-    //           .mul(await poolGomboc.balanceOf(owner.address))
-    //           .div(BigNumber.from("10"))
-    //           .div(BigNumber.from("10000"));
-    //         //await poolGomboc.withdraw(amount_owner);
-    //         await poolGomboc["withdraw(uint256)"](amount_owner);
-    //         await update_integral();
-    //         owner_staked = owner_staked.sub(amount_owner);
-    //         console.log("--------------------> owner:" + owner_staked.div(BigNumber.from("10").pow("18")).toNumber());
-    //       } else {
-    //         console.log("Owner Deposits");
-    //         let amount_owner = BigNumber.from(Math.floor(Math.random() * 10000).toString())
-    //           .mul(await mockLpToken.balanceOf(owner.address))
-    //           .div(BigNumber.from("10000"));
-    //
-    //         //console.log("owner balance :" + await mockLpToken.balanceOf(owner.address));
-    //         //console.log("amount_owner :" + amount_owner);
-    //
-    //         await mockLpToken.approve(poolGomboc.address, amount_owner);
-    //         // await poolGomboc.deposit(amount_owner, owner.address);
-    //         await poolGomboc["deposit(uint256,address)"](amount_owner, owner.address);
-    //         await update_integral();
-    //         owner_staked = owner_staked.add(amount_owner);
-    //         console.log("--------------------> owner:" + owner_staked.div(BigNumber.from("10").pow("18")).toNumber());
-    //       }
-    //     }
-    //
-    //     // Checking that updating the checkpoint in the same second does nothing
-    //     // Also everyone can update: that should make no difference, too
-    //     if (Math.random() < 0.5) {
-    //       await poolGomboc.userCheckpoint(owner.address);
-    //     }
-    //     if (Math.random() < 0.5) {
-    //       await poolGomboc.connect(bob).userCheckpoint(bob.address);
-    //     }
-    //
-    //     expect(await poolGomboc.balanceOf(owner.address)).to.equal(owner_staked);
-    //     expect(await poolGomboc.balanceOf(bob.address)).to.equal(bob_staked);
-    //     expect(await poolGomboc.totalSupply()).to.equal(owner_staked.add(bob_staked));
-    //
-    //     dt = BigNumber.from(Math.floor(Math.random() * 86400 * 19).toString()).add(BigNumber.from("1"));
-    //
-    //     await time.increase(dt.toNumber());
-    //
-    //     await poolGomboc.userCheckpoint(owner.address);
-    //     await update_integral();
-    //     //approx 1e-20
-    //     //expect(await poolGomboc.integrateFraction(owner.address)).to.equal(integral);
-    //     console.log("times:" + i + " dt/86400: " + dt / 86400 + " integral: " + integral + " integrateFraction : " + (await poolGomboc.integrateFraction(owner.address)));
-    //   }
-    // });
-
     it("test mining with votelock", async () => {
       const { lt, veLT, mockLpToken, gombocController, permit2, poolGomboc, owner, bob } = await loadFixture(deployOneYearLockFixture);
 
@@ -349,13 +207,13 @@ describe("PoolGomboc", function() {
       sig = await PermitSigHelper.signature(owner, mockLpToken.address, permit2.address, poolGomboc.address, depositAmount, NONCE, DEADLINE);
       await lt.approve(permit2.address, depositAmount);
       await mockLpToken.approve(permit2.address, depositAmount);
-      await poolGomboc["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount,NONCE, DEADLINE, sig, owner.address);
+      await poolGomboc["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount, NONCE, DEADLINE, sig, owner.address);
 
       random = ethers.utils.randomBytes(32);
       NONCE = BigNumber.from(random);
       sig = await PermitSigHelper.signature(bob, mockLpToken.address, permit2.address, poolGomboc.address, depositAmount, NONCE, DEADLINE);
       await mockLpToken.connect(bob).approve(permit2.address, depositAmount);
-      await poolGomboc.connect(bob)["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount,NONCE, DEADLINE, sig, bob.address)
+      await poolGomboc.connect(bob)["deposit(uint256,uint256,uint256,bytes,address)"](depositAmount, NONCE, DEADLINE, sig, bob.address)
       //await poolGomboc.connect(bob)["deposit(uint256,address)"](depositAmount, bob.address);
 
       let now = await time.latest();

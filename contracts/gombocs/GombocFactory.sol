@@ -8,10 +8,12 @@ import "../interfaces/IPoolGomboc.sol";
 
 contract GombocFactory is Ownable2Step {
     event PoolGombocCreated(address indexed lpAddr, address indexed poolGomboc, uint);
+    event SetPermit2Address(address oldAddress, address newAddress);
 
     address public immutable poolGombocImplementation;
     address public immutable miner;
-    address public immutable permit2;
+    address public permit2;
+    address public immutable onwer;
 
     // lpToken => poolGomboc
     mapping(address => address) public getPool;
@@ -21,7 +23,7 @@ contract GombocFactory is Ownable2Step {
         require(_poolGombocImplementation != address(0), "GombocFactory: invalid poolGomboc address");
         require(_minter != address(0), "GombocFactory: invalid minter address");
         require(_permit2Address != address(0), "GombocFactory: invalid permit2 address");
-
+        onwer = _msgSender();
         poolGombocImplementation = _poolGombocImplementation;
         miner = _minter;
         permit2 = _permit2Address;
@@ -30,7 +32,7 @@ contract GombocFactory is Ownable2Step {
     function createPool(address _lpAddr) external onlyOwner returns (address pool) {
         bytes32 salt = keccak256(abi.encodePacked(_lpAddr));
         pool = Clones.cloneDeterministic(poolGombocImplementation, salt);
-        IPoolGomboc(pool).initialize(_lpAddr, miner, permit2);
+        IPoolGomboc(pool).initialize(_lpAddr, miner, permit2, onwer);
         getPool[_lpAddr] = pool;
         allPools.push(pool);
         emit PoolGombocCreated(_lpAddr, pool, allPools.length);
@@ -38,5 +40,16 @@ contract GombocFactory is Ownable2Step {
 
     function allPoolsLength() external view returns (uint) {
         return allPools.length;
+    }
+
+    /**
+     * @dev Set permit2 address, onlyOwner
+     * @param newAddress New permit2 address
+     */
+    function setPermit2Address(address newAddress) external onlyOwner {
+        require(newAddress != address(0), "CE000");
+        address oldAddress = permit2;
+        permit2 = newAddress;
+        emit SetPermit2Address(oldAddress, newAddress);
     }
 }

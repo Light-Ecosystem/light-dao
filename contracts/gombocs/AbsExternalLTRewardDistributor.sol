@@ -45,7 +45,7 @@ abstract contract AbsExternalLTRewardDistributor {
 
         IMinter(_minter).mint(_stHopeGomboc);
 
-        bool success = IERC20(_ltToken).approve(_stHopeGomboc, claimableTokens);
+        bool success = IERC20(_ltToken).approve(_gombocAddress, claimableTokens);
         require(success, "APPROVE FAILED");
         ILightGomboc(_gombocAddress).depositRewardToken(_ltToken, claimableTokens);
 

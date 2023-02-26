@@ -712,5 +712,83 @@ describe("GombocController", function () {
             expect(await gombocController.gombocRelativeWeight(mockGomboc.address, nextTime)).to.equal(Wg.mul(ethers.utils.parseEther("1")).div(afterTotalWg));
             expect(await gombocController.gombocRelativeWeight(mockGombocV2.address, nextTime)).to.equal(Wg2.add(Wg3).mul(ethers.utils.parseEther("1")).div(afterTotalWg));
         });
+
+        it("should revert right error when batchVoteForGombocWeights use too much power", async function () {
+            const { gombocController, permit2, mockGomboc, mockGombocV2, eRC20LT, owner, otherAccount, thridAccount, veLT, WEEK } = await loadFixture(deployOneYearLockFixture);
+            //prepare data
+            let name = "LT Staking Type";
+            let weight = ethers.utils.parseEther("1");
+            let typeId = await gombocController.nGombocTypes();
+            await gombocController.addType(name, weight);
+            let typeId1 = await gombocController.nGombocTypes();
+            let name1 = "LT Staking Type 1";
+            await gombocController.addType(name1, weight);
+            await gombocController.addGomboc(mockGomboc.address, typeId, 0);
+            await gombocController.addGomboc(mockGombocV2.address, typeId1, 0);
+
+            //lock lt for otherAccount
+            const MAXTIME = 4 * 365 * 86400;
+            let ti = await time.latest();
+            let lockTime = ti + MAXTIME;
+            const DEADLINE = await time.latest() + 60 * 60;
+            let NONCE = BigNumber.from(ethers.utils.randomBytes(32));
+            let lockLTAmount = ethers.utils.parseEther("100000");
+            const sig = await PermitSigHelper.signature(owner, eRC20LT.address, permit2.address, veLT.address, lockLTAmount, NONCE, DEADLINE);
+            await veLT.createLockFor(otherAccount.address, lockLTAmount, lockTime, NONCE, DEADLINE, sig);
+
+            let userWeight = 5000;
+            let userWeightV2 = 6000;
+            await expect(gombocController.connect(otherAccount).batchVoteForGombocWeights([mockGomboc.address, mockGombocV2.address], [userWeight, userWeightV2])).to.be.revertedWith("GC006");
+        });
+
+        it("batchVoteForGombocWeights with two type and two gomboc ", async function () {
+            const { gombocController, permit2, mockGomboc, mockGombocV2, eRC20LT, owner, otherAccount, veLT, WEEK } = await loadFixture(deployOneYearLockFixture);
+            //prepare data
+            let name = "LT Staking Type";
+            let weight = ethers.utils.parseEther("1");
+            let typeId = await gombocController.nGombocTypes();
+            await gombocController.addType(name, weight);
+            let typeId1 = await gombocController.nGombocTypes();
+            let name1 = "LT Staking Type 1";
+            await gombocController.addType(name1, weight);
+            await gombocController.addGomboc(mockGomboc.address, typeId, 0);
+            await gombocController.addGomboc(mockGombocV2.address, typeId1, 0);
+
+            //lock lt for otherAccount
+            const MAXTIME = 4 * 365 * 86400;
+            let ti = await time.latest();
+            let lockTime = ti + MAXTIME;
+            const DEADLINE = await time.latest() + 60 * 60;
+            let NONCE = BigNumber.from(ethers.utils.randomBytes(32));
+            let lockLTAmount = ethers.utils.parseEther("100000");
+            const sig = await PermitSigHelper.signature(owner, eRC20LT.address, permit2.address, veLT.address, lockLTAmount, NONCE, DEADLINE);
+            await veLT.createLockFor(otherAccount.address, lockLTAmount, lockTime, NONCE, DEADLINE, sig);
+
+
+            let userWeight = 5000;
+            let userWeightV2 = 5000;
+            await gombocController.connect(otherAccount).batchVoteForGombocWeights([mockGomboc.address, mockGombocV2.address], [userWeight, userWeightV2])
+
+            let blcoTime = await time.latest();
+            let lockEnd = await veLT.lockedEnd(otherAccount.address);
+            let nextTime = blcoTime + WEEK;
+            nextTime = nextTime - nextTime % WEEK;
+            let slope = await veLT.getLastUserSlope(otherAccount.address);
+            let gSlope = slope.mul(userWeight).div(10000);
+            let Wg = gSlope.mul((lockEnd.toNumber() - nextTime));
+
+            lockEnd = await veLT.lockedEnd(otherAccount.address);
+            let slope2 = await veLT.getLastUserSlope(otherAccount.address);
+            let gSlope2 = slope2.mul(userWeightV2).div(10000);
+            let Wg2 = gSlope2.mul((lockEnd.toNumber() - nextTime));
+            let totalWg = Wg.add(Wg2);
+            expect(await gombocController.getGombocWeight(mockGomboc.address)).to.equal(Wg);
+            expect(await gombocController.getGombocWeight(mockGombocV2.address)).to.equal(Wg2);
+            expect(await gombocController.getWeightsSumPreType(typeId)).to.equal(Wg);
+            expect(await gombocController.getWeightsSumPreType(typeId1)).to.equal(Wg2);
+            expect(await gombocController.getTotalWeight()).to.equal(totalWg.mul(weight));
+            expect(await gombocController.gombocRelativeWeight(mockGomboc.address, nextTime)).to.equal(Wg.mul(ethers.utils.parseEther("1")).div(totalWg));
+            expect(await gombocController.gombocRelativeWeight(mockGombocV2.address, nextTime)).to.equal(Wg2.mul(ethers.utils.parseEther("1")).div(totalWg));
+        });
     })
 })

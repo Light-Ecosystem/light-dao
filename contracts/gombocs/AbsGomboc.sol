@@ -22,6 +22,7 @@ abstract contract AbsGomboc is Ownable2Step {
         uint256 votingBalance,
         uint256 votingTotal
     );
+    event SetPermit2Address(address oldAddress, address newAddress);
 
     uint256 internal constant _TOKENLESS_PRODUCTION = 40;
     uint256 internal constant _DAY = 86400;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
@@ -85,6 +85,10 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         address _stHOPE,
         address _emergencyReturn
     ) external initializer {
+        require(_votingEscrow != address(0), "Invalid Address");
+        require(_token != address(0), "Invalid Address");
+        require(_stHOPE != address(0), "Invalid Address");
+
         __Ownable2Step_init();
 
         uint256 t = LibTime.timesRoundedByWeek(_startTime);
@@ -199,7 +203,6 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
                     /// Then make dt 0
                     dt = t - pt.ts;
                 }
-                _getPointBalanceOf(pt.bias, pt.slope, dt);
                 veSupply[t] = _getPointBalanceOf(pt.bias, pt.slope, dt);
             }
             t += WEEK;
@@ -396,7 +399,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
         uint256 total = 0;
 
-        for (uint256 i = 0; i < _receivers.length; i++) {
+        for (uint256 i = 0; i < _receivers.length && i < 50; i++) {
             address addr = _receivers[i];
             if (addr == address(0)) {
                 break;
@@ -457,6 +460,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      */
     function setEmergencyReturn(address _addr) external onlyOwner {
         emergencyReturn = _addr;
+        emit SetEmergencyReturn(_addr);
     }
 
     function pause() external onlyOwner {

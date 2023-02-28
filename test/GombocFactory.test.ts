@@ -7,7 +7,7 @@ const { ethers } = require("hardhat");
 const { BigNumber } = require("ethers");
 
 
-describe("GombocFactory", function() {
+describe("GombocFactory", function () {
 
   const DAY = 86400;
   const WEEK = DAY * 7;
@@ -65,10 +65,27 @@ describe("GombocFactory", function() {
 
   }
 
+  describe("Set permit2 address", async () => {
+    it("only owner can set", async () => {
+      const { alice, gombocFactory } = await loadFixture(deployOneYearLockFixture);
+      await expect(gombocFactory.connect(alice).setPermit2Address("0x000000000022D473030F116dDEE9F6B43aC78BA3")).to.be.revertedWith("Ownable: caller is not the owner");
+    })
+    it("can not set address zero", async () => {
+      const { gombocFactory } = await loadFixture(deployOneYearLockFixture);
+      await expect(gombocFactory.setPermit2Address(ethers.constants.AddressZero)).to.be.revertedWith("CE000");
+    })
+    it("set permit2 address success", async () => {
+      const { gombocFactory, permit2 } = await loadFixture(deployOneYearLockFixture);
+      const newAddress = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+      await expect(gombocFactory.setPermit2Address(newAddress)).to.be.emit(gombocFactory, "SetPermit2Address")
+        .withArgs(permit2.address, newAddress);
+      expect(await gombocFactory.permit2()).to.be.equal(newAddress);
+    })
+  })
 
-  describe("test gomboc factory", function() {
+  describe("test gomboc factory", function () {
 
-    it("test onwer", async function() {
+    it("test onwer", async function () {
       const { gombocFactory, poolGomboc, poolGombocImplementation, owner } = await loadFixture(deployOneYearLockFixture);
       expect(await gombocFactory.owner()).to.equal(owner.address);
       expect(await poolGomboc.owner()).to.equal(owner.address);
@@ -76,14 +93,14 @@ describe("GombocFactory", function() {
     });
 
 
-    it("should revert right error when init twice", async function() {
+    it("should revert right error when init twice", async function () {
       const { poolGombocImplementation, poolGomboc, mockLpToken, minter, permit2, bob } = await loadFixture(deployOneYearLockFixture);
 
       await expect(poolGomboc.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("PoolGomboc: FORBIDDEN");
       await expect(poolGombocImplementation.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("PoolGomboc: FORBIDDEN");
     });
 
-    it("test  gomboc reward others tokens", async function() {
+    it("test  gomboc reward others tokens", async function () {
       const { poolGomboc, mytoken, owner, mockLpToken } = await loadFixture(deployOneYearLockFixture);
 
       await poolGomboc.addReward(mytoken.address, owner.address);

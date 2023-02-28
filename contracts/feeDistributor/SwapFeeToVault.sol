@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -21,6 +21,9 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     address public underlyingBurner;
 
     constructor(BurnerManager _burnerManager, address _underlyingBurner) {
+        require(address(_burnerManager) != address(0), "Invalid Address");
+        require(_underlyingBurner != address(0), "Invalid Address");
+
         burnerManager = _burnerManager;
         underlyingBurner = _underlyingBurner;
     }
@@ -36,7 +39,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     }
 
     function withdrawMany(address[] memory pools) external whenNotPaused {
-        for (uint256 i = 0; i < pools.length; i++) {
+        for (uint256 i = 0; i < pools.length && i < 256; i++) {
             this.withdrawAdminFee(pools[i]);
         }
     }
@@ -57,7 +60,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     }
 
     function burnMany(IERC20[] calldata tokens) external {
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint i = 0; i < tokens.length && i < 128; i++) {
             _burn(tokens[i]);
         }
     }

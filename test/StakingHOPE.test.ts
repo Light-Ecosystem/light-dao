@@ -67,6 +67,24 @@ describe("StakingHope", function () {
     return { lt, mockLpToken, permit2, veLT, gombocController, hopeToken, minter, stakingHope, admin, owner, alice, bob };
   }
 
+  describe("Set permit2 address", async () => {
+    it("only owner can set", async () => {
+      const { alice, stakingHope } = await loadFixture(deployOneYearLockFixture);
+      await expect(stakingHope.connect(alice).setPermit2Address("0x000000000022D473030F116dDEE9F6B43aC78BA3")).to.be.revertedWith("Ownable: caller is not the owner");
+    })
+    it("can not set address zero", async () => {
+      const { stakingHope } = await loadFixture(deployOneYearLockFixture);
+      await expect(stakingHope.setPermit2Address(ethers.constants.AddressZero)).to.be.revertedWith("CE000");
+    })
+    it("set permit2 address success", async () => {
+      const { stakingHope, permit2 } = await loadFixture(deployOneYearLockFixture);
+      const newAddress = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+      await expect(stakingHope.setPermit2Address(newAddress)).to.be.emit(stakingHope, "SetPermit2Address")
+        .withArgs(permit2.address, newAddress);
+      expect(await stakingHope.permit2Address()).to.be.equal(newAddress);
+    })
+  })
+
   describe("test_checkpoint", async function () {
     it("test_user_checkpoint", async () => {
       const { stakingHope, alice } = await loadFixture(deployOneYearLockFixture);

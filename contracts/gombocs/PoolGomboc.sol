@@ -461,6 +461,17 @@ contract PoolGomboc is AbsGomboc, ReentrancyGuard {
         rewardsReceiver[msg.sender] = _receiver;
     }
 
+    /**
+     * @dev Set permit2 address, onlyOwner
+     * @param newAddress New permit2 address
+     */
+    function setPermit2Address(address newAddress) external onlyOwner {
+        require(newAddress != address(0), "CE000");
+        address oldAddress = permit2Address;
+        permit2Address = newAddress;
+        emit SetPermit2Address(oldAddress, newAddress);
+    }
+
     /***
      * @notice Claim available reward tokens for `_addr`
      * @param _addr Address to claim for

@@ -217,6 +217,18 @@ contract GombocController is Ownable2Step, IGombocController {
         _changeGombocWeight(gombocAddress, weight);
     }
 
+    /**
+     * @notice Allocate voting power for changing pool weights
+     * @param gombocAddressList Gomboc of list which `msg.sender` votes for
+     * @param userWeightList Weight of list for a gomboc in bps (units of 0.01%). Minimal is 0.01%.
+     */
+    function batchVoteForGombocWeights(address[] memory gombocAddressList, uint256[] memory userWeightList) public {
+        require(gombocAddressList.length == userWeightList.length, "GC007");
+        for (uint256 i = 0; i < gombocAddressList.length && i < 128; i++) {
+            voteForGombocWeights(gombocAddressList[i], userWeightList[i]);
+        }
+    }
+
     //avoid Stack too deep
     struct VoteForGombocWeightsParam {
         VotedSlope oldSlope;
@@ -234,7 +246,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param userWeight Weight for a gomboc in bps (units of 0.01%). Minimal is 0.01%.
      *        example: 10%=1000,3%=300,0.01%=1,100%=10000
      */
-    function voteForGombocWeights(address gombocAddress, uint256 userWeight) external override {
+    function voteForGombocWeights(address gombocAddress, uint256 userWeight) public override {
         int128 gombocType = _gombocTypes[gombocAddress] - 1;
         require(gombocType >= 0, "GC000");
 

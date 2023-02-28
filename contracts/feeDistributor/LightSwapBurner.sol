@@ -18,6 +18,8 @@ interface ISwapRouter {
 }
 
 contract LightSwapBurner is IBurner, Ownable2Step {
+    event SetRouters(ISwapRouter[] _routers);
+
     ISwapRouter[] public routers;
     IERC20 public immutable HOPE;
     mapping(ISwapRouter => mapping(IERC20 => bool)) public approved;
@@ -32,6 +34,7 @@ contract LightSwapBurner is IBurner, Ownable2Step {
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
         routers = _routers;
+        emit SetRouters(_routers);
     }
 
     function burn(address to, IERC20 token, uint amount) external {
@@ -40,7 +43,10 @@ contract LightSwapBurner is IBurner, Ownable2Step {
             return;
         }
 
+        uint256 balanceBefore = token.balanceOf(address(this));
         require(token.transferFrom(msg.sender, address(this), amount), "LSB01");
+        uint256 balanceAfter = token.balanceOf(address(this));
+        uint256 spendAmount = balanceAfter - balanceBefore;
 
         ISwapRouter bestRouter = routers[0];
         uint bestExpected = 0;
@@ -49,7 +55,7 @@ contract LightSwapBurner is IBurner, Ownable2Step {
         path[1] = address(HOPE);
 
         for (uint i = 0; i < routers.length; i++) {
-            uint[] memory expected = routers[i].getAmountsOut(amount, path);
+            uint[] memory expected = routers[i].getAmountsOut(spendAmount, path);
             if (expected[0] > bestExpected) {
                 bestExpected = expected[0];
                 bestRouter = routers[i];
@@ -62,6 +68,6 @@ contract LightSwapBurner is IBurner, Ownable2Step {
             approved[bestRouter][token] = true;
         }
 
-        bestRouter.swapExactTokensForTokens(amount, 0, path, to, block.timestamp);
+        bestRouter.swapExactTokensForTokens(spendAmount, 0, path, to, block.timestamp);
     }
 }

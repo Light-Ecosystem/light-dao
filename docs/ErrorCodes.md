@@ -15,6 +15,7 @@
 `GC004` : `You used all your voting power`
 `GC005` : `Cannot vote so often`
 `GC006` : `Used too much power`
+`GC007` : `Invalid Param`
 
 ## VotingEscrow related
 

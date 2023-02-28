@@ -10,6 +10,8 @@ interface IFeeDistributor {
 
     event RecoverBalance(address indexed token, address indexed emergencyReturn, uint256 amount);
 
+    event SetEmergencyReturn(address indexed emergencyReturn);
+
     /**
      * @notice Update the token checkpoint
      * @dev Calculates the total number of tokens to be distributed in a given week.

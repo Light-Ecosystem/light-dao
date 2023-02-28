@@ -223,6 +223,7 @@ contract GombocController is Ownable2Step, IGombocController {
      * @param userWeightList Weight of list for a gomboc in bps (units of 0.01%). Minimal is 0.01%.
      */
     function batchVoteForGombocWeights(address[] memory gombocAddressList, uint256[] memory userWeightList) public {
+        require(gombocAddressList.length == userWeightList.length, "GC007");
         for (uint256 i = 0; i < gombocAddressList.length && i < 128; i++) {
             voteForGombocWeights(gombocAddressList[i], userWeightList[i]);
         }

@@ -35,7 +35,7 @@ abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable
         address _ownerAddress
     ) internal onlyInitializing {
         require(_ownerAddress != address(0), "CE000");
-        require(_connnet != address(0), "CE000");
+        // require(_connnet != address(0), "CE000");
         require(_token != address(0), "CE000");
 
         string memory _name = IERC20MetadataUpgradeable(_token).name();
@@ -52,6 +52,7 @@ abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable
     }
 
     function deposit(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external whenNotPaused returns (uint256) {
+        require(connet != address(0), "connet is not initialized, please deposit later");
         require(amount != 0, "INVALID_ZERO_AMOUNT");
         address from = _msgSender();
         /// transferFrom token to this contract

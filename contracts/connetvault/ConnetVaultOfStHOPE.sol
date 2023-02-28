@@ -8,10 +8,6 @@ import "../interfaces/IMinter.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "./AbsConnetVault.sol";
 
-interface IStHope {
-    function claimableTokens(address addr) external returns (uint256);
-}
-
 contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AbsConnetVault {
     event RewardsDistributed(address distributer, address to, uint256 amount);
 
@@ -27,6 +23,8 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
         address _minter,
         address _ltToken
     ) external initializer {
+        require(_minter != address(0), "CE000");
+        require(_ltToken != address(0), "CE000");
         minter = _minter;
         ltToken = _ltToken;
         _initialize(_permit2Address, _token, _connnet, _withdrawAdmin, _ownerAddress);

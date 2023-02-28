@@ -8,8 +8,8 @@ import { Constants } from "../constant";
  */
 async function main() {
 
-  let connetAddress = "";
-  let withdrawAddress = "";
+  let connetAddress = ethers.constants.AddressZero;
+  let withdrawAddress = ethers.constants.AddressZero;
   let adminRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("withraw_Admin_Role"));
 
   // change connet and withdrawAdmin for connetVaultOfHOPE

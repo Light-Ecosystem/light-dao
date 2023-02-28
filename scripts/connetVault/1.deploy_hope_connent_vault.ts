@@ -12,12 +12,12 @@ async function main() {
 
   let permit2Address = FileUtils.getContractAddress(Constants.PERMIT2);
   let hopeToken = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
-  let connetAddress = "";
-  let _withdrawAdmin = "";
-  let ownerAddress = owner;
+  let connetAddress = ethers.constants.AddressZero;
+  let _withdrawAdmin = ethers.constants.AddressZero;
+  let ownerAddress = owner.address;
   //deloy ConnetVaultOfHOPE  contract
   const ConnetVault = await ethers.getContractFactory("ConnetVault");
-  const connetVault = await upgrades.deployProxy(ConnetVault, [permit2Address, hopeToken, hopeToken, connetAddress, _withdrawAdmin, ownerAddress]);
+  const connetVault = await upgrades.deployProxy(ConnetVault, [permit2Address, hopeToken, connetAddress, _withdrawAdmin, ownerAddress]);
   await connetVault.deployed();
   console.log("connetVault: ", connetVault.address);
   FileUtils.saveFrontendFiles(connetVault.address, "ConnetVault", Constants.HOPE_CONNET_VAULT);

@@ -33,7 +33,7 @@ interface IGombocController {
 }
 
 interface IStakingHOPE {
-    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external;
+    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external returns (bool);
 }
 
 contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IGombocFeeDistributor {
@@ -476,7 +476,8 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {
         require(IERC20Upgradeable(token).approve(stHOPE, amount), "APPROVE_FAILED");
-        IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        bool success = IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        require(success, "staking hope fail");
         TransferHelper.doTransferOut(stHOPE, to, amount);
     }
 

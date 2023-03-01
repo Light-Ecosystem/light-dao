@@ -30,7 +30,7 @@ interface IVotingEscrow {
 }
 
 interface IStakingHOPE {
-    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external;
+    function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external returns (bool);
 }
 
 contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDistributor {
@@ -473,7 +473,8 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
 
     function stakingHOPEAndTransfer2User(address to, uint256 amount) internal {
         TransferHelper.doApprove(token, stHOPE, amount);
-        IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        bool success = IStakingHOPE(stHOPE).staking(amount, 0, 0, "");
+        require(success, "staking hope fail");
         TransferHelper.doTransferOut(stHOPE, to, amount);
     }
 }

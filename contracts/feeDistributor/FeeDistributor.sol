@@ -162,11 +162,15 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
 
     /**
      * @notice Get the VeLT voting percentage for `_user` in _gomboc  at `_timestamp`
+     * @dev This function should be manually changed to "view" in the ABI
      * @param _user Address to query voting
      * @param _timestamp Epoch time
      * @return value of voting precentage normalized to 1e18
      */
-    function vePrecentageForAt(address _user, uint256 _timestamp) external view returns (uint256) {
+    function vePrecentageForAt(address _user, uint256 _timestamp) external returns (uint256) {
+        if (block.timestamp >= timeCursor) {
+            _checkpointTotalSupply();
+        }
         _timestamp = LibTime.timesRoundedByWeek(_timestamp);
         uint256 veForAtValue = this.veForAt(_user, _timestamp);
         uint256 supply = veSupply[_timestamp];

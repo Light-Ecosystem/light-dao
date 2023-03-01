@@ -35,7 +35,7 @@ interface IFeeDistributor {
      * @param _timestamp Epoch time
      * @return value of voting precentage normalized to 1e18
      */
-    function vePrecentageForAt(address _user, uint256 _timestamp) external view returns (uint256);
+    function vePrecentageForAt(address _user, uint256 _timestamp) external returns (uint256);
 
     /**
      * @notice Update the veLT total supply checkpoint

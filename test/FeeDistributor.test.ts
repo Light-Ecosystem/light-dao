@@ -316,8 +316,8 @@ describe("FeeDistributor", function () {
             await feeDistributor.checkpointTotalSupply();
 
             let timestamp = await time.latest();
-            let precentage1 = await feeDistributor.vePrecentageForAt(owner.address, timestamp);
-            let precentage2 = await feeDistributor.vePrecentageForAt(alice.address, timestamp);
+            let precentage1 = await feeDistributor.callStatic.vePrecentageForAt(owner.address, timestamp);
+            let precentage2 = await feeDistributor.callStatic.vePrecentageForAt(alice.address, timestamp);
             expect(precentage1).to.be.equal(ethers.utils.parseEther("0.5"));
             expect(precentage2).to.be.equal(ethers.utils.parseEther("0.5"));
         })

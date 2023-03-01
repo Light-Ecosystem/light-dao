@@ -30,6 +30,8 @@ interface IGombocController {
     function voteVeLtPointHistory(address user, address gomboc, uint256 epoch) external view returns (Point memory);
 
     function gombocRelativeWeight(address gombocAddress, uint256 time) external view returns (uint256);
+
+    function checkpointGomboc(address addr) external;
 }
 
 interface IStakingHOPE {
@@ -161,12 +163,14 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
 
     /**
      * @notice Get the VeLT voting percentage for `_user` in _gomboc  at `_timestamp`
+     * @dev This function should be manually changed to "view" in the ABI
      * @param _gomboc Address to query voting gomboc
      * @param _user Address to query voting
      * @param _timestamp Epoch time
      * @return value of voting precentage normalized to 1e18
      */
-    function vePrecentageForAt(address _gomboc, address _user, uint256 _timestamp) external view returns (uint256) {
+    function vePrecentageForAt(address _gomboc, address _user, uint256 _timestamp) external returns (uint256) {
+        IGombocController(gombocController).checkpointGomboc(_gomboc);
         _timestamp = LibTime.timesRoundedByWeek(_timestamp);
         uint256 veForAtValue = this.veForAt(_gomboc, _user, _timestamp);
         SimplePoint memory pt = IGombocController(gombocController).pointsWeight(_gomboc, _timestamp);
@@ -321,6 +325,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
         }
 
         _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
+        IGombocController(gombocController).checkpointGomboc(gomboc);
         uint256 amount = _claim(gomboc, _addr, _lastTokenTime);
         if (amount != 0) {
             stakingHOPEAndTransfer2User(_addr, amount);
@@ -359,7 +364,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
 
         _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
         uint256 total = 0;
-
+        IGombocController(gombocController).checkpointGomboc(gomboc);
         for (uint256 i = 0; i < _receivers.length && i < 50; i++) {
             address addr = _receivers[i];
             if (addr == address(0)) {
@@ -402,6 +407,7 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
             if (gomboc == address(0)) {
                 break;
             }
+            IGombocController(gombocController).checkpointGomboc(gomboc);
             uint256 amount = _claim(gomboc, receiver, _lastTokenTime);
             if (amount != 0) {
                 total += amount;

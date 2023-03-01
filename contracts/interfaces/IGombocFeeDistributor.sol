@@ -28,7 +28,7 @@ interface IGombocFeeDistributor {
      * @param _timestamp Epoch time
      * @return value of voting precentage normalized to 1e18
      */
-    function vePrecentageForAt(address _gomboc, address _user, uint256 _timestamp) external view returns (uint256);
+    function vePrecentageForAt(address _gomboc, address _user, uint256 _timestamp) external returns (uint256);
 
     /**
      * @notice Get the veLT balance for `_user` at `_timestamp`

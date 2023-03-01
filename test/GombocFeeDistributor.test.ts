@@ -276,8 +276,8 @@ describe("GombocFeeDistributor", function () {
             await gombocController.connect(alice).voteForGombocWeights(stakingHope.address, 5000);
 
             let timestamp = await time.latest() + WEEK;
-            let precentage1 = await gombocFeeDistributor.vePrecentageForAt(stakingHope.address, owner.address, timestamp);
-            let precentage2 = await gombocFeeDistributor.vePrecentageForAt(stakingHope.address, alice.address, timestamp);
+            let precentage1 = await gombocFeeDistributor.callStatic.vePrecentageForAt(stakingHope.address, owner.address, timestamp);
+            let precentage2 = await gombocFeeDistributor.callStatic.vePrecentageForAt(stakingHope.address, alice.address, timestamp);
             expect(precentage1).to.be.equal(ethers.utils.parseEther("0.5"));
             expect(precentage2).to.be.equal(ethers.utils.parseEther("0.5"));
         })
@@ -366,7 +366,7 @@ describe("GombocFeeDistributor", function () {
 
             /// ownerClaimBalance =  gombocBalancePreWeek * ownerVotingGombocPrecentage
             let gombocBalance = await gombocFeeDistributor.gombocBalancePreWeek(stakingHope.address, lastTokenTime);
-            let ownerVotingGombocPrecentage = await gombocFeeDistributor.vePrecentageForAt(stakingHope.address, owner.address, lastTokenTime);
+            let ownerVotingGombocPrecentage = await gombocFeeDistributor.callStatic.vePrecentageForAt(stakingHope.address, owner.address, lastTokenTime);
             await gombocFeeDistributor.claim(stakingHope.address, owner.address);
             let expectStHOPE = gombocBalance.mul(ownerVotingGombocPrecentage).div(ethers.utils.parseEther("1"));
             expect(await stakingHope.balanceOf(owner.address)).to.be.equal(expectStHOPE);
@@ -405,8 +405,8 @@ describe("GombocFeeDistributor", function () {
 
             /// ownerClaimBalance =  gombocBalancePreWeek * ownerVotingGombocPrecentage
             let gombocBalance = await gombocFeeDistributor.gombocBalancePreWeek(stakingHope.address, lastTokenTime);
-            let ownerVotingGombocPrecentage = await gombocFeeDistributor.vePrecentageForAt(stakingHope.address, owner.address, lastTokenTime);
-            let aliceVotingGombocPrecentage = await gombocFeeDistributor.vePrecentageForAt(stakingHope.address, alice.address, lastTokenTime);
+            let ownerVotingGombocPrecentage = await gombocFeeDistributor.callStatic.vePrecentageForAt(stakingHope.address, owner.address, lastTokenTime);
+            let aliceVotingGombocPrecentage = await gombocFeeDistributor.callStatic.vePrecentageForAt(stakingHope.address, alice.address, lastTokenTime);
             await gombocFeeDistributor.claimMany(stakingHope.address, [owner.address, alice.address]);
             let expectStHOPE = gombocBalance.mul(ownerVotingGombocPrecentage).div(ethers.utils.parseEther("1"));
             expect(await stakingHope.balanceOf(owner.address)).to.be.equal(expectStHOPE);
@@ -450,7 +450,7 @@ describe("GombocFeeDistributor", function () {
             let gombocBalance1 = await gombocFeeDistributor.gombocBalancePreWeek(stakingHope.address, lastTokenTime);
             let gombocBalance2 = await gombocFeeDistributor.gombocBalancePreWeek(mockGomboc.address, lastTokenTime);
             await gombocFeeDistributor.claimManyGomboc([stakingHope.address, mockGomboc.address], owner.address, { gasLimit: 30000000 });
-            let ownerVotingGombocPrecentage = await gombocFeeDistributor.vePrecentageForAt(mockGomboc.address, owner.address, lastTokenTime);
+            let ownerVotingGombocPrecentage = await gombocFeeDistributor.callStatic.vePrecentageForAt(mockGomboc.address, owner.address, lastTokenTime);
             let expectStHOPE = gombocBalance1.add(gombocBalance2.mul(ownerVotingGombocPrecentage).div(ethers.utils.parseEther("1")));
             expect(await stakingHope.balanceOf(owner.address)).to.be.equal(expectStHOPE);
         })

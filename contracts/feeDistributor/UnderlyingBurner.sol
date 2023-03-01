@@ -106,6 +106,10 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param _routers routers implment ISwapRouter
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
+        require(_routers.length != 0, "invalid param");
+        for (uint i = 0; i < routers.length; i++) {
+            require(address(routers[i]) != address(0), "invalid address");
+        }
         routers = _routers;
         emit SetRouters(_routers);
     }
@@ -141,6 +145,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param _addr emergencyReturn address
      */
     function setEmergencyReturn(address _addr) external onlyOwner {
+        require(_addr != address(0), "CE000");
         emergencyReturn = _addr;
         emit SetEmergencyReturn(_addr);
     }

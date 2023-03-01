@@ -33,6 +33,10 @@ contract LightSwapBurner is IBurner, Ownable2Step {
      * @param _routers routers implment ISwapRouter
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
+        require(_routers.length != 0, "invalid param");
+        for (uint i = 0; i < routers.length; i++) {
+            require(address(routers[i]) != address(0), "invalid address");
+        }
         routers = _routers;
         emit SetRouters(_routers);
     }

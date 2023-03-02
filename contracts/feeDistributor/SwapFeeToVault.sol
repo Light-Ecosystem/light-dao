@@ -44,24 +44,24 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         }
     }
 
-    function _burn(IERC20 token) internal {
+    function _burn(IERC20 token, uint amountOutMin) internal {
         uint256 amount = token.balanceOf(address(this));
         // user choose to not burn token if not profitable
         if (amount > 0) {
             IBurner burner = burnerManager.burners(address(token));
             require(token.approve(address(burner), amount), "SFTV00");
             require(burner != IBurner(address(0)), "SFTV01");
-            burner.burn(underlyingBurner, token, amount);
+            burner.burn(underlyingBurner, token, amount, amountOutMin);
         }
     }
 
-    function burn(IERC20 token) external {
-        _burn(token);
+    function burn(IERC20 token, uint amountOutMin) external {
+        _burn(token, amountOutMin);
     }
 
-    function burnMany(IERC20[] calldata tokens) external {
+    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external {
         for (uint i = 0; i < tokens.length && i < 128; i++) {
-            _burn(tokens[i]);
+            _burn(tokens[i], amountOutMin[i]);
         }
     }
 

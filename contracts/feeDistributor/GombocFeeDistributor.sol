@@ -342,7 +342,18 @@ contract GombocFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, I
      *
      */
     function claimableTokens(address gomboc, address _addr) external whenNotPaused returns (uint256) {
-        return this.claim(gomboc, _addr);
+        if (_addr == address(0)) {
+            _addr = msg.sender;
+        }
+        uint256 _lastTokenTime = lastTokenTime;
+        if (canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
+            _checkpointToken();
+            _lastTokenTime = block.timestamp;
+        }
+
+        _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
+        IGombocController(gombocController).checkpointGomboc(gomboc);
+        return _claim(gomboc, _addr, _lastTokenTime);
     }
 
     /**

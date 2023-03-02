@@ -377,7 +377,20 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      *
      */
     function claimableToken(address _addr) external returns (uint256) {
-        return this.claim(_addr);
+        if (block.timestamp >= timeCursor) {
+            _checkpointTotalSupply();
+        }
+        if (_addr == address(0)) {
+            _addr = msg.sender;
+        }
+        uint256 _lastTokenTime = lastTokenTime;
+        if (canCheckpointToken && (block.timestamp > _lastTokenTime + TOKEN_CHECKPOINT_DEADLINE)) {
+            _checkpointToken();
+            _lastTokenTime = block.timestamp;
+        }
+
+        _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
+        return _claim(_addr, votingEscrow, _lastTokenTime);
     }
 
     /**

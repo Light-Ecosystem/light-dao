@@ -10,11 +10,11 @@ async function main() {
     let usdc = FileUtils.getContractAddress(Constants.USDC_TOKEN);
     let usdt = FileUtils.getContractAddress(Constants.USDT_TOKEN);
     let dai = FileUtils.getContractAddress(Constants.DAI_TOKEN);
-    let lightSwapBurner = FileUtils.getContractAddress(Constants.LightSwapBurner);
+    let hopeSwapBurner = FileUtils.getContractAddress(Constants.HopeSwapBurner);
     let burnerManager = FileUtils.getContractAddress(Constants.BurnerManager);
     const burnerManagerContract = await ethers.getContractAt("BurnerManager", burnerManager);
 
-    await burnerManagerContract.setManyBurner([usdc, usdt, dai], [lightSwapBurner, lightSwapBurner, lightSwapBurner]);
+    await burnerManagerContract.setManyBurner([usdc, usdt, dai], [hopeSwapBurner, hopeSwapBurner, hopeSwapBurner]);
 }
 
 main().catch((error) => {

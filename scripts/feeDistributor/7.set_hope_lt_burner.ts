@@ -9,11 +9,11 @@ async function main() {
 
     let hopeToken = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
     let ltToken = FileUtils.getContractAddress(Constants.LT_TOKEN);
-    let lightSwapBurner = FileUtils.getContractAddress(Constants.LightSwapBurner);
+    let hopeSwapBurner = FileUtils.getContractAddress(Constants.HopeSwapBurner);
     let burnerManager = FileUtils.getContractAddress(Constants.BurnerManager);
     const burnerManagerContract = await ethers.getContractAt("BurnerManager", burnerManager);
 
-    await burnerManagerContract.setManyBurner([hopeToken, ltToken], [lightSwapBurner, lightSwapBurner]);
+    await burnerManagerContract.setManyBurner([hopeToken, ltToken], [hopeSwapBurner, hopeSwapBurner]);
 }
 
 main().catch((error) => {

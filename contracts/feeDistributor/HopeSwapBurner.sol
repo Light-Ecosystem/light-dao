@@ -17,7 +17,7 @@ interface ISwapRouter {
     ) external returns (uint[] memory amounts);
 }
 
-contract LightSwapBurner is IBurner, Ownable2Step {
+contract HopeSwapBurner is IBurner, Ownable2Step {
     event SetRouters(ISwapRouter[] _routers);
 
     ISwapRouter[] public routers;

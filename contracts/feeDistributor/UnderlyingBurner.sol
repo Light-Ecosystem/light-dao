@@ -114,7 +114,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
         emit SetRouters(_routers);
     }
 
-    function burn(IERC20Upgradeable token, uint amount) external {
+    function burn(IERC20Upgradeable token, uint amount, uint amountOutMin) external {
         require(address(token) != hopeToken, "HOPE dosent need burn");
 
         ISwapRouter bestRouter = routers[0];
@@ -130,7 +130,9 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
                 bestRouter = routers[i];
             }
         }
-
+        if (bestExpected < amountOutMin) {
+            return;
+        }
         if (!approved[bestRouter][token]) {
             bool success = IERC20Upgradeable(token).approve(address(bestRouter), type(uint).max);
             require(success, "LSB01");

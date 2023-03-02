@@ -25,9 +25,9 @@ echo "deploy feeToVault"
 npx hardhat run scripts/feeDistributor/5.deploy_fee_to_vault.ts --network $_netwrok
 echo "deploy feeToVault_______________\n"
 
-echo "deploy LightSwapBurner_______________"
-npx hardhat run scripts/feeDistributor/6.deploy_light_swap_burner.ts --network $_netwrok
-echo "deploy LightSwapBurner_______________\n"
+echo "deploy HopeSwapBurner_______________"
+npx hardhat run scripts/feeDistributor/6.deploy_hope_swap_burner.ts --network $_netwrok
+echo "deploy HopeSwapBurner_______________\n"
 
 echo "set hope and lt burner_______________"
 npx hardhat run scripts/feeDistributor/7.set_hope_lt_burner.ts --network $_netwrok

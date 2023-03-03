@@ -55,11 +55,11 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         }
     }
 
-    function burn(IERC20 token, uint amountOutMin) external {
+    function burn(IERC20 token, uint amountOutMin) external whenNotPaused {
         _burn(token, amountOutMin);
     }
 
-    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external {
+    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external whenNotPaused {
         for (uint i = 0; i < tokens.length && i < 128; i++) {
             _burn(tokens[i], amountOutMin[i]);
         }

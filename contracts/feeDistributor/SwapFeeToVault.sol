@@ -56,6 +56,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
     }
 
     function burn(IERC20 token, uint amountOutMin) external whenNotPaused {
+        require(msg.sender == tx.origin, "SFTV02");
         _burn(token, amountOutMin);
     }
 

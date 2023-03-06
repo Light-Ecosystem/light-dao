@@ -8,9 +8,10 @@ import { deploy } from "@openzeppelin/hardhat-upgrades/dist/utils";
  */
 async function main() {
   let hopeToken = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
+  let swapFeeVault = FileUtils.getContractAddress(Constants.SwapFeeToVault);
 
   const HopeSwapBurner = await ethers.getContractFactory("HopeSwapBurner");
-  const hopeSwapBurner = await HopeSwapBurner.deploy(hopeToken);
+  const hopeSwapBurner = await HopeSwapBurner.deploy(hopeToken, swapFeeVault);
   await hopeSwapBurner.deployed();
   console.log("hopeSwapBurner: ", hopeSwapBurner.address);
   FileUtils.saveFrontendFiles(

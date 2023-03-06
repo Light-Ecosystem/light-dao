@@ -22,10 +22,12 @@ contract HopeSwapBurner is IBurner, Ownable2Step {
 
     ISwapRouter[] public routers;
     IERC20 public immutable HOPE;
+    address public immutable feeVault;
     mapping(ISwapRouter => mapping(IERC20 => bool)) public approved;
 
-    constructor(IERC20 _HOPE) {
+    constructor(IERC20 _HOPE, address _feeVault) {
         HOPE = _HOPE;
+        feeVault = _feeVault;
     }
 
     /**
@@ -42,6 +44,8 @@ contract HopeSwapBurner is IBurner, Ownable2Step {
     }
 
     function burn(address to, IERC20 token, uint amount, uint amountOutMin) external {
+        require(msg.sender == feeVault, "LSB04");
+
         if (token == HOPE) {
             require(token.transferFrom(msg.sender, to, amount), "LSB00");
             return;

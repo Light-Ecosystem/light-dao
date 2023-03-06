@@ -115,6 +115,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
     }
 
     function burn(IERC20Upgradeable token, uint amount, uint amountOutMin) external {
+        require(msg.sender == tx.origin, "not EOA");
         require(address(token) != hopeToken, "HOPE dosent need burn");
 
         ISwapRouter bestRouter = routers[0];

@@ -130,12 +130,11 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
                 bestRouter = routers[i];
             }
         }
-        if (bestExpected < amountOutMin) {
-            return;
-        }
+
+        require(bestExpected >= amountOutMin, "less than expected");
         if (!approved[bestRouter][token]) {
             bool success = IERC20Upgradeable(token).approve(address(bestRouter), type(uint).max);
-            require(success, "LSB01");
+            require(success, "approve failed");
             approved[bestRouter][token] = true;
         }
 

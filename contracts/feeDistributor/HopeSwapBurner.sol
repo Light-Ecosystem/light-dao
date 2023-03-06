@@ -66,12 +66,10 @@ contract HopeSwapBurner is IBurner, Ownable2Step {
             }
         }
 
-        if (bestExpected < amountOutMin) {
-            return;
-        }
+        require(bestExpected >= amountOutMin, "LSB02");
         if (!approved[bestRouter][token]) {
             bool success = IERC20(token).approve(address(bestRouter), type(uint).max);
-            require(success, "LSB01");
+            require(success, "LSB03");
             approved[bestRouter][token] = true;
         }
 

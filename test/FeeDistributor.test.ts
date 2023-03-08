@@ -16,7 +16,7 @@ describe("FeeDistributor", function () {
 
         let LT = await ethers.getContractFactory("LT");
         const VeLT = await ethers.getContractFactory("VotingEscrow");
-        const GombocController = await ethers.getContractFactory("GombocController");
+        const GaugeController = await ethers.getContractFactory("GaugeController");
         const Minter = await ethers.getContractFactory("Minter");
         const StakingHOPE = await ethers.getContractFactory("StakingHOPE");
         const HOPE = await ethers.getContractFactory("HOPE");
@@ -39,12 +39,12 @@ describe("FeeDistributor", function () {
         const veLT = await VeLT.deploy(lt.address, permit2.address);
         await veLT.deployed();
 
-        ///deploy gombocController contract
-        const gombocController = await GombocController.deploy(lt.address, veLT.address);
-        await gombocController.deployed();
+        ///deploy gaugeController contract
+        const gaugeController = await GaugeController.deploy(lt.address, veLT.address);
+        await gaugeController.deployed();
 
         ///delopy minter contract
-        const minter = await Minter.deploy(lt.address, gombocController.address);
+        const minter = await Minter.deploy(lt.address, gaugeController.address);
         await minter.deployed();
 
         /// deploy hope contract

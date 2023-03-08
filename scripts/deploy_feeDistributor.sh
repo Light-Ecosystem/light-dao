@@ -13,9 +13,9 @@ echo "deploy feeDistributor_______________"
 npx hardhat run scripts/feeDistributor/2.deploy_feeDistributor.ts --network $_netwrok
 echo "deploy feeDistributor_______________\n"
 
-echo "deploy gombocFeeDistributor_______________"
-npx hardhat run scripts/feeDistributor/3.deploy_gomboc_feeDistributor.ts --network $_netwrok
-echo "deploy gombocFeeDistributor_______________\n"
+echo "deploy gaugeFeeDistributor_______________"
+npx hardhat run scripts/feeDistributor/3.deploy_gauge_feeDistributor.ts --network $_netwrok
+echo "deploy gaugeFeeDistributor_______________\n"
 
 echo "deploy underlyingBurner_______________"
 npx hardhat run scripts/feeDistributor/4.deploy_underlying_burner.ts --network $_netwrok

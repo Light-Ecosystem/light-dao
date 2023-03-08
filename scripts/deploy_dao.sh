@@ -16,9 +16,9 @@ echo "deploy veLT token_______________"
 npx hardhat run scripts/dao/3.deploy_veLT_token.ts --network $_netwrok
 echo "deploy veLT token_______________\n"
 
-echo "deploy gomboc controller_______________"
-npx hardhat run scripts/dao/4.deploy_gomboc_controller.ts --network $_netwrok
-echo "deploy gomboc controller_______________\n"
+echo "deploy gauge controller_______________"
+npx hardhat run scripts/dao/4.deploy_gauge_controller.ts --network $_netwrok
+echo "deploy gauge controller_______________\n"
 
 echo "deploy lt minter_______________"
 npx hardhat run scripts/dao/5.deploy_LT_minter.ts --network $_netwrok
@@ -29,13 +29,13 @@ npx hardhat run scripts/dao/6.LT_set_minter.ts --network $_netwrok
 echo "set lt minter_______________\n"
 
 
-echo "deploy pool gomboc _______________"
-npx hardhat run scripts/dao/7.deploy_pool_gomboc.ts --network $_netwrok
-echo "deploy pool gomboc _______________\n"
+echo "deploy pool gauge _______________"
+npx hardhat run scripts/dao/7.deploy_pool_gauge.ts --network $_netwrok
+echo "deploy pool gauge _______________\n"
 
-echo "deploy pool gomboc factory_______________"
-npx hardhat run scripts/dao/8.deploy_gomboc_factory.ts --network $_netwrok
-echo "deploy pool gomboc factory_______________\n"
+echo "deploy pool gauge factory_______________"
+npx hardhat run scripts/dao/8.deploy_gauge_factory.ts --network $_netwrok
+echo "deploy pool gauge factory_______________\n"
 
 echo "deploy SmartWalletWhitelist contract"
 npx hardhat run scripts/dao/9.deploy_smartWalletWhitelist.ts --network $_netwrok

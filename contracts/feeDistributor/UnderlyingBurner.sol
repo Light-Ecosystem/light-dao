@@ -32,7 +32,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
     event SetRouters(ISwapRouter[] _routers);
 
     address public feeDistributor;
-    address public gombocFeeDistributor;
+    address public gaugeFeeDistributor;
     address public emergencyReturn;
     address public hopeToken;
 
@@ -48,32 +48,32 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      * @notice Contract constructor
      * @param _hopeToken HOPE token address
      * @param _feeDistributor total feeDistributor address
-     * @param _gombocFeeDistributor gomboc feeDistributor address
+     * @param _gaugeFeeDistributor gauge feeDistributor address
      * @param _emergencyReturn Address to transfer `_token` balance to if this contract is killed
      */
     function initialize(
         address _hopeToken,
         address _feeDistributor,
-        address _gombocFeeDistributor,
+        address _gaugeFeeDistributor,
         address _emergencyReturn
     ) external initializer {
         require(_hopeToken != address(0), "Invalid Address");
         require(_feeDistributor != address(0), "Invalid Address");
-        require(_gombocFeeDistributor != address(0), "Invalid Address");
+        require(_gaugeFeeDistributor != address(0), "Invalid Address");
 
         __Ownable2Step_init();
 
         hopeToken = _hopeToken;
         feeDistributor = _feeDistributor;
-        gombocFeeDistributor = _gombocFeeDistributor;
+        gaugeFeeDistributor = _gaugeFeeDistributor;
         emergencyReturn = _emergencyReturn;
 
         IERC20Upgradeable(hopeToken).approve(feeDistributor, 2 ** 256 - 1);
-        IERC20Upgradeable(hopeToken).approve(gombocFeeDistributor, 2 ** 256 - 1);
+        IERC20Upgradeable(hopeToken).approve(gaugeFeeDistributor, 2 ** 256 - 1);
     }
 
     /**
-     * @notice  transfer HOPE to the fee distributor and  gomboc fee distributor 50% each
+     * @notice  transfer HOPE to the fee distributor and  gauge fee distributor 50% each
      */
     function transferHopeToFeeDistributor() external whenNotPaused returns (uint256) {
         uint256 balance = IERC20Upgradeable(hopeToken).balanceOf(address(this));
@@ -82,10 +82,10 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
         uint256 amount = balance / 2;
 
         IFeeDistributor(feeDistributor).burn(amount);
-        IFeeDistributor(gombocFeeDistributor).burn(amount);
+        IFeeDistributor(gaugeFeeDistributor).burn(amount);
 
         emit ToFeeDistributor(feeDistributor, amount);
-        emit ToFeeDistributor(gombocFeeDistributor, amount);
+        emit ToFeeDistributor(gaugeFeeDistributor, amount);
         return amount * 2;
     }
 

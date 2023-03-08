@@ -25,11 +25,11 @@ npx hardhat run scripts/hope/grant_sale_contract_agent.ts --network $_netwrok
 echo "grant agent to sale_______________\n"
 
 echo "deploy staking hope"
-npx hardhat run scripts/hope/4.staking_hope_gomboc.ts --network $_netwrok
+npx hardhat run scripts/hope/4.staking_hope_gauge.ts --network $_netwrok
 echo "deploy staking hope_______________\n"
 
-echo "add  staking gomboc for gombocController_______________"
-npx hardhat run scripts/hope/add_staking_gomboc.ts --network $_netwrok
-echo "add  staking gomboc for gombocController_______________\n"
+echo "add  staking gauge for gaugeController_______________"
+npx hardhat run scripts/hope/add_staking_gauge.ts --network $_netwrok
+echo "add  staking gauge for gaugeController_______________\n"
 
 echo 'end to deploy all hope contract.............'

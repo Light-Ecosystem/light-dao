@@ -15,8 +15,8 @@ async function main() {
   let hopeSalesAgentAddress = FileUtils.getContractAddress(Constants.TOKEN_SALE);
   let hopeAddress = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
 
-  let stakingHopeAddress = FileUtils.getContractAddress(Constants.STAKING_HOPE_GOMBOC);
-  let gombocControllerAddress = FileUtils.getContractAddress(Constants.GOMBOC_CONTROLLER);
+  let stakingHopeAddress = FileUtils.getContractAddress(Constants.STAKING_HOPE_GAUGE);
+  let gaugeControllerAddress = FileUtils.getContractAddress(Constants.GAUGE_CONTROLLER);
   let veLTAddress = FileUtils.getContractAddress(Constants.VELT_TOKEN);
   let minterAddress = FileUtils.getContractAddress(Constants.LT_MINTER);
   let ltAddress = FileUtils.getContractAddress(Constants.LT_TOKEN);
@@ -28,7 +28,7 @@ async function main() {
   let hopeToken = await ethers.getContractAt("HOPE", hopeAddress);
 
   let stakingHope = await ethers.getContractAt("StakingHope", stakingHopeAddress);
-  let gombocController = await ethers.getContractAt("GombocController", gombocControllerAddress);
+  let gaugeController = await ethers.getContractAt("GaugeController", gaugeControllerAddress);
   let veLT = await ethers.getContractAt("VotingEscrow", veLTAddress);
   let minter = await ethers.getContractAt("Minter", minterAddress);
   let light = await ethers.getContractAt("LT", ltAddress);

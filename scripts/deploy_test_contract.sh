@@ -25,17 +25,17 @@ echo "deploy mock admin_______________"
 npx hardhat run scripts/mock/mock_admin.ts --network $_netwrok
 echo "deploy mock admin_______________\n"
 
-echo "set mock lp token for pool_gomboc_______________"
+echo "set mock lp token for pool_gauge_______________"
 npx hardhat run scripts/mock/mock_lp_token.ts --network $_netwrok
-echo "set mock lp token for pool_gomboc_______________\n"
+echo "set mock lp token for pool_gauge_______________\n"
 
-#echo "set pool gomboc_______________"
-#npx hardhat run scripts/mock/deploy_gomboc_by_factory.ts --network $_netwrok
+#echo "set pool gauge_______________"
+#npx hardhat run scripts/mock/deploy_gauge_by_factory.ts --network $_netwrok
 #echo "set pool gmoboc_______________\n"
 
-#echo "add  mock gomboc for gombocController_______________"
-#npx hardhat run scripts/mock/mock_add_gomboc.ts --network $_netwrok
-#echo "add  mock gomboc for gombocController_______________\n"
+#echo "add  mock gauge for gaugeController_______________"
+#npx hardhat run scripts/mock/mock_add_gauge.ts --network $_netwrok
+#echo "add  mock gauge for gaugeController_______________\n"
 
 echo "daploy swap_______________"
 npx hardhat run scripts/mock/deploy_mock_swap.ts --network $_netwrok

@@ -7,7 +7,7 @@ import { Constants } from "../constant";
  */
 async function main() {
 
-    let veLT = FileUtils.getContractAddress(Constants.VELT_TOKEN);
+    let gaugeController = FileUtils.getContractAddress(Constants.GAUGE_CONTROLLER);
     let hopeToken = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
     let stHope = FileUtils.getContractAddress(Constants.STAKING_HOPE_GAUGE);
     let emergencyReturn = ethers.constants.AddressZero;
@@ -17,11 +17,11 @@ async function main() {
     let startTime = Math.floor((new Date()).valueOf() / 1000) + WEEK;
     startTime = startTime - startTime % WEEK;
 
-    const FeeDistributor = await ethers.getContractFactory("FeeDistributor");
-    const feeDistributor = await upgrades.deployProxy(FeeDistributor, [veLT, startTime, hopeToken, stHope, emergencyReturn]);
-    await feeDistributor.deployed();
-    console.log("feeDistributor: ", feeDistributor.address);
-    FileUtils.saveFrontendFiles(feeDistributor.address, "FeeDistributor", Constants.FeeDistributor);
+    const GaugeFeeDistributor = await ethers.getContractFactory("GaugeFeeDistributor");
+    const gaugeFeeDistributor = await upgrades.deployProxy(GaugeFeeDistributor, [gaugeController, startTime, hopeToken, stHope, emergencyReturn]);
+    await gaugeFeeDistributor.deployed();
+    console.log("gaugeFeeDistributor: ", gaugeFeeDistributor.address);
+    FileUtils.saveFrontendFiles(gaugeFeeDistributor.address, "GaugeFeeDistributor", Constants.GaugeFeeDistributor);
 }
 
 main().catch((error) => {

@@ -26,7 +26,6 @@ abstract contract AbsGomboc is Ownable2Step {
 
     uint256 internal constant _TOKENLESS_PRODUCTION = 40;
     uint256 internal constant _DAY = 86400;
-    uint256 internal constant _BOOST_WARMUP = _DAY * 14;
     uint256 internal constant _WEEK = _DAY * 7;
 
     bool public isKilled;
@@ -108,7 +107,7 @@ abstract contract AbsGomboc is Ownable2Step {
         uint256 _votingTotal = votingEscrow.totalSupplyAtTime(block.timestamp);
 
         uint256 _lim = (_l * _TOKENLESS_PRODUCTION) / 100;
-        if ((_votingTotal > 0) && (block.timestamp > periodTimestamp[0] + _BOOST_WARMUP)) {
+        if (_votingTotal > 0) {
             // 0.4 * _l + 0.6 * _L * balance/total
             _lim += (_L * _votingBalance * (100 - _TOKENLESS_PRODUCTION)) / _votingTotal / 100;
         }

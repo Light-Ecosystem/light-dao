@@ -15,7 +15,7 @@ describe("StakingHope", function () {
 
     const LT = await ethers.getContractFactory("LT");
     const VeLT = await ethers.getContractFactory("VotingEscrow");
-    const GombocController = await ethers.getContractFactory("GombocController");
+    const GaugeController = await ethers.getContractFactory("GaugeController");
     const Minter = await ethers.getContractFactory("Minter");
     const StakingHOPE = await ethers.getContractFactory("StakingHOPE");
     const HOPE = await ethers.getContractFactory("HOPE");
@@ -40,10 +40,10 @@ describe("StakingHope", function () {
     const veLT = await VeLT.deploy(lt.address, permit2.address);
     await veLT.deployed();
 
-    const gombocController = await GombocController.deploy(lt.address, veLT.address);
-    await gombocController.deployed();
+    const gaugeController = await GaugeController.deploy(lt.address, veLT.address);
+    await gaugeController.deployed();
 
-    const minter = await Minter.deploy(lt.address, gombocController.address);
+    const minter = await Minter.deploy(lt.address, gaugeController.address);
     await minter.deployed();
 
     const restrictedList = await RestrictedList.deploy();
@@ -64,7 +64,7 @@ describe("StakingHope", function () {
     const stakingHope = await StakingHOPE.deploy(hopeToken.address, minter.address, permit2.address);
     await stakingHope.deployed();
 
-    return { lt, mockLpToken, permit2, veLT, gombocController, hopeToken, minter, stakingHope, admin, owner, alice, bob };
+    return { lt, mockLpToken, permit2, veLT, gaugeController, hopeToken, minter, stakingHope, admin, owner, alice, bob };
   }
 
   describe("Set permit2 address", async () => {
@@ -331,18 +331,18 @@ describe("StakingHope", function () {
     });
 
     it("staking amount and unstaking mnay time  then use redeemByMaxIndex", async function () {
-      const { hopeToken, permit2, admin, alice, owner, stakingHope, gombocController } = await loadFixture(deployOneYearLockFixture);
+      const { hopeToken, permit2, admin, alice, owner, stakingHope, gaugeController } = await loadFixture(deployOneYearLockFixture);
 
       let MINT_AMOUNT = ethers.utils.parseEther("100");
       const DEADLINE = await time.latest() + 60 * 60;
 
 
-      let typeId = await gombocController.nGombocTypes();
+      let typeId = await gaugeController.nGaugeTypes();
       let weight = ethers.utils.parseEther("1");
-      let gombocWeight = ethers.utils.parseEther("1");
-      await gombocController.addType("stLiquidity", BigNumber.from(0));
-      await gombocController.changeTypeWeight(typeId, weight);
-      await gombocController.addGomboc(stakingHope.address, typeId, gombocWeight);
+      let gaugeWeight = ethers.utils.parseEther("1");
+      await gaugeController.addType("stLiquidity", BigNumber.from(0));
+      await gaugeController.changeTypeWeight(typeId, weight);
+      await gaugeController.addGauge(stakingHope.address, typeId, gaugeWeight);
 
 
       const effectiveBlock = await ethers.provider.getBlockNumber();

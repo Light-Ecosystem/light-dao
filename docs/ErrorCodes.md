@@ -6,11 +6,11 @@
 `CE001` : `Invalid Symbol`
 `CE002` : `Insufficient balance`
 
-## Gomboc Controller related
+## Gauge Controller related
 
-`GC000` : `Gomnoc not added`
-`GC001` : `Invalid Gomboc Type`
-`GC002` : `Cannot add the same gomboc twice`
+`GC000` : `Gauge not added`
+`GC001` : `Invalid Gauge Type`
+`GC002` : `Cannot add the same gauge twice`
 `GC003` : `Your token lock expires too soon`
 `GC004` : `You used all your voting power`
 `GC005` : `Cannot vote so often`

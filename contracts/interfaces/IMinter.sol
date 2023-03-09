@@ -8,5 +8,5 @@ interface IMinter {
 
     function minted(address user, address gauge) external view returns (uint256);
 
-    function mint(address gombocAddress) external;
+    function mint(address gaugeAddress) external;
 }

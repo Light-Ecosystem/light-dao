@@ -47,13 +47,13 @@ describe("ConnetVaultOfStHOPE", function () {
         const veLT = await VeLT.deploy(lt.address, permit2.address);
         await veLT.deployed();
 
-        const GombocController = await ethers.getContractFactory("GombocController");
-        const gombocController = await GombocController.deploy(lt.address, veLT.address);
-        await gombocController.deployed();
+        const GaugeController = await ethers.getContractFactory("GaugeController");
+        const gaugeController = await GaugeController.deploy(lt.address, veLT.address);
+        await gaugeController.deployed();
 
         // console.log("hopeToken:", hopeToken.address);
         const Minter = await ethers.getContractFactory("Minter");
-        const minter = await Minter.deploy(lt.address, gombocController.address);
+        const minter = await Minter.deploy(lt.address, gaugeController.address);
         await minter.deployed();
         await lt.setMinter(minter.address);
 
@@ -61,12 +61,12 @@ describe("ConnetVaultOfStHOPE", function () {
         const stakingHope = await StakingHOPE.deploy(hopeToken.address, minter.address, permit2.address);
         await stakingHope.deployed();
 
-        let typeId = await gombocController.nGombocTypes();
+        let typeId = await gaugeController.nGaugeTypes();
         let weight = ethers.utils.parseEther("1");
         let gombocWeight = ethers.utils.parseEther("1");
-        await gombocController.addType("stLiquidity", BigNumber.from(0));
-        await gombocController.changeTypeWeight(typeId, weight);
-        await gombocController.addGomboc(stakingHope.address, typeId, gombocWeight);
+        await gaugeController.addType("stLiquidity", BigNumber.from(0));
+        await gaugeController.changeTypeWeight(typeId, weight);
+        await gaugeController.addGauge(stakingHope.address, typeId, gombocWeight);
 
         let adminRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("withraw_Admin_Role"));
 
@@ -75,7 +75,7 @@ describe("ConnetVaultOfStHOPE", function () {
         await connetVaultOfStHOPE.deployed();
         await mockConnet.setValut(connetVaultOfStHOPE.address);
 
-        return { owner, alice, bob, connetVaultOfStHOPE, permit2, hopeToken, stakingHope, mockConnet, admin, adminRole, gombocController, lt, veLT, minter };
+        return { owner, alice, bob, connetVaultOfStHOPE, permit2, hopeToken, stakingHope, mockConnet, admin, adminRole, gaugeController, lt, veLT, minter };
     }
 
     describe("Initialize check", async function () {

@@ -3,22 +3,22 @@
 pragma solidity 0.8.17;
 
 import "./interfaces/ILT.sol";
-import "./interfaces/IGombocController.sol";
+import "./interfaces/IGaugeController.sol";
 
-interface LiquidityGomboc {
+interface LiquidityGauge {
     function integrateFraction(address addr) external view returns (uint256);
 
     function userCheckpoint(address addr) external returns (bool);
 }
 
 contract Minter {
-    event Minted(address indexed recipient, address gomboc, uint256 minted);
+    event Minted(address indexed recipient, address gauge, uint256 minted);
     event ToogleApproveMint(address sender, address indexed mintingUser, bool status);
 
     address public immutable token;
     address public immutable controller;
 
-    // user -> gomboc -> value
+    // user -> gauge -> value
     mapping(address => mapping(address => uint256)) public minted;
 
     // minter -> user -> can mint?
@@ -27,7 +27,7 @@ contract Minter {
     /*
      * @notice Contract constructor
      * @param _token  LT Token Address
-     * @param _controller gomboc Controller Address
+     * @param _controller gauge Controller Address
      */
     constructor(address _token, address _controller) {
         token = _token;
@@ -36,34 +36,34 @@ contract Minter {
 
     /**
      * @notice Mint everything which belongs to `msg.sender` and send to them
-     * @param gombocAddress `LiquidityGomboc` address to get mintable amount from
+     * @param gaugeAddress `LiquidityGauge` address to get mintable amount from
      */
-    function mint(address gombocAddress) external {
-        _mintFor(gombocAddress, msg.sender);
+    function mint(address gaugeAddress) external {
+        _mintFor(gaugeAddress, msg.sender);
     }
 
     /**
-     * @notice Mint everything which belongs to `msg.sender` across multiple gombocs
-     * @param gombocAddressList List of `LiquidityGomboc` addresses
+     * @notice Mint everything which belongs to `msg.sender` across multiple gauges
+     * @param gaugeAddressList List of `LiquidityGauge` addresses
      */
-    function mintMany(address[] memory gombocAddressList) external {
-        for (uint256 i = 0; i < gombocAddressList.length && i < 128; i++) {
-            if (gombocAddressList[i] == address(0)) {
+    function mintMany(address[] memory gaugeAddressList) external {
+        for (uint256 i = 0; i < gaugeAddressList.length && i < 128; i++) {
+            if (gaugeAddressList[i] == address(0)) {
                 continue;
             }
-            _mintFor(gombocAddressList[i], msg.sender);
+            _mintFor(gaugeAddressList[i], msg.sender);
         }
     }
 
     /**
      * @notice Mint tokens for `_for`
      * @dev Only possible when `msg.sender` has been approved via `toggle_approve_mint`
-     * @param gombocAddress `LiquidityGomboc` address to get mintable amount from
+     * @param gaugeAddress `LiquidityGauge` address to get mintable amount from
      * @param _for Address to mint to
      */
-    function mintFor(address gombocAddress, address _for) external {
+    function mintFor(address gaugeAddress, address _for) external {
         if (allowedToMintFor[msg.sender][_for]) {
-            _mintFor(gombocAddress, _for);
+            _mintFor(gaugeAddress, _for);
         }
     }
 
@@ -77,20 +77,20 @@ contract Minter {
         emit ToogleApproveMint(msg.sender, mintingUser, !flag);
     }
 
-    function _mintFor(address gombocAddr, address _for) internal {
+    function _mintFor(address gaugeAddr, address _for) internal {
         ///Gomnoc not adde
-        require(IGombocController(controller).gombocTypes(gombocAddr) >= 0, "CE000");
+        require(IGaugeController(controller).gaugeTypes(gaugeAddr) >= 0, "CE000");
 
-        bool success = LiquidityGomboc(gombocAddr).userCheckpoint(_for);
+        bool success = LiquidityGauge(gaugeAddr).userCheckpoint(_for);
         require(success, "CHECK FAILED");
-        uint256 totalMint = LiquidityGomboc(gombocAddr).integrateFraction(_for);
-        uint256 toMint = totalMint - minted[_for][gombocAddr];
+        uint256 totalMint = LiquidityGauge(gaugeAddr).integrateFraction(_for);
+        uint256 toMint = totalMint - minted[_for][gaugeAddr];
 
         if (toMint != 0) {
-            minted[_for][gombocAddr] = totalMint;
+            minted[_for][gaugeAddr] = totalMint;
             bool success = ILT(token).mint(_for, toMint);
             require(success, "MINT FAILED");
-            emit Minted(_for, gombocAddr, toMint);
+            emit Minted(_for, gaugeAddr, toMint);
         }
     }
 }

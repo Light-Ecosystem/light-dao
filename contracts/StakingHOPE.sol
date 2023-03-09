@@ -3,11 +3,11 @@
 pragma solidity 0.8.17;
 
 import "./interfaces/IStaking.sol";
-import "./gombocs/AbsGomboc.sol";
+import "./gauges/AbsGauge.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
-contract StakingHOPE is IStaking, ERC20, AbsGomboc {
+contract StakingHOPE is IStaking, ERC20, AbsGauge {
     uint256 internal constant _LOCK_TIME = 28;
 
     // permit2 contract
@@ -253,7 +253,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
     }
 
     /***
-     * @notice Transfers Gomboc deposit (stHOPE) from the caller to _to.
+     * @notice Transfers Gauge deposit (stHOPE) from the caller to _to.
      *
      * @param to
      * @param amount
@@ -275,7 +275,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGomboc {
     }
 
     /***
-     * @notice Tansfers a Gomboc deposit between _from and _to.
+     * @notice Tansfers a Gauge deposit between _from and _to.
      *
      * @param from
      * @param to

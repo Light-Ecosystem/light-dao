@@ -16,14 +16,14 @@ describe("UnderlyingBurner", function () {
 
         let LT = await ethers.getContractFactory("LT");
         const VeLT = await ethers.getContractFactory("VotingEscrow");
-        const GombocController = await ethers.getContractFactory("GombocController");
+        const GaugeController = await ethers.getContractFactory("GaugeController");
         const Minter = await ethers.getContractFactory("Minter");
         const StakingHOPE = await ethers.getContractFactory("StakingHOPE");
         const HOPE = await ethers.getContractFactory("HOPE");
         const RestrictedList = await ethers.getContractFactory("RestrictedList");
         const Admin = await ethers.getContractFactory("Admin");
         const FeeDistributor = await ethers.getContractFactory("FeeDistributor");
-        const GombocFeeDistributor = await ethers.getContractFactory("GombocFeeDistributor");
+        const GaugeFeeDistributor = await ethers.getContractFactory("GaugeFeeDistributor");
         const UnderlyingBurner = await ethers.getContractFactory("UnderlyingBurner");
 
         ///deploy permit contract
@@ -41,12 +41,12 @@ describe("UnderlyingBurner", function () {
         const veLT = await VeLT.deploy(lt.address, permit2.address);
         await veLT.deployed();
 
-        ///deploy gombocController contract
-        const gombocController = await GombocController.deploy(lt.address, veLT.address);
-        await gombocController.deployed();
+        ///deploy gaugeController contract
+        const gaugeController = await GaugeController.deploy(lt.address, veLT.address);
+        await gaugeController.deployed();
 
         ///delopy minter contract
-        const minter = await Minter.deploy(lt.address, gombocController.address);
+        const minter = await Minter.deploy(lt.address, gaugeController.address);
         await minter.deployed();
 
         /// deploy hope contract
@@ -77,17 +77,17 @@ describe("UnderlyingBurner", function () {
         const feeDistributor = await upgrades.deployProxy(FeeDistributor, [veLT.address, startTime, hopeToken.address, stakingHope.address, bob.address]);
         await feeDistributor.deployed();
 
-        //deploy gombocFeeDistributor contract
-        const gombocFeeDistributor = await upgrades.deployProxy(GombocFeeDistributor, [gombocController.address, startTime, hopeToken.address, stakingHope.address, bob.address]);
-        await gombocFeeDistributor.deployed();
+        //deploy gaugeFeeDistributor contract
+        const gaugeFeeDistributor = await upgrades.deployProxy(GaugeFeeDistributor, [gaugeController.address, startTime, hopeToken.address, stakingHope.address, bob.address]);
+        await gaugeFeeDistributor.deployed();
 
         //deploy UnderlyingBurner
-        const underlyingBurner = await upgrades.deployProxy(UnderlyingBurner, [hopeToken.address, feeDistributor.address, gombocFeeDistributor.address, bob.address]);
+        const underlyingBurner = await upgrades.deployProxy(UnderlyingBurner, [hopeToken.address, feeDistributor.address, gaugeFeeDistributor.address, bob.address]);
         await underlyingBurner.deployed();
 
         const WEEK = 7 * 86400;
         const MAXTIME = 4 * 365 * 86400;
-        return { owner, alice, bob, hopeToken, stakingHope, lt, veLT, permit2, feeDistributor, gombocFeeDistributor, underlyingBurner, WEEK, MAXTIME }
+        return { owner, alice, bob, hopeToken, stakingHope, lt, veLT, permit2, feeDistributor, gaugeFeeDistributor, underlyingBurner, WEEK, MAXTIME }
     }
 
     describe("transferHopeToFeeDistributor", async function () {
@@ -104,12 +104,12 @@ describe("UnderlyingBurner", function () {
         })
 
         it("transferHopeToFeeDistributor success", async function () {
-            const { owner, alice, bob, underlyingBurner, hopeToken, feeDistributor, gombocFeeDistributor, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
+            const { owner, alice, bob, underlyingBurner, hopeToken, feeDistributor, gaugeFeeDistributor, lt, permit2, MAXTIME } = await loadFixture(deployOneYearLockFixture);
 
             await hopeToken.transfer(underlyingBurner.address, ethers.utils.parseEther("100"));
             await underlyingBurner.transferHopeToFeeDistributor();
             expect(await hopeToken.balanceOf(feeDistributor.address)).to.be.equal(ethers.utils.parseEther("50"));
-            expect(await hopeToken.balanceOf(gombocFeeDistributor.address)).to.be.equal(ethers.utils.parseEther("50"));
+            expect(await hopeToken.balanceOf(gaugeFeeDistributor.address)).to.be.equal(ethers.utils.parseEther("50"));
         })
     })
 

@@ -32,7 +32,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
     event SetRouters(ISwapRouter[] _routers);
 
     address public feeDistributor;
-    address public gombocFeeDistributor;
+    address public gaugeFeeDistributor;
     address public emergencyReturn;
     address public hopeToken;
 
@@ -48,32 +48,32 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      * @notice Contract constructor
      * @param _hopeToken HOPE token address
      * @param _feeDistributor total feeDistributor address
-     * @param _gombocFeeDistributor gomboc feeDistributor address
+     * @param _gaugeFeeDistributor gauge feeDistributor address
      * @param _emergencyReturn Address to transfer `_token` balance to if this contract is killed
      */
     function initialize(
         address _hopeToken,
         address _feeDistributor,
-        address _gombocFeeDistributor,
+        address _gaugeFeeDistributor,
         address _emergencyReturn
     ) external initializer {
         require(_hopeToken != address(0), "Invalid Address");
         require(_feeDistributor != address(0), "Invalid Address");
-        require(_gombocFeeDistributor != address(0), "Invalid Address");
+        require(_gaugeFeeDistributor != address(0), "Invalid Address");
 
         __Ownable2Step_init();
 
         hopeToken = _hopeToken;
         feeDistributor = _feeDistributor;
-        gombocFeeDistributor = _gombocFeeDistributor;
+        gaugeFeeDistributor = _gaugeFeeDistributor;
         emergencyReturn = _emergencyReturn;
 
         IERC20Upgradeable(hopeToken).approve(feeDistributor, 2 ** 256 - 1);
-        IERC20Upgradeable(hopeToken).approve(gombocFeeDistributor, 2 ** 256 - 1);
+        IERC20Upgradeable(hopeToken).approve(gaugeFeeDistributor, 2 ** 256 - 1);
     }
 
     /**
-     * @notice  transfer HOPE to the fee distributor and  gomboc fee distributor 50% each
+     * @notice  transfer HOPE to the fee distributor and  gauge fee distributor 50% each
      */
     function transferHopeToFeeDistributor() external whenNotPaused returns (uint256) {
         uint256 balance = IERC20Upgradeable(hopeToken).balanceOf(address(this));
@@ -82,10 +82,10 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
         uint256 amount = balance / 2;
 
         IFeeDistributor(feeDistributor).burn(amount);
-        IFeeDistributor(gombocFeeDistributor).burn(amount);
+        IFeeDistributor(gaugeFeeDistributor).burn(amount);
 
         emit ToFeeDistributor(feeDistributor, amount);
-        emit ToFeeDistributor(gombocFeeDistributor, amount);
+        emit ToFeeDistributor(gaugeFeeDistributor, amount);
         return amount * 2;
     }
 
@@ -106,11 +106,16 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param _routers routers implment ISwapRouter
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
+        require(_routers.length != 0, "invalid param");
+        for (uint i = 0; i < routers.length; i++) {
+            require(address(routers[i]) != address(0), "invalid address");
+        }
         routers = _routers;
         emit SetRouters(_routers);
     }
 
-    function burn(IERC20Upgradeable token, uint amount) external {
+    function burn(IERC20Upgradeable token, uint amount, uint amountOutMin) external {
+        require(msg.sender == tx.origin, "not EOA");
         require(address(token) != hopeToken, "HOPE dosent need burn");
 
         ISwapRouter bestRouter = routers[0];
@@ -127,9 +132,10 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
             }
         }
 
+        require(bestExpected >= amountOutMin, "less than expected");
         if (!approved[bestRouter][token]) {
             bool success = IERC20Upgradeable(token).approve(address(bestRouter), type(uint).max);
-            require(success, "LSB01");
+            require(success, "approve failed");
             approved[bestRouter][token] = true;
         }
 
@@ -141,6 +147,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param _addr emergencyReturn address
      */
     function setEmergencyReturn(address _addr) external onlyOwner {
+        require(_addr != address(0), "CE000");
         emergencyReturn = _addr;
         emit SetEmergencyReturn(_addr);
     }

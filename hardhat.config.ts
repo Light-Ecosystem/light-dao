@@ -1,8 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import '@openzeppelin/hardhat-upgrades';
-import 'hardhat-contract-sizer';
-import "hardhat-gas-reporter"
+import "@openzeppelin/hardhat-upgrades";
+import "hardhat-contract-sizer";
+import "hardhat-gas-reporter";
+import "dotenv/config";
 
 const config: HardhatUserConfig = {
 
@@ -13,7 +14,7 @@ const config: HardhatUserConfig = {
     alphaSort: false,
     disambiguatePaths: false,
     runOnCompile: false,
-    strict: true,
+    strict: true
     // only: [':ERC20$'],
   },
   solidity: {
@@ -23,16 +24,17 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true, // Default: false
-            runs: 200, // Default: 200,
+            runs: 200 // Default: 200,
           },
-          viaIR: true,
-        },
-      },
-    ],
+          viaIR: true
+        }
+      }
+    ]
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: false,
+      gas: 4100000,
+      allowUnlimitedContractSize: false
     },
     ganache: {
       gas: 4100000,
@@ -43,9 +45,23 @@ const config: HardhatUserConfig = {
         path: "m/44'/60'/0'/0",
         initialIndex: 0,
         count: 20,
-        passphrase: "",
+        passphrase: ""
       }
     },
+    Sepolia: {
+      gas: 4100000,
+      url: process.env.SEPOLIA_NODE_URL,
+      accounts: [`${process.env.WALLET_KEY}`]
+    },
+    goerli: {
+      gas: 4100000,
+      url: process.env.GOERLI_NODE_URL,
+      accounts: [`${process.env.WALLET_KEY}`]
+    }
+  },
+  etherscan: {
+    // Your API key for Etherscan
+    apiKey: process.env.ETHERSCAN_API_KEY
   }
 };
 

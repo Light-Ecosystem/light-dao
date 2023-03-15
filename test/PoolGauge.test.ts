@@ -23,7 +23,7 @@ describe("PoolGauge", function () {
     const GaugeFactory = await ethers.getContractFactory("GaugeFactory");
 
     // init 1000
-    const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, 1000000); //Not using the actual InsureDAO contract
+    const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, 1000000);
 
 
     const lt = await upgrades.deployProxy(MyERC20LT, ["LT Dao Token", "LT"]);

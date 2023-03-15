@@ -24,7 +24,7 @@ describe("StakingHope", function () {
     const TestLP = await ethers.getContractFactory("MockLP");
 
 
-    const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000); //Not using the actual InsureDAO contract
+    const mockLpToken = await TestLP.deploy("stHope", "stHope", 18, 1000000);
 
     const lt = await upgrades.deployProxy(LT, ["LT Dao Token", "LT"]);
     await lt.deployed();

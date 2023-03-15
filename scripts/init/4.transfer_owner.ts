@@ -20,6 +20,8 @@ async function main() {
   const hopeSwapBurn = await ethers.getContractAt("HopeSwapBurner", FileUtils.getContractAddress(Constants.HopeSwapBurner));
   const underlyingBurner = await ethers.getContractAt("UnderlyingBurner", FileUtils.getContractAddress(Constants.UnderlyingBurner));
   const swapFeeToVault = await ethers.getContractAt("SwapFeeToVault", FileUtils.getContractAddress(Constants.SwapFeeToVault));
+  const burnerManager = await ethers.getContractAt("BurnerManager", FileUtils.getContractAddress(Constants.BurnerManager));
+
 
   console.log(ltToken.address);
   console.log(veLight.address);
@@ -34,6 +36,8 @@ async function main() {
   console.log(hopeSwapBurn.address);
   console.log(underlyingBurner.address);
   console.log(swapFeeToVault.address);
+  console.log(burnerManager.address);
+
 
   await hope.transferOwnership(newOwnerAddress);
   await gaugeController.transferOwnership(newOwnerAddress);
@@ -49,6 +53,7 @@ async function main() {
   await feeDistributor.transferOwnership(newOwnerAddress);
   await gaugeFeeDistributor.transferOwnership(newOwnerAddress);
   await gaugeFactory.setGaugeOwner(newOwnerAddress);
+  await burnerManager.transferOwnership(newOwnerAddress);
 }
 
 main().catch((error) => {

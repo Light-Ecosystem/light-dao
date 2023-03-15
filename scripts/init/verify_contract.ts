@@ -22,6 +22,7 @@ async function main() {
   const gombocFeeDistributorAddress = FileUtils.getContractAddress(Constants.GaugeFeeDistributor);
   const underlyingBurnerAddress = FileUtils.getContractAddress(Constants.UnderlyingBurner);
   const swapFeeToVaultAddress = FileUtils.getContractAddress(Constants.SwapFeeToVault);
+  const hopeSwapBurnerAddress = FileUtils.getContractAddress(Constants.HopeSwapBurner);
 
   // const hopeConnectVaultAddress = FileUtils.getContractAddress(Constants.HOPE_CONNET_VAULT);
   // const stHopeConnectAddress = FileUtils.getContractAddress(Constants.stHOPE_CONNET_VAULT);
@@ -45,6 +46,7 @@ async function main() {
   await verifyContract(await upgrades.erc1967.getImplementationAddress(gombocFeeDistributorAddress), []);
   await verifyContract(await upgrades.erc1967.getImplementationAddress(underlyingBurnerAddress), []);
   await verifyContract(swapFeeToVaultAddress, [burnerManagerAddress, underlyingBurnerAddress]);
+  await verifyContract(hopeSwapBurnerAddress, [hopeAddress, swapFeeToVaultAddress])
 
   // await verifyContract(await upgrades.erc1967.getImplementationAddress(hopeConnectVaultAddress), []);
   // await verifyContract(await upgrades.erc1967.getImplementationAddress(stHopeConnectAddress), []);

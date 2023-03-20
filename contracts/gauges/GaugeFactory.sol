@@ -11,9 +11,10 @@ contract GaugeFactory is Ownable2Step {
     event SetPermit2Address(address oldAddress, address newAddress);
     event SetGaugeOwner(address);
     event SetOperator(address);
+    event SetPoolGaugeImplementation(address);
 
-    address public immutable poolGaugeImplementation;
     address public immutable miner;
+    address public poolGaugeImplementation;
     address public permit2;
     address public gaugeOwner;
     address public operator;
@@ -23,8 +24,8 @@ contract GaugeFactory is Ownable2Step {
     address[] public allPools;
 
     constructor(address _poolGaugeImplementation, address _minter, address _permit2Address) {
-        require(_poolGaugeImplementation != address(0), "GaugeFactory: invalid poolGauge address");
-        require(_minter != address(0), "GaugeFactory: invalid minter address");
+        require(_poolGaugeImplementation != address(0), "CE000");
+        require(_minter != address(0), "CE000");
         gaugeOwner = _msgSender();
         operator = _msgSender();
         poolGaugeImplementation = _poolGaugeImplementation;
@@ -58,12 +59,20 @@ contract GaugeFactory is Ownable2Step {
     }
 
     function setGaugeOwner(address _gaugeOwner) external onlyOwner {
+        require(_gaugeOwner != address(0), "CE000");
         gaugeOwner = _gaugeOwner;
         emit SetGaugeOwner(_gaugeOwner);
     }
 
     function setOperator(address _operator) external onlyOwner {
+        require(_operator != address(0), "CE000");
         operator = _operator;
         emit SetOperator(_operator);
+    }
+
+    function setPoolGaugeImplementation(address _gaugeAddress) external onlyOwner {
+        require(_gaugeAddress != address(0), "CE000");
+        poolGaugeImplementation = _gaugeAddress;
+        emit SetPoolGaugeImplementation(_gaugeAddress);
     }
 }

@@ -220,7 +220,7 @@ abstract contract AbsGauge is Ownable2Step {
      * @return bool success
      */
     function userCheckpoint(address _addr) external returns (bool) {
-        require((msg.sender == _addr) || (msg.sender == address(minter)), "dev: unauthorized");
+        require((msg.sender == _addr) || (msg.sender == address(minter)), "GP000");
         _checkpoint(_addr);
         _updateLiquidityLimit(_addr, lpBalanceOf(_addr), lpTotalSupply());
         return true;
@@ -246,8 +246,8 @@ abstract contract AbsGauge is Ownable2Step {
         uint256 _tVe = votingEscrow.userPointHistoryTs(_addr, votingEscrow.userPointEpoch(_addr));
         uint256 _balance = lpBalanceOf(_addr);
 
-        require(votingEscrow.balanceOfAtTime(_addr, block.timestamp) == 0 || _tVe > _tLast, "dev: kick not allowed");
-        require(workingBalances[_addr] > (_balance * _TOKENLESS_PRODUCTION) / 100, "dev: kick not needed");
+        require(votingEscrow.balanceOfAtTime(_addr, block.timestamp) == 0 || _tVe > _tLast, "GP001");
+        require(workingBalances[_addr] > (_balance * _TOKENLESS_PRODUCTION) / 100, "GP001");
 
         _checkpoint(_addr);
         _updateLiquidityLimit(_addr, lpBalanceOf(_addr), lpTotalSupply());

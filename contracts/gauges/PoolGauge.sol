@@ -66,7 +66,7 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
 
     // called once by the factory at time of deployment
     function initialize(address _lpAddr, address _minter, address _permit2Address, address _owner) external {
-        require(factory == address(0), "PoolGauge: FORBIDDEN");
+        require(factory == address(0), "GP002");
         // sufficient check
         factory = msg.sender;
 
@@ -265,8 +265,8 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
      * - `spender` cannot be the zero address.
      */
     function _approve(address owner, address spender, uint256 amount) internal {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        require(owner != address(0), "CE000");
+        require(spender != address(0), "CE000");
         allowance[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
@@ -313,7 +313,7 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
     function decreaseAllowance(address _spender, uint256 _subtractedValue) external returns (bool) {
         address owner = msg.sender;
         uint256 currentAllowance = allowance[owner][_spender];
-        require(currentAllowance >= _subtractedValue, "ERC20: decreased allowance below zero");
+        require(currentAllowance >= _subtractedValue, "GP003");
         unchecked {
             _approve(owner, _spender, currentAllowance - _subtractedValue);
         }
@@ -325,8 +325,8 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
      */
     function addReward(address _rewardToken, address _distributor) external onlyOwner {
         uint256 _rewardCount = rewardCount;
-        require(_rewardCount < _MAX_REWARDS, "Reward Threshold");
-        require(rewardData[_rewardToken].distributor == address(0), "Repeat setting");
+        require(_rewardCount < _MAX_REWARDS, "GP004");
+        require(rewardData[_rewardToken].distributor == address(0), "GP005");
         rewardData[_rewardToken].distributor = _distributor;
         rewardTokens[_rewardCount] = _rewardToken;
         rewardCount = _rewardCount + 1;
@@ -335,19 +335,19 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
 
     function setRewardDistributor(address _rewardToken, address _distributor) external {
         address currentDistributor = rewardData[_rewardToken].distributor;
-        require(msg.sender == currentDistributor || msg.sender == owner(), "Must currentDistributor or owner");
-        require(currentDistributor != address(0), "currentDistributor the zero address");
-        require(_distributor != address(0), "distributor the zero address");
+        require(msg.sender == currentDistributor || msg.sender == owner(), "GP006");
+        require(currentDistributor != address(0), "GP007");
+        require(_distributor != address(0), "GP008");
         rewardData[_rewardToken].distributor = _distributor;
         emit ChangeRewardDistributor(msg.sender, _rewardToken, _distributor, currentDistributor);
     }
 
     function depositRewardToken(address _rewardToken, uint256 _amount) external payable nonReentrant {
-        require(msg.sender == rewardData[_rewardToken].distributor, "No permission to execute");
+        require(msg.sender == rewardData[_rewardToken].distributor, "GP009");
 
         _checkpointRewards(address(0), totalSupply, false, address(0));
 
-        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount), "Transfer failed");
+        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount), "GP010");
 
         uint256 periodFinish = rewardData[_rewardToken].periodFinish;
         if (block.timestamp >= periodFinish) {
@@ -412,7 +412,7 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
                     uint256 totalClaimed = _claimData % 2 ** 128;
                     if (_claim) {
                         claimData[_user][vars.token] = totalClaimed + totalClaimable;
-                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable), "Transfer failed");
+                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable), "GP010");
                     } else if (newClaimable > 0) {
                         claimData[_user][vars.token] = totalClaimed + (totalClaimable << 128);
                     }
@@ -481,7 +481,7 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
      */
     function _claimRewards(address _addr, address _receiver) private {
         if (_receiver != address(0)) {
-            require(_addr == msg.sender, "Cannot redirect when claiming for another user");
+            require(_addr == msg.sender, "GP011");
             // dev: cannot redirect when claiming for another user
         }
         _checkpointRewards(_addr, totalSupply, true, _receiver);

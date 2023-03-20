@@ -34,7 +34,7 @@ contract GaugeFactory is Ownable2Step {
     }
 
     function createPool(address _lpAddr) external returns (address pool) {
-        require(_msgSender() == operator || _msgSender() == owner(), "No permission to create pool");
+        require(_msgSender() == operator || _msgSender() == owner(), "GF000");
         bytes32 salt = keccak256(abi.encodePacked(_lpAddr));
         pool = Clones.cloneDeterministic(poolGaugeImplementation, salt);
         IPoolGauge(pool).initialize(_lpAddr, miner, permit2, gaugeOwner);

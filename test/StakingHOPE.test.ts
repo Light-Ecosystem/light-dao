@@ -101,7 +101,7 @@ describe("StakingHope", function () {
 
     it("test_user_checkpoint_wrong_account", async () => {
       const { stakingHope, alice, bob } = await loadFixture(deployOneYearLockFixture);
-      await expect(stakingHope.connect(alice).userCheckpoint(bob.address)).to.revertedWith("dev: unauthorized");
+      await expect(stakingHope.connect(alice).userCheckpoint(bob.address)).to.revertedWith("GP000");
     });
   });
 
@@ -168,7 +168,7 @@ describe("StakingHope", function () {
 
       const sig = await PermitSigHelper.signature(alice, hopeToken.address, permit2.address, stakingHope.address, amount, NONCE, DEADLINE);
 
-      await expect(stakingHope.connect(alice).staking(amount, NONCE, DEADLINE, sig)).to.be.revertedWith("INVALID_ZERO_AMOUNT");
+      await expect(stakingHope.connect(alice).staking(amount, NONCE, DEADLINE, sig)).to.be.revertedWith("CE002");
     });
 
     it("Should fail if sender doesn’t have enough tokens", async () => {
@@ -193,7 +193,7 @@ describe("StakingHope", function () {
       let NONCE = BigNumber.from(random);
 
       const sig = await PermitSigHelper.signature(alice, hopeToken.address, permit2.address, stakingHope.address, amount, NONCE, DEADLINE);
-      await expect(stakingHope.connect(alice).staking(amount, NONCE, DEADLINE, sig)).to.be.revertedWith("INVALID_AMOUNT");
+      await expect(stakingHope.connect(alice).staking(amount, NONCE, DEADLINE, sig)).to.be.revertedWith("CE002");
     });
 
   });
@@ -300,7 +300,7 @@ describe("StakingHope", function () {
       expect(await stakingHope.totalNotRedeemAmount()).to.equal(unStakingAmount);
 
       // expect revert with "No redeemable amount"
-      await expect(stakingHope.redeemAll()).to.revertedWith("No redeemable amount");
+      await expect(stakingHope.redeemAll()).to.revertedWith("CE002");
 
 
       // The unstaking process takes 28 days to complete.
@@ -399,7 +399,7 @@ describe("StakingHope", function () {
       expect(await stakingHope.unstakingTotal()).to.equal(unStakingAmountTotal);
 
       // expect revert with "No redeemable amount"
-      await expect(stakingHope.redeemByMaxIndex(10)).to.revertedWith("No redeemable amount");
+      await expect(stakingHope.redeemByMaxIndex(10)).to.revertedWith("CE002");
 
       // increase 29 days
       await time.increase(86400 * 29);
@@ -579,7 +579,7 @@ describe("StakingHope", function () {
 
       // revert
       let transAmout = stakingAmount;
-      await expect(stakingHope.transfer(bob.address, transAmout)).to.revertedWith("ERC20: transfer amount exceeds balance");
+      await expect(stakingHope.transfer(bob.address, transAmout)).to.revertedWith("CE002");
 
       // transfer
       transAmout = stakingAmount / 2;

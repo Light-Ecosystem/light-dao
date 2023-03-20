@@ -108,8 +108,8 @@ describe("GaugeFactory", function() {
     it("should revert right error when init twice", async function() {
       const { poolGaugeImplementation, poolGauge, mockLpToken, minter, permit2, bob } = await loadFixture(deployOneYearLockFixture);
 
-      await expect(poolGauge.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("PoolGauge: FORBIDDEN");
-      await expect(poolGaugeImplementation.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("PoolGauge: FORBIDDEN");
+      await expect(poolGauge.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("GP002");
+      await expect(poolGaugeImplementation.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("GP002");
     });
 
     it("test  gauge reward others tokens", async function() {

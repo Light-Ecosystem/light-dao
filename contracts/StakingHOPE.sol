@@ -31,8 +31,8 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
     uint256 private _unstakeTotal;
 
     constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("HOPE Staking", "stHOPE") {
-        require(_stakedToken != address(0), "StakingHope::initialize: invalid staking address");
-        require(_permit2Address != address(0), "StakingHope::initialize: invalid permit2 address");
+        require(_stakedToken != address(0), "CE000");
+        require(_permit2Address != address(0), "CE000");
 
         _init(_stakedToken, _minter, _msgSender());
 
@@ -48,12 +48,12 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
      * @param signature
      */
     function staking(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external override returns (bool) {
-        require(amount != 0, "INVALID_ZERO_AMOUNT");
+        require(amount != 0, "CE002");
 
         address staker = _msgSender();
         // checking amount
         uint256 balanceOfUser = IERC20(lpToken).balanceOf(staker);
-        require(balanceOfUser >= amount, "INVALID_AMOUNT");
+        require(balanceOfUser >= amount, "CE002");
         TransferHelper.doTransferIn(permit2Address, lpToken, amount, staker, nonce, deadline, signature);
 
         _checkpoint(staker);
@@ -75,12 +75,12 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
      * @return
      */
     function unstaking(uint256 amount) external {
-        require(amount != 0, "INVALID_ZERO_AMOUNT");
+        require(amount != 0, "CE002");
 
         address staker = _msgSender();
         // checking amount
         uint256 balanceOfUser = lpBalanceOf(staker);
-        require(balanceOfUser >= amount, "INVALID_AMOUNT");
+        require(balanceOfUser >= amount, "CE002");
 
         _checkpoint(staker);
 
@@ -164,7 +164,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
     function redeemAll() external override returns (uint256) {
         address redeemer = _msgSender();
         uint256 amountToRedeem = unstakedBalanceOf(redeemer);
-        require(amountToRedeem != 0, "No redeemable amount");
+        require(amountToRedeem != 0, "CE002");
 
         _checkpoint(redeemer);
 
@@ -201,7 +201,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
         address redeemer = _msgSender();
 
         uint256 allToRedeemAmount = unstakedBalanceOf(redeemer);
-        require(allToRedeemAmount != 0, "No redeemable amount");
+        require(allToRedeemAmount != 0, "CE002");
 
         uint256 amountToRedeem = 0;
         _checkpoint(redeemer);
@@ -262,7 +262,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
     function transfer(address _to, uint256 _amount) public virtual override returns (bool) {
         address owner = _msgSender();
         uint256 fromBalance = lpBalanceOf(owner);
-        require(fromBalance >= _amount, "ERC20: transfer amount exceeds balance");
+        require(fromBalance >= _amount, "CE002");
 
         _checkpoint(owner);
         _checkpoint(_to);
@@ -284,7 +284,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
      */
     function transferFrom(address _from, address _to, uint256 _amount) public override returns (bool) {
         uint256 fromBalance = lpBalanceOf(_from);
-        require(fromBalance >= _amount, "ERC20: transfer amount exceeds balance");
+        require(fromBalance >= _amount, "CE002");
 
         _checkpoint(_from);
         _checkpoint(_to);

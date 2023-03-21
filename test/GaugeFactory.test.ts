@@ -1,13 +1,12 @@
-import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
-import { network, upgrades } from "hardhat";
-import * as timers from "timers";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { upgrades } from "hardhat";
 
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { BigNumber } = require("ethers");
 
 
-describe("GaugeFactory", function () {
+describe("GaugeFactory", function() {
 
   const DAY = 86400;
   const WEEK = DAY * 7;
@@ -28,7 +27,7 @@ describe("GaugeFactory", function () {
     const GaugeFactory = await ethers.getContractFactory("GaugeFactory");
 
     // init 1000
-    const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, ethers.utils.parseEther("604800")); //Not using the actual InsureDAO contract
+    const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, ethers.utils.parseEther("604800"));
 
     const lt = await upgrades.deployProxy(MyERC20LT, ["LT Dao Token", "LT"]);
     await lt.deployed();
@@ -61,7 +60,20 @@ describe("GaugeFactory", function () {
     // load pool gauge
     const poolGauge = PoolGauge.attach(poolGaugeAddress);
 
-    return { mockLpToken, gaugeFactory, poolGauge, poolGaugeImplementation, minter, permit2, mytoken, owner, alice, bob };
+    return {
+      mockLpToken,
+      gaugeFactory,
+      poolGauge,
+      poolGaugeImplementation,
+      minter,
+      permit2,
+      mytoken,
+      owner,
+      alice,
+      bob,
+      TestLP,
+      PoolGauge
+    };
 
   }
 
@@ -69,23 +81,23 @@ describe("GaugeFactory", function () {
     it("only owner can set", async () => {
       const { alice, gaugeFactory } = await loadFixture(deployOneYearLockFixture);
       await expect(gaugeFactory.connect(alice).setPermit2Address("0x000000000022D473030F116dDEE9F6B43aC78BA3")).to.be.revertedWith("Ownable: caller is not the owner");
-    })
+    });
     it("can not set address zero", async () => {
       const { gaugeFactory } = await loadFixture(deployOneYearLockFixture);
       await expect(gaugeFactory.setPermit2Address(ethers.constants.AddressZero)).to.be.revertedWith("CE000");
-    })
+    });
     it("set permit2 address success", async () => {
       const { gaugeFactory, permit2 } = await loadFixture(deployOneYearLockFixture);
       const newAddress = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
       await expect(gaugeFactory.setPermit2Address(newAddress)).to.be.emit(gaugeFactory, "SetPermit2Address")
         .withArgs(permit2.address, newAddress);
       expect(await gaugeFactory.permit2()).to.be.equal(newAddress);
-    })
-  })
+    });
+  });
 
-  describe("test gauge factory", function () {
+  describe("test gauge factory", function() {
 
-    it("test onwer", async function () {
+    it("test onwer", async function() {
       const { gaugeFactory, poolGauge, poolGaugeImplementation, owner } = await loadFixture(deployOneYearLockFixture);
       expect(await gaugeFactory.owner()).to.equal(owner.address);
       expect(await poolGauge.owner()).to.equal(owner.address);
@@ -93,14 +105,14 @@ describe("GaugeFactory", function () {
     });
 
 
-    it("should revert right error when init twice", async function () {
+    it("should revert right error when init twice", async function() {
       const { poolGaugeImplementation, poolGauge, mockLpToken, minter, permit2, bob } = await loadFixture(deployOneYearLockFixture);
 
-      await expect(poolGauge.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("PoolGauge: FORBIDDEN");
-      await expect(poolGaugeImplementation.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("PoolGauge: FORBIDDEN");
+      await expect(poolGauge.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("GP002");
+      await expect(poolGaugeImplementation.initialize(mockLpToken.address, minter.address, permit2.address, bob.address)).to.revertedWith("GP002");
     });
 
-    it("test  gauge reward others tokens", async function () {
+    it("test  gauge reward others tokens", async function() {
       const { poolGauge, mytoken, owner, mockLpToken } = await loadFixture(deployOneYearLockFixture);
 
       await poolGauge.addReward(mytoken.address, owner.address);
@@ -110,6 +122,52 @@ describe("GaugeFactory", function () {
       expect(await poolGauge.rewardCount()).to.equal(BigNumber.from("1"));
     });
 
+  });
+
+  describe("Test owner", function() {
+    it("test set gauge owner is right", async function() {
+      const { gaugeFactory, alice, TestLP, PoolGauge } = await loadFixture(deployOneYearLockFixture);
+      await gaugeFactory.setGaugeOwner(alice.address);
+
+      expect(await gaugeFactory.gaugeOwner()).to.equal(alice.address);
+      const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, ethers.utils.parseEther("604800"));
+      // deploy pool gauge by Factory
+      await gaugeFactory.createPool(mockLpToken.address);
+      // get pool address
+      const poolGaugeAddress = await gaugeFactory.getPool(mockLpToken.address);
+      // load pool gauge
+      const poolGauge = PoolGauge.attach(poolGaugeAddress);
+      expect(await poolGauge.owner()).to.equal(alice.address);
+    });
+
+
+    it("test owner or operator  can create gauge pool", async function() {
+      const { gaugeFactory, TestLP, alice } = await loadFixture(deployOneYearLockFixture);
+
+      await gaugeFactory.setOperator(alice.address);
+      expect(await gaugeFactory.operator()).to.equal(alice.address);
+
+      // test owner create gauge pool
+      const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, ethers.utils.parseEther("604800"));
+      await gaugeFactory.createPool(mockLpToken.address);
+      // test operator create gauge pool
+      const mockLpToken2 = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, ethers.utils.parseEther("604800"));
+      await gaugeFactory.connect(alice).createPool(mockLpToken2.address);
+    });
+
+    it("should revert error when create twice", async function() {
+      const { gaugeFactory, TestLP, alice } = await loadFixture(deployOneYearLockFixture);
+
+      await gaugeFactory.setOperator(alice.address);
+      expect(await gaugeFactory.operator()).to.equal(alice.address);
+
+      // test owner create gauge pool
+      const mockLpToken = await TestLP.deploy("USED/DAI Pair", "uni pair", 18, ethers.utils.parseEther("604800"));
+      // first createPool
+      await gaugeFactory.createPool(mockLpToken.address);
+      // second createPool
+      await expect(gaugeFactory.createPool(mockLpToken.address)).to.revertedWith("ERC1167: create2 failed")
+    });
   });
 
 

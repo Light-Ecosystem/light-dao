@@ -79,3 +79,29 @@
 
 ## FeeDistributor related
 `FD001` : `can not checkpoint now`
+
+## Staking Hope
+`SH` : `Unsupport currency`
+
+
+# Gauge Pool
+`GP000` : `Unauthorized`
+`GP001` : `Kick not allowed`
+`GP002` : `Forbidden init`
+`GP003` : `Decreased allowance below zero`
+`GP004` : `Reward Threshold`
+`GP005` : `Repeat setting`
+`GP006` : `Must currentDistributor or owner`
+`GP007` : `CurrentDistributor the zero address`
+`GP008` : `Distributor the zero address`
+`GP009` : `No permission to execute`
+`GP010` : `Transfer failed`
+`GP011` : `Cannot redirect when claiming for another user`
+
+# Gauge Factroy
+`GF000` : `No permission to create pool`
+
+
+
+
+

@@ -30,7 +30,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("HOPE Staking", "stHOPE") {
+    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("staked HOPE", "stHOPE") {
         require(_stakedToken != address(0), "CE000");
         require(_permit2Address != address(0), "CE000");
 

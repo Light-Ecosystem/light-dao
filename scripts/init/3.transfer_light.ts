@@ -4,7 +4,7 @@ import { FileUtils } from "../file_utils";
 
 async function main() {
 
-  // todo
+  // TODO:
   const teamVaultManager = "";
   const teamVault = "";
   const treasuryVault = "";

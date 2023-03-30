@@ -4,7 +4,7 @@ import { FileUtils } from "../file_utils";
 
 async function main() {
 
-  // todo
+  // TODO:
   const checkAddress = "0x00";
 
   const veLight = await ethers.getContractAt("VotingEscrow", FileUtils.getContractAddress(Constants.VELT_TOKEN));

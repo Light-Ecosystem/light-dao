@@ -48,7 +48,7 @@ const config: HardhatUserConfig = {
         passphrase: ""
       }
     },
-    Sepolia: {
+    sepolia: {
       gas: 4100000,
       url: process.env.SEPOLIA_NODE_URL,
       accounts: [`${process.env.WALLET_KEY}`]

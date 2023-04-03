@@ -11,7 +11,7 @@ async function main() {
     let maxCredit = ethers.utils.parseEther('1200000');
     const effectiveBlock = await ethers.provider.getBlockNumber();
     const expirationBlock = effectiveBlock + 20000;
-    await hopeToken.grantAgent(
+    let tx = await hopeToken.grantAgent(
         tokenSaleAddress,
         maxCredit,
         effectiveBlock,
@@ -19,6 +19,7 @@ async function main() {
         true,
         true
     )
+    await tx.wait(1)
     console.log("Grant Info: ", tokenSaleAddress, await hopeToken.getMaxCredit(tokenSaleAddress), await hopeToken.getExpirationBlock(tokenSaleAddress));
 }
 

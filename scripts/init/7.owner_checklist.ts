@@ -1,11 +1,11 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { Constants } from "../constant";
 import { FileUtils } from "../file_utils";
 import { expect } from "chai";
 
 async function main() {
   // todo
-  const newOwnerAddress = "0x00";
+  const gnosisSafe = "0x00";
 
   const ltToken = await ethers.getContractAt("LT", FileUtils.getContractAddress(Constants.LT_TOKEN));
   const veLight = await ethers.getContractAt("VotingEscrow", FileUtils.getContractAddress(Constants.VELT_TOKEN));
@@ -23,20 +23,20 @@ async function main() {
   const swapFeeToVault = await ethers.getContractAt("SwapFeeToVault", FileUtils.getContractAddress(Constants.SwapFeeToVault));
   const burnerManager = await ethers.getContractAt("BurnerManager", FileUtils.getContractAddress(Constants.BurnerManager));
 
-  expect(await ltToken.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await veLight.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await gaugeController.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await gaugeFactory.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await smartWalletWhitelist.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await restricted.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await hope.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await stakingHope.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await feeDistributor.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await gaugeFeeDistributor.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await hopeSwapBurn.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await underlyingBurner.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await swapFeeToVault.pendingOwner()).to.equal(newOwnerAddress);
-  expect(await burnerManager.pendingOwner()).to.equal(newOwnerAddress);
+  expect(await ltToken.pendingOwner()).to.equal(gnosisSafe);
+  expect(await veLight.pendingOwner()).to.equal(gnosisSafe);
+  expect(await gaugeController.pendingOwner()).to.equal(gnosisSafe);
+  expect(await gaugeFactory.pendingOwner()).to.equal(gnosisSafe);
+  expect(await smartWalletWhitelist.pendingOwner()).to.equal(gnosisSafe);
+  expect(await restricted.pendingOwner()).to.equal(gnosisSafe);
+  expect(await hope.pendingOwner()).to.equal(gnosisSafe);
+  expect(await stakingHope.pendingOwner()).to.equal(gnosisSafe);
+  expect(await feeDistributor.pendingOwner()).to.equal(gnosisSafe);
+  expect(await gaugeFeeDistributor.pendingOwner()).to.equal(gnosisSafe);
+  expect(await hopeSwapBurn.pendingOwner()).to.equal(gnosisSafe);
+  expect(await underlyingBurner.pendingOwner()).to.equal(gnosisSafe);
+  expect(await swapFeeToVault.pendingOwner()).to.equal(gnosisSafe);
+  expect(await burnerManager.pendingOwner()).to.equal(gnosisSafe);
 }
 
 main().catch((error) => {

@@ -4,7 +4,7 @@ import { FileUtils } from "../file_utils";
 
 async function main() {
   // todo
-  const newOwnerAddress = "0x00";
+  const gnosisSafe = "0x00";
 
   const ltToken = await ethers.getContractAt("LT", FileUtils.getContractAddress(Constants.LT_TOKEN));
   const veLight = await ethers.getContractAt("VotingEscrow", FileUtils.getContractAddress(Constants.VELT_TOKEN));
@@ -22,7 +22,7 @@ async function main() {
   const swapFeeToVault = await ethers.getContractAt("SwapFeeToVault", FileUtils.getContractAddress(Constants.SwapFeeToVault));
   const burnerManager = await ethers.getContractAt("BurnerManager", FileUtils.getContractAddress(Constants.BurnerManager));
 
-
+  console.log("Transfer Onwership address: ");
   console.log(ltToken.address);
   console.log(veLight.address);
   console.log(gaugeController.address);
@@ -39,21 +39,21 @@ async function main() {
   console.log(burnerManager.address);
 
 
-  await hope.transferOwnership(newOwnerAddress);
-  await gaugeController.transferOwnership(newOwnerAddress);
-  await restricted.transferOwnership(newOwnerAddress);
-  await ltToken.transferOwnership(newOwnerAddress);
-  await stakingHope.transferOwnership(newOwnerAddress);
-  await veLight.transferOwnership(newOwnerAddress);
-  await smartWalletWhitelist.transferOwnership(newOwnerAddress);
-  await gaugeFactory.transferOwnership(newOwnerAddress);
-  await swapFeeToVault.transferOwnership(newOwnerAddress);
-  await underlyingBurner.transferOwnership(newOwnerAddress);
-  await hopeSwapBurn.transferOwnership(newOwnerAddress);
-  await feeDistributor.transferOwnership(newOwnerAddress);
-  await gaugeFeeDistributor.transferOwnership(newOwnerAddress);
-  await gaugeFactory.setGaugeOwner(newOwnerAddress);
-  await burnerManager.transferOwnership(newOwnerAddress);
+  await hope.transferOwnership(gnosisSafe);
+  await gaugeController.transferOwnership(gnosisSafe);
+  await restricted.transferOwnership(gnosisSafe);
+  await ltToken.transferOwnership(gnosisSafe);
+  await stakingHope.transferOwnership(gnosisSafe);
+  await veLight.transferOwnership(gnosisSafe);
+  await smartWalletWhitelist.transferOwnership(gnosisSafe);
+  await gaugeFactory.transferOwnership(gnosisSafe);
+  await swapFeeToVault.transferOwnership(gnosisSafe);
+  await underlyingBurner.transferOwnership(gnosisSafe);
+  await hopeSwapBurn.transferOwnership(gnosisSafe);
+  await feeDistributor.transferOwnership(gnosisSafe);
+  await gaugeFeeDistributor.transferOwnership(gnosisSafe);
+  await gaugeFactory.setGaugeOwner(gnosisSafe);
+  await burnerManager.transferOwnership(gnosisSafe);
 }
 
 main().catch((error) => {

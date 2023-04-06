@@ -2,104 +2,104 @@
 
 ## Common Error related
 
-`CE000` : `Invalid Address`
-`CE001` : `Invalid Symbol`
-`CE002` : `Insufficient balance`
+`CE000` : `Invalid Address.`
+`CE001` : `Invalid Symbol.`
+`CE002` : `Insufficient balance.`
 
 ## Gauge Controller related
 
-`GC000` : `Gauge not added`
-`GC001` : `Invalid Gauge Type`
-`GC002` : `Cannot add the same gauge twice`
-`GC003` : `Your token lock expires too soon`
-`GC004` : `You used all your voting power`
-`GC005` : `Cannot vote so often`
-`GC006` : `Used too much power`
-`GC007` : `Invalid Param`
+`GC000` : `Gauge not added.`
+`GC001` : `Invalid Gauge Type.`
+`GC002` : `Cannot add the same gauge twice.`
+`GC003` : `Your LT vote-lock is expiring soon.`
+`GC004` : `You used all your voting power.`
+`GC005` : `You are on voting cool-down. (You have to wait 10 days between 2 votes).`
+`GC006` : `Not sufficient voting power.`
+`GC007` : `Invalid Param.`
 
 ## VotingEscrow related
 
-`VE000` : `Can't lock zero value`
-`VE001` : `Withdraw old tokens first`
-`VE002` : `Can only lock until time in the future`
-`VE003` : `Voting lock can be 4 years max`
-`VE004` : `No existing lock found`
-`VE005` : `Cannot add to expired lock. Withdraw first`
-`VE006` : `Lock expired`
-`VE007` : `Nothing is locked`
-`VE008` : `Can only increase lock duration`
-`VE009` : `Voting lock can be 4 years max`
-`VE010` : `The lock didn't expire`
-`VE011` : `Can't exceed lasted block`
+`VE000` : `Lock amount can’t be zero.`
+`VE001` : `Please withdraw before locking new tokens.`
+`VE002` : `Unlock time needs to be in the future.`
+`VE003` : `The max lock time is 4 years.`
+`VE004` : `No existing lock found.`
+`VE005` : `Cannot add to expired lock. Withdraw first.`
+`VE006` : `Lock expired.`
+`VE007` : `No existing lock found.`
+`VE008` : `You can only increase lock duration.`
+`VE009` : `The max lock time is 4 years.`
+`VE010` : `The lock didn't expire.`
+`VE011` : `Can’t go exceed the latest block.`
 
 ## LT Token related
 
-`BA000` : `updateMiningParameters too soon`
-`BA001` : `start must greater end`
-`BA002` : `too far in future`
-`BA003` : `can set the minter only once`
-`BA004` : `minter only`
-`BA005` : `exceeds allowable mint amount`
+`BA000` : `updateMiningParameters not updated yet.`
+`BA001` : `start time less than or equal to end time.`
+`BA002` : `too far in future.`
+`BA003` : `can set the minter only once.`
+`BA004` : `Accessible to the minter only.`
+`BA005` : `exceeds max allowable mint amount.`
 
 ## Agent related
 
-`AG000` : `The address is not agent`
-`AG001` : `The address is already agent`
-`AG002` : `The address cannot mint`
-`AG003` : `The address cannot burn`
-`AG004` : `Insufficient credit`
-`AG005` : `Credit must greater than zero`
-`AG006` : `Expiration block number must be greater than or equal to the now`
-`AG007` : `Increase credit must greater than zero`
-`AG008` : `Decrease credit must greater than zero`
-`AG009` : `Decrease credit must less than or equal remaining credit`
-`AG010` : `The modification status is the same as the current one`
-`AG011` : `The address authorization has expired`
-`AG012` : `Invalid effective block number`
-`AG013` : `Invalid expiration block number`
-`AG014` : `The address has not reached authorization effective block number`
-`AG015` : `The effective block number must be less than expiration block number`
+`AG000` : `The address is not authorized as an agent.`
+`AG001` : `The address is already authorized as an agent.`
+`AG002` : `The address cannot mint.`
+`AG003` : `The address cannot burn.`
+`AG004` : `Insufficient credit.`
+`AG005` : `Credit must be greater than zero.`
+`AG006` : `Expiration block height must be greater than or equal to the current one.`
+`AG007` : `The increase in credit must be greater than zero.`
+`AG008` : `The decrease in credit must be greater than zero.`
+`AG009` : `The decrease in credit must be less than or equal to the remaining credit.`
+`AG010` : `The modified status is the same as the current one.`
+`AG011` : `The address authorization has expired.`
+`AG012` : `Invalid effective block height.`
+`AG013` : `Invalid expiration block height.`
+`AG014` : `The latest block height has not reach the effective authorization block height of the address.`
+`AG015` : `The effective block height must be smaller than the expiration block height.`
 
 ## RetrictedList related
 
-`FA000` : `The address has been forbade`
+`FA000` : `The address has been forbidden.`
 
 ## HOPE Token related
 
-`HO000` : `Only the CA can be called`
+`HO000` : `Can only be called by the CA.`
 
 ## HOPE Sales related
 
-`HS000` : `Unsupport currency`
-`HS001` : `The minimum purchase quota cannot be reached`
-`HS002` : `The currency is already exist`
-`HS003` : `Rate must greater than zero`
-`HS004` : `Invalid param, it is different from contract symbol`
-`HS005` : `Please redeem balance before delete the currency`
+`HS000` : `Unsupport currency.`
+`HS001` : `The minimum purchase quota not met.`
+`HS002` : `The currency already exists.`
+`HS003` : `Rate must greater than zero.`
+`HS004` : `Invalid param, it is different from contract symbol.`
+`HS005` : `Please redeem the balance before removing the currency.`
 
 ## FeeDistributor related
-`FD001` : `can not checkpoint now`
+`FD001` : `can not perform checkpoint now.`
 
 ## Staking Hope
-`SH` : `Unsupport currency`
+`SH` : `Unsupport currency.`
 
 
 # Gauge Pool
-`GP000` : `Unauthorized`
-`GP001` : `Kick not allowed`
-`GP002` : `Forbidden init`
-`GP003` : `Decreased allowance below zero`
-`GP004` : `Reward Threshold`
-`GP005` : `Repeat setting`
-`GP006` : `Must currentDistributor or owner`
-`GP007` : `CurrentDistributor the zero address`
-`GP008` : `Distributor the zero address`
-`GP009` : `No permission to execute`
-`GP010` : `Transfer failed`
-`GP011` : `Cannot redirect when claiming for another user`
+`GP000` : `Unauthorized.`
+`GP001` : `Kick not allowed.`
+`GP002` : `Initiation forbidden.`
+`GP003` : `Negative after decreasing.`
+`GP004` : `Reward Threshold exceeded.`
+`GP005` : `Repeated.`
+`GP006` : `Must be the currentDistributor or owner.`
+`GP007` : `CurrentDistributor the zero address.`
+`GP008` : `Distributor the zero address.`
+`GP009` : `No permission to execute.`
+`GP010` : `Transfer failed.`
+`GP011` : `Cannot redirect when claiming for another user.`
 
 # Gauge Factroy
-`GF000` : `No permission to create pool`
+`GF000` : `No permission to create pool.`
 
 
 

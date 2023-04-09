@@ -4,14 +4,14 @@ pragma solidity 0.8.17;
 
 import "../agents/AgentManager.sol";
 import "../interfaces/IRestrictedList.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "./ERC20Permit.sol";
 
 /**
  * @title LT Dao's HOPE Token Contract
  * @notice $HOPE, the ecosystem’s native pricing token backed by reserves
  * @author LT
  */
-contract HOPE is ERC20Upgradeable, AgentManager {
+contract HOPE is ERC20Permit, AgentManager {
     // RestrictedList contract
     address public restrictedList;
 
@@ -25,6 +25,7 @@ contract HOPE is ERC20Upgradeable, AgentManager {
         restrictedList = _restrictedList;
         __Ownable2Step_init();
         __ERC20_init("HOPE", "HOPE");
+        __ERC20Permit_init();
     }
 
     /**

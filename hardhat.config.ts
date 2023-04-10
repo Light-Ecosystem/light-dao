@@ -34,7 +34,9 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       gas: 4100000,
-      allowUnlimitedContractSize: false
+      gasPrice: 8000000000,
+      allowUnlimitedContractSize: false,
+      chainId: 31337
     },
     ganache: {
       gas: 4100000,
@@ -48,21 +50,21 @@ const config: HardhatUserConfig = {
         passphrase: ""
       }
     },
-    sepolia: {
-      gas: 4100000,
-      url: process.env.SEPOLIA_NODE_URL,
-      accounts: [`${process.env.WALLET_KEY}`]
-    },
-    goerli: {
-      gas: 4100000,
-      url: process.env.GOERLI_NODE_URL,
-      accounts: [`${process.env.WALLET_KEY}`]
-    }
+    // sepolia: {
+    //   gas: 4100000,
+    //   url: process.env.SEPOLIA_NODE_URL,
+    //   accounts: [`${process.env.WALLET_KEY}`]
+    // },
+    // goerli: {
+    //   gas: 4100000,
+    //   url: process.env.GOERLI_NODE_URL,
+    //   accounts: [`${process.env.WALLET_KEY}`]
+    // }
   },
-  etherscan: {
-    // Your API key for Etherscan
-    apiKey: process.env.ETHERSCAN_API_KEY
-  }
+  // etherscan: {
+  //   // Your API key for Etherscan
+  //   apiKey: process.env.ETHERSCAN_API_KEY
+  // }
 };
 
 export default config;

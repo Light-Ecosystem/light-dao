@@ -1,12 +1,15 @@
-import { ethers, upgrades } from "hardhat";
+import { ethers, upgrades, config } from "hardhat";
 import { expect } from 'chai';
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { buildPermitParams, getSignatureFromTypedData } from "./contracts-helpers";
-import { getTestWallets } from './utils/wallets';
+import { buildPermitParams, getSignatureFromTypedData } from "./SigHelper";
 
 describe("HOPEPermit", () => {
 
-    let testWallets = getTestWallets();
+    const accounts = config.networks.hardhat.accounts;
+    const index = 0; // first wallet, increment for next wallets
+    const wallet1 = ethers.Wallet.fromMnemonic(accounts.mnemonic, accounts.path + `/${index}`);
+    const ownerPrivateKey = wallet1.privateKey;
+
     const EIP712_REVISION = '1';
     const MAX_UINT_AMOUNT =
         '115792089237316195423570985008687907853269984665640564039457584007913129639935';
@@ -62,7 +65,7 @@ describe("HOPEPermit", () => {
                 expiration.toFixed()
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             expect((await hopeToken.allowance(owner.address, spender.address)).toString()).to.be.equal(
                 '0',
@@ -100,7 +103,7 @@ describe("HOPEPermit", () => {
                 permitAmount
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             expect((await hopeToken.allowance(owner.address, spender.address)).toString()).to.be.equal(
                 '0',
@@ -136,7 +139,7 @@ describe("HOPEPermit", () => {
                 permitAmount
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             const sig = getSignatureFromTypedData(ownerPrivateKey, msgParams1);
             await hopeToken.permit(owner.address, spender.address, permitAmount, deadline, sig.v, sig.r, sig.s)
@@ -192,7 +195,7 @@ describe("HOPEPermit", () => {
                 permitAmount
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             const { v, r, s } = getSignatureFromTypedData(ownerPrivateKey, msgParams);
 
@@ -220,7 +223,7 @@ describe("HOPEPermit", () => {
                 permitAmount
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             const { v, r, s } = getSignatureFromTypedData(ownerPrivateKey, msgParams);
 
@@ -248,7 +251,7 @@ describe("HOPEPermit", () => {
                 permitAmount
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             const { v, r, s } = getSignatureFromTypedData(ownerPrivateKey, msgParams);
 
@@ -276,7 +279,7 @@ describe("HOPEPermit", () => {
                 permitAmount
             );
 
-            const ownerPrivateKey = testWallets[0].secretKey;
+            const ownerPrivateKey = wallet1.privateKey;
 
             const { v, r, s } = getSignatureFromTypedData(ownerPrivateKey, msgParams);
 
@@ -302,7 +305,9 @@ describe("HOPEPermit", () => {
                 DEADLINE.toString(),
                 permitAmount
             );
-            const { v, r, s } = getSignatureFromTypedData(testWallets[0].secretKey, msgParams);
+
+            const ownerPrivateKey = wallet1.privateKey;
+            const { v, r, s } = getSignatureFromTypedData(ownerPrivateKey, msgParams);
             await hopeToken.permit(owner.address, spender.address, permitAmount, DEADLINE, v, r, s)
             expect((await hopeToken.allowance(owner.address, spender.address)).toString()).to.be.equal(
                 permitAmount,

@@ -4,7 +4,6 @@ import "@openzeppelin/hardhat-upgrades";
 import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 import "dotenv/config";
-import { accounts } from './test_wallets.js';
 
 const config: HardhatUserConfig = {
 
@@ -37,11 +36,7 @@ const config: HardhatUserConfig = {
       gas: 4100000,
       gasPrice: 8000000000,
       allowUnlimitedContractSize: false,
-      chainId: 31337,
-      accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
-        privateKey: secretKey,
-        balance,
-      })),
+      chainId: 31337
     },
     ganache: {
       gas: 4100000,

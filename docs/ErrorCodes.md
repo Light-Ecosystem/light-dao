@@ -35,7 +35,7 @@
 ## LT Token related
 
 `BA000` : `updateMiningParameters not updated yet.`
-`BA001` : `start time less than or equal to end time.`
+`BA001` : `The start time has to be earlier than the end time.`
 `BA002` : `too far in future.`
 `BA003` : `can set the minter only once.`
 `BA004` : `Accessible to the minter only.`

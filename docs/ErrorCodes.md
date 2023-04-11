@@ -22,13 +22,13 @@
 `VE000` : `Lock amount can’t be zero.`
 `VE001` : `Please withdraw before locking new tokens.`
 `VE002` : `Unlock time needs to be in the future.`
-`VE003` : `The max lock time is 4 years.`
+`VE003` : `The max. lock time is 4 years.`
 `VE004` : `No existing lock found.`
 `VE005` : `Cannot add to expired lock. Withdraw first.`
 `VE006` : `Lock expired.`
 `VE007` : `No existing lock found.`
 `VE008` : `You can only increase lock duration.`
-`VE009` : `The max lock time is 4 years.`
+`VE009` : `The max. lock time is 4 years.`
 `VE010` : `The lock didn't expire.`
 `VE011` : `Can’t go exceed the latest block.`
 
@@ -39,7 +39,7 @@
 `BA002` : `too far in future.`
 `BA003` : `can set the minter only once.`
 `BA004` : `Accessible to the minter only.`
-`BA005` : `exceeds max allowable mint amount.`
+`BA005` : `exceeds max. allowable mint amount.`
 
 ## Agent related
 

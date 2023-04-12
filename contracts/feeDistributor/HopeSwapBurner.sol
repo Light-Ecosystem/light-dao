@@ -4,6 +4,7 @@ pragma solidity 0.8.17;
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../interfaces/IBurner.sol";
+import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
 interface ISwapRouter {
     function getAmountsOut(uint amountIn, address[] memory path) external view returns (uint[] memory amounts);
@@ -51,10 +52,7 @@ contract HopeSwapBurner is IBurner, Ownable2Step {
             return;
         }
 
-        uint256 balanceBefore = token.balanceOf(address(this));
-        require(token.transferFrom(msg.sender, address(this), amount), "LSB01");
-        uint256 balanceAfter = token.balanceOf(address(this));
-        uint256 spendAmount = balanceAfter - balanceBefore;
+        uint256 spendAmount = TransferHelper.doTransferFrom(address(token), msg.sender, address(this), amount);
 
         ISwapRouter bestRouter = routers[0];
         uint bestExpected = 0;

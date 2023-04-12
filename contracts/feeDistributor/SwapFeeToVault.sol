@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../feeDistributor/BurnerManager.sol";
+import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
 interface SwapPair {
     function mintFee() external;
@@ -49,7 +50,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         // user choose to not burn token if not profitable
         if (amount > 0) {
             IBurner burner = burnerManager.burners(address(token));
-            require(token.approve(address(burner), amount), "SFTV00");
+            TransferHelper.doApprove(address(token), address(burner), amount);
             require(burner != IBurner(address(0)), "SFTV01");
             burner.burn(underlyingBurner, token, amount, amountOutMin);
         }

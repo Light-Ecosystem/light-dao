@@ -627,6 +627,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
      * @return Total voting power at that time
      */
     function _supplyAt(Point memory point, uint256 t) internal view returns (uint256) {
+        require(t >= point.ts, "GC007");
         Point memory _lastPoint = point;
         uint256 _ti = (_lastPoint.ts / WEEK) * WEEK;
         for (uint256 i; i < 255; i++) {

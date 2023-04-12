@@ -126,8 +126,8 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
 
         for (uint i = 0; i < routers.length; i++) {
             uint[] memory expected = routers[i].getAmountsOut(amount, path);
-            if (expected[0] > bestExpected) {
-                bestExpected = expected[0];
+            if (expected[1] > bestExpected) {
+                bestExpected = expected[1];
                 bestRouter = routers[i];
             }
         }

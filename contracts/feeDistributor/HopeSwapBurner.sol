@@ -62,8 +62,8 @@ contract HopeSwapBurner is IBurner, Ownable2Step {
 
         for (uint i = 0; i < routers.length; i++) {
             uint[] memory expected = routers[i].getAmountsOut(spendAmount, path);
-            if (expected[0] > bestExpected) {
-                bestExpected = expected[0];
+            if (expected[1] > bestExpected) {
+                bestExpected = expected[1];
                 bestRouter = routers[i];
             }
         }

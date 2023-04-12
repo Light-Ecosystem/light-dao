@@ -90,7 +90,7 @@
 `GP002` : `Initiation forbidden.`
 `GP003` : `Negative after decreasing.`
 `GP004` : `Reward Threshold exceeded.`
-`GP005` : `Repeated.`
+`GP005` : `Repeated setting.`
 `GP006` : `Must be the currentDistributor or owner.`
 `GP007` : `CurrentDistributor the zero address.`
 `GP008` : `Distributor the zero address.`

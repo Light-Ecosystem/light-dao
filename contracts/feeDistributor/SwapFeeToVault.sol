@@ -3,6 +3,7 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../feeDistributor/BurnerManager.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
@@ -17,7 +18,9 @@ interface SwapPair {
     function transfer(address to, uint value) external returns (bool);
 }
 
-contract SwapFeeToVault is Ownable2Step, Pausable {
+contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
+    bytes32 public constant operatorRole = keccak256("Operator_Role");
+
     BurnerManager public burnerManager;
     address public underlyingBurner;
 
@@ -29,7 +32,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         underlyingBurner = _underlyingBurner;
     }
 
-    function withdrawAdminFee(address pool) external whenNotPaused {
+    function withdrawAdminFee(address pool) external whenNotPaused onlyRole(operatorRole) {
         SwapPair pair = SwapPair(pool);
         pair.mintFee();
         uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
@@ -39,7 +42,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         }
     }
 
-    function withdrawMany(address[] memory pools) external whenNotPaused {
+    function withdrawMany(address[] memory pools) external whenNotPaused onlyRole(operatorRole) {
         for (uint256 i = 0; i < pools.length && i < 256; i++) {
             this.withdrawAdminFee(pools[i]);
         }
@@ -56,12 +59,12 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
         }
     }
 
-    function burn(IERC20 token, uint amountOutMin) external whenNotPaused {
+    function burn(IERC20 token, uint amountOutMin) external whenNotPaused onlyRole(operatorRole) {
         require(msg.sender == tx.origin, "SFTV02");
         _burn(token, amountOutMin);
     }
 
-    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external whenNotPaused {
+    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external whenNotPaused onlyRole(operatorRole) {
         require(msg.sender == tx.origin, "SFTV02");
         for (uint i = 0; i < tokens.length && i < 128; i++) {
             _burn(tokens[i], amountOutMin[i]);
@@ -74,5 +77,13 @@ contract SwapFeeToVault is Ownable2Step, Pausable {
 
     function unpause() public onlyOwner {
         _unpause();
+    }
+
+    function grantRole(bytes32 role, address account) public override onlyOwner {
+        _grantRole(role, account);
+    }
+
+    function revokeRole(bytes32 role, address account) public override onlyOwner {
+        _revokeRole(role, account);
     }
 }

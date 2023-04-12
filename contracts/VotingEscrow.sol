@@ -77,8 +77,9 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     mapping(address => uint256) public userPointEpoch;
     mapping(uint256 => int256) public slopeChanges; // time -> signed slope change
 
-    string public name;
-    string public symbol;
+    string public constant NAME = "Vote-escrowed LT";
+    string public constant SYMBOL = "veLT";
+
     uint256 public immutable decimals;
     address public smartWalletChecker;
 
@@ -90,8 +91,6 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         supplyPointHistory[0] = Point({bias: 0, slope: 0, ts: block.timestamp, blk: block.number});
         uint256 _decimals = IERC20Metadata(_tokenAddr).decimals();
         decimals = _decimals;
-        name = "Vote-escrowed LT";
-        symbol = "veLT";
     }
 
     /***

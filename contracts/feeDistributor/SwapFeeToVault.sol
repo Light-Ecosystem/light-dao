@@ -21,8 +21,8 @@ interface SwapPair {
 contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
     bytes32 public constant operatorRole = keccak256("Operator_Role");
 
-    BurnerManager public burnerManager;
-    address public underlyingBurner;
+    BurnerManager public immutable burnerManager;
+    address public immutable underlyingBurner;
 
     constructor(BurnerManager _burnerManager, address _underlyingBurner) {
         require(address(_burnerManager) != address(0), "Invalid Address");

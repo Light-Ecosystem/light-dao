@@ -134,8 +134,7 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
 
         require(bestExpected >= amountOutMin, "less than expected");
         if (!approved[bestRouter][token]) {
-            bool success = IERC20Upgradeable(token).approve(address(bestRouter), type(uint).max);
-            require(success, "approve failed");
+            TransferHelper.doApprove(address(token), address(bestRouter), type(uint).max);
             approved[bestRouter][token] = true;
         }
 

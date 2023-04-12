@@ -220,7 +220,7 @@ contract GaugeController is Ownable2Step, IGaugeController {
     /**
      * @notice Allocate voting power for changing pool weights
      * @param gaugeAddressList Gauge of list which `msg.sender` votes for
-     * @param userWeightList Weight of list for a gauge in bps (units of 0.01%). Minimal is 0.01%.
+     * @param userWeightList Weight of list for a gauge in bps (units of 0.01%). Minimal is zero.
      */
     function batchVoteForGaugeWeights(address[] memory gaugeAddressList, uint256[] memory userWeightList) public {
         require(gaugeAddressList.length == userWeightList.length, "GC007");
@@ -243,7 +243,7 @@ contract GaugeController is Ownable2Step, IGaugeController {
     /**
      * @notice Allocate voting power for changing pool weights
      * @param gaugeAddress Gauge which `msg.sender` votes for
-     * @param userWeight Weight for a gauge in bps (units of 0.01%). Minimal is 0.01%.
+     * @param userWeight Weight for a gauge in bps (units of 0.01%). Minimal is zero.
      *        example: 10%=1000,3%=300,0.01%=1,100%=10000
      */
     function voteForGaugeWeights(address gaugeAddress, uint256 userWeight) public override {

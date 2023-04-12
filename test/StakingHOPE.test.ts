@@ -29,7 +29,7 @@ describe("StakingHope", function () {
     const lt = await upgrades.deployProxy(LT, ["LT Dao Token", "LT"]);
     await lt.deployed();
 
-    await time.increase(DAY);
+    await time.increase(2 * DAY);
     await lt.updateMiningParameters();
 
     const Permit2Contract = await ethers.getContractFactory("Permit2");

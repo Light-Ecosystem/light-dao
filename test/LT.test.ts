@@ -18,7 +18,7 @@ describe("LT", function () {
         await eRC20LT.deployed();
         // console.log('eRC20LT address is', eRC20LT.address);
 
-        await time.increase(86400 + 10);
+        await time.increase(2 * 86400 + 10);
         await eRC20LT.updateMiningParameters();
 
         let RATE_REDUCTION_TIME = 86400 * 365;

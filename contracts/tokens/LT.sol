@@ -34,7 +34,7 @@ contract LT is ERC20Permit, Ownable2StepUpgradeable, ILT {
     /// 2 ** (1/4) * 1e18
     uint256 private constant _RATE_REDUCTION_COEFFICIENT = 1189207115002721024;
     uint256 private constant _RATE_DENOMINATOR = 10 ** 18;
-    uint256 private constant _INFLATION_DELAY = _DAY;
+    uint256 private constant _INFLATION_DELAY = 2 * _DAY;
 
     address public minter;
     /// Supply variables

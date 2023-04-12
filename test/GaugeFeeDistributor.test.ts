@@ -31,7 +31,7 @@ describe("GaugeFeeDistributor", function () {
         ///deploy LT contract
         const lt = await upgrades.deployProxy(LT, ['LT Dao Token', 'LT']);
         await lt.deployed();
-        await time.increase(86400);
+        await time.increase(2 * 86400);
         await lt.updateMiningParameters();
         await lt.approve(permit2.address, ethers.constants.MaxUint256);
 

@@ -14,7 +14,6 @@ async function main() {
   const smartWalletWhitelist = await ethers.getContractAt("SmartWalletWhitelist", FileUtils.getContractAddress(Constants.SmartWalletWhitelist));
   const restricted = await ethers.getContractAt("RestrictedList", FileUtils.getContractAddress(Constants.RESTRICTED_LIST));
   const hope = await ethers.getContractAt("HOPE", FileUtils.getContractAddress(Constants.HOPE_TOKEN));
-  const hopeTokenSell = await ethers.getContractAt("HOPESalesAgent", FileUtils.getContractAddress(Constants.TOKEN_SALE));
   const stakingHope = await ethers.getContractAt("StakingHOPE", FileUtils.getContractAddress(Constants.STAKING_HOPE_GAUGE));
   const feeDistributor = await ethers.getContractAt("FeeDistributor", FileUtils.getContractAddress(Constants.FeeDistributor));
   const gaugeFeeDistributor = await ethers.getContractAt("GaugeFeeDistributor", FileUtils.getContractAddress(Constants.GaugeFeeDistributor));
@@ -31,7 +30,6 @@ async function main() {
   console.log(smartWalletWhitelist.address);
   console.log(restricted.address);
   console.log(hope.address);
-  console.log(hopeTokenSell.address);
   console.log(stakingHope.address);
   console.log(feeDistributor.address);
   console.log(gaugeFeeDistributor.address);
@@ -42,7 +40,6 @@ async function main() {
 
 
   await hope.transferOwnership(gnosisSafe);
-  await hopeTokenSell.transferOwnership(gnosisSafe);
   await gaugeController.transferOwnership(gnosisSafe);
   await restricted.transferOwnership(gnosisSafe);
   await ltToken.transferOwnership(gnosisSafe);

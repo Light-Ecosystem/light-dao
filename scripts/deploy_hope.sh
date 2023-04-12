@@ -12,18 +12,6 @@ echo "deploy hope token_______________"
 npx hardhat run scripts/hope/2.deploy_hope_token.ts --network $_netwrok
 echo "deploy hope token_______________\n"
 
-echo "deploy token sale_______________"
-npx hardhat run scripts/hope/3.deploy_hope_sales_agent.ts --network $_netwrok
-echo "deploy token sale_______________\n"
-
-echo "add currency for token sale_______________"
-npx hardhat run scripts/hope/add_currency_for_token_sale.ts --network $_netwrok
-echo "add currency for token sale_______________\n"
-
-echo "grant agent to sale_______________"
-npx hardhat run scripts/hope/grant_sale_contract_agent.ts --network $_netwrok
-echo "grant agent to sale_______________\n"
-
 echo "deploy staking hope"
 npx hardhat run scripts/hope/4.staking_hope_gauge.ts --network $_netwrok
 echo "deploy staking hope_______________\n"

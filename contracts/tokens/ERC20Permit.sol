@@ -19,6 +19,7 @@ contract ERC20Permit is ERC20Upgradeable {
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) public virtual {
         require(owner != address(0), "INVALID_OWNER");
         require(deadline >= block.timestamp, "PERMIT_DEADLINE_EXPIRED");
+        require(uint256(s) <= 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, "INVALID_SIGNER");
 
         // Unchecked because the only math done is incrementing
         // the owner's nonce which cannot realistically overflow.

@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable2Step.sol";
 import "../interfaces/IBurner.sol";
 
 contract BurnerManager is Ownable2Step {
-    event AddBurner(IBurner indexed newBurner, IBurner indexed oldBurner);
+    event AddBurner(address indexed token, IBurner indexed newBurner, IBurner indexed oldBurner);
 
     /// tokenAddress => burnerAddress
     mapping(address => IBurner) public burners;
@@ -46,7 +46,7 @@ contract BurnerManager is Ownable2Step {
         IBurner oldBurner = burners[token];
         burners[token] = burner;
 
-        emit AddBurner(burner, oldBurner);
+        emit AddBurner(token, burner, oldBurner);
 
         return true;
     }

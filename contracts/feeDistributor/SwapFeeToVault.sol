@@ -33,18 +33,22 @@ contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
     }
 
     function withdrawAdminFee(address pool) external whenNotPaused onlyRole(OPERATOR_ROLE) {
+        _withdrawAdminFee(pool);
+    }
+
+    function withdrawMany(address[] memory pools) external whenNotPaused onlyRole(OPERATOR_ROLE) {
+        for (uint256 i = 0; i < pools.length && i < 256; i++) {
+            _withdrawAdminFee(pools[i]);
+        }
+    }
+
+    function _withdrawAdminFee(address pool) internal {
         SwapPair pair = SwapPair(pool);
         pair.mintFee();
         uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
         if (tokenPBalance > 0) {
             pair.transfer(address(pair), tokenPBalance);
             pair.burn(address(this));
-        }
-    }
-
-    function withdrawMany(address[] memory pools) external whenNotPaused onlyRole(OPERATOR_ROLE) {
-        for (uint256 i = 0; i < pools.length && i < 256; i++) {
-            this.withdrawAdminFee(pools[i]);
         }
     }
 

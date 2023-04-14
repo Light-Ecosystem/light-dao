@@ -534,12 +534,12 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         if (_t == 0) {
             _t = block.timestamp;
         }
-
         uint256 _epoch = userPointEpoch[_addr];
         if (_epoch == 0) {
             return 0;
         } else {
             Point memory _lastPoint = userPointHistory[_addr][_epoch];
+            require(_t >= _lastPoint.ts, "GC007");
             unchecked {
                 _lastPoint.bias -= _lastPoint.slope * int256(_t - _lastPoint.ts);
             }

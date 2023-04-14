@@ -624,8 +624,7 @@ describe("VotingEscrow", function () {
             expect(point).to.have.property('ts').to.equal(ts);
             expect(point).to.have.property('slope').to.equal(value.div(MAXTIME * BASE_RATE));
             expect(await veLT.balanceOfAtTime(owner.address, 0)).to.equal(slope.mul(MAXTIME - (lockTime - end.toNumber())));
-
-            expect(await veLT.balanceOfAtTime(owner.address, ts - (lockTime - end.toNumber()))).to.equal(slope.mul(MAXTIME));
+            await expect(veLT.balanceOfAtTime(owner.address, ts - (lockTime - end.toNumber()))).to.be.revertedWith("GC007");
             // expect(slope.mul(MAXTIME)).to.equal(value);
 
             let lastTime = await time.latest();

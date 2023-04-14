@@ -19,7 +19,7 @@ interface SwapPair {
 }
 
 contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
-    bytes32 public constant operatorRole = keccak256("Operator_Role");
+    bytes32 public constant OPERATOR_ROLE = keccak256("Operator_Role");
 
     BurnerManager public immutable burnerManager;
     address public immutable underlyingBurner;
@@ -32,7 +32,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
         underlyingBurner = _underlyingBurner;
     }
 
-    function withdrawAdminFee(address pool) external whenNotPaused onlyRole(operatorRole) {
+    function withdrawAdminFee(address pool) external whenNotPaused onlyRole(OPERATOR_ROLE) {
         SwapPair pair = SwapPair(pool);
         pair.mintFee();
         uint256 tokenPBalance = SwapPair(pool).balanceOf(address(this));
@@ -42,7 +42,7 @@ contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
         }
     }
 
-    function withdrawMany(address[] memory pools) external whenNotPaused onlyRole(operatorRole) {
+    function withdrawMany(address[] memory pools) external whenNotPaused onlyRole(OPERATOR_ROLE) {
         for (uint256 i = 0; i < pools.length && i < 256; i++) {
             this.withdrawAdminFee(pools[i]);
         }
@@ -59,12 +59,12 @@ contract SwapFeeToVault is Ownable2Step, Pausable, AccessControl {
         }
     }
 
-    function burn(IERC20 token, uint amountOutMin) external whenNotPaused onlyRole(operatorRole) {
+    function burn(IERC20 token, uint amountOutMin) external whenNotPaused onlyRole(OPERATOR_ROLE) {
         require(msg.sender == tx.origin, "SFTV02");
         _burn(token, amountOutMin);
     }
 
-    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external whenNotPaused onlyRole(operatorRole) {
+    function burnMany(IERC20[] calldata tokens, uint[] calldata amountOutMin) external whenNotPaused onlyRole(OPERATOR_ROLE) {
         require(msg.sender == tx.origin, "SFTV02");
         for (uint i = 0; i < tokens.length && i < 128; i++) {
             _burn(tokens[i], amountOutMin[i]);

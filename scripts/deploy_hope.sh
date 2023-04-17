@@ -16,8 +16,4 @@ echo "deploy staking hope"
 npx hardhat run scripts/hope/4.staking_hope_gauge.ts --network $_netwrok
 echo "deploy staking hope_______________\n"
 
-echo "add  staking gauge for gaugeController_______________"
-npx hardhat run scripts/hope/add_staking_gauge.ts --network $_netwrok
-echo "add  staking gauge for gaugeController_______________\n"
-
 echo 'end to deploy all hope contract.............'

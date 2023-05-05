@@ -39,7 +39,16 @@ yarn hardhat test
 
 # Audits and Security
 
-Light DAO contracts have been audited by  SlowMist and Certic. These audit reports are made available on the [Audit](https://github.com/Light-Ecosystem/light-dao/tree/main/audit).
+Light DAO contracts have been audited by  SlowMist ,Certic and PackShield. These audit reports are made available on the [Audit](https://github.com/Light-Ecosystem/light-dao/tree/main/audit).
+You can also view audit reports in other ways：
+1. [SlowMist](https://slowmist.com)
+    * [SlowMist Audit Report - LightDAO Phase1_en-us](https://github.com/slowmist/Knowledge-Base/blob/master/open-report-V2/smart-contract/SlowMist%20Audit%20Report%20-%20LightDAO_en-us.pdf)
+    * [SlowMist Audit Report - LightDAO Phase2_en-us](https://github.com/slowmist/Knowledge-Base/blob/master/open-report-V2/smart-contract/SlowMist%20Audit%20Report%20-%20LightDAO%20Phase2_en-us.pdf)
+2. [Certik](https://www.certik.com/)
+    * [HOPE - CertiK Skynet Project Insight](https://skynet.certik.com/zh-CN/projects/hope)
+3. [PackShield](https://peckshield.com/#home)
+   * [PeckShield-Audit-Report-HOPE-v1.2.pdf](https://github.com/peckshield/publications/blob/master/audit_reports/PeckShield-Audit-Report-HOPE-v1.2.pdf)
+
 
 There is also an active [bug bounty](https://static.hope.money/bug-bounty.html) for issues which can lead to substantial loss of money, critical bugs such as a broken live-ness condition, or irreversible loss of funds.
 

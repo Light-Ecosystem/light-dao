@@ -25,7 +25,7 @@ export class Constants {
     static readonly GaugeFeeDistributor = "Gauge_Fee_Distributor";
     static readonly UnderlyingBurner = "UnderlyingBurner";
     static readonly HopeSwapBurner = "Hope_SwapBurner";
-    static readonly HOPE_CONNET_VAULT = "HOPE_CONNET_VAULT";
-    static readonly stHOPE_CONNET_VAULT = "stHOPE_CONNET_VAULT";
+    static readonly HOPE_CONNECT_VAULT = "HOPE_CONNECT_VAULT";
+    static readonly stHOPE_CONNECT_VAULT = "stHOPE_CONNECT_VAULT";
 
 }

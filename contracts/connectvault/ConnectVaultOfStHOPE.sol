@@ -6,9 +6,9 @@ import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "../interfaces/IMinter.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
-import "./AbsConnetVault.sol";
+import "./AbsConnectVault.sol";
 
-contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AbsConnetVault {
+contract ConnectVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AbsConnectVault {
     event RewardsDistributed(address distributer, address to, uint256 amount);
 
     address public minter;
@@ -17,7 +17,7 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
     function initialize(
         address _permit2Address,
         address _token,
-        address _connnet,
+        address _connect,
         address _withdrawAdmin,
         address _ownerAddress,
         address _minter,
@@ -27,11 +27,11 @@ contract ConnetVaultOfStHOPE is Ownable2StepUpgradeable, PausableUpgradeable, ER
         require(_ltToken != address(0), "CE000");
         minter = _minter;
         ltToken = _ltToken;
-        _initialize(_permit2Address, _token, _connnet, _withdrawAdmin, _ownerAddress);
+        _initialize(_permit2Address, _token, _connect, _withdrawAdmin, _ownerAddress);
     }
 
     function transferLTRewards(address to, uint256 amount) external whenNotPaused returns (bool) {
-        require(msg.sender == connet, "forbidden");
+        require(msg.sender == connect, "forbidden");
         /// mint stHopeGomboc reward for this contract
         IMinter(minter).mint(token);
         /// transfer LT

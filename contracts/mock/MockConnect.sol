@@ -3,7 +3,7 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable2Step.sol";
 
-interface IValut {
+interface IVault {
     function withdraw(address to, uint256 amount) external returns (uint256);
 
     function transferLTRewards(address to, uint256 amount) external returns (bool);
@@ -15,12 +15,12 @@ interface IERC20 {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
-contract MockConnet is Ownable2Step {
-    address public valut;
+contract MockConnect is Ownable2Step {
+    address public vault;
     address public ltToken;
 
-    function setValut(address _valut) external onlyOwner returns (bool) {
-        valut = _valut;
+    function setVault(address _vault) external onlyOwner returns (bool) {
+        vault = _vault;
     }
 
     function setLt(address _addr) external onlyOwner returns (bool) {
@@ -36,15 +36,15 @@ contract MockConnet is Ownable2Step {
     }
 
     function transferLTRewards(address to, uint256 amount) external onlyOwner returns (bool) {
-        IValut(valut).transferLTRewards(to, amount);
+        IVault(vault).transferLTRewards(to, amount);
         return true;
     }
 
     function withdraw(address to, uint256 amount) external onlyOwner {
-        IValut(valut).withdraw(to, amount);
+        IVault(vault).withdraw(to, amount);
     }
 
     function transferBToken(address to, uint256 amount) external onlyOwner {
-        IERC20(valut).transfer(to, amount);
+        IERC20(vault).transfer(to, amount);
     }
 }

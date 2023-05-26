@@ -7,30 +7,31 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-interface IConnet {
+interface IConnect {
     function depositRewardToken(uint256 amount) external;
 
     function deposit(address token, address addr, uint256 amount) external returns (bool);
 }
 
-abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable {
+abstract contract AbsConnectVault is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable {
     event Deposit(address indexed from, uint256 amount);
-    event ChangeConnet(address indexed newConnet);
+    event Withdraw(address indexed to, uint256 amount);
+    event ChangeConnect(address indexed newConnect);
 
-    bytes32 public constant withrawAdminRole = keccak256("withraw_Admin_Role");
+    bytes32 public constant WITHDRAW_ADMIN_ROLE = keccak256("WITHDRAW_ADMIN_ROLE");
 
     // permit2 contract
     address public permit2Address;
 
     ///token address
     address public token;
-    /// connnet address
-    address public connet;
+    /// connect address
+    address public connect;
 
     function _initialize(
         address _permit2Address,
         address _token,
-        address _connnet,
+        address _connect,
         address _withdrawAdmin,
         address _ownerAddress
     ) internal onlyInitializing {
@@ -42,47 +43,47 @@ abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable
         string memory _symbol = IERC20MetadataUpgradeable(_token).symbol();
         __ERC20_init(string.concat("b", _name), _symbol);
 
-        connet = _connnet;
+        connect = _connect;
         permit2Address = _permit2Address;
         token = _token;
         _transferOwnership(_ownerAddress);
         if (_withdrawAdmin != address(0)) {
-            _grantRole(withrawAdminRole, _withdrawAdmin);
+            _grantRole(WITHDRAW_ADMIN_ROLE, _withdrawAdmin);
         }
     }
 
     function deposit(uint256 amount, uint256 nonce, uint256 deadline, bytes memory signature) external whenNotPaused returns (uint256) {
-        require(connet != address(0), "connet is not initialized, please deposit later");
+        require(connect != address(0), "connect is not initialized, please deposit later");
         require(amount != 0, "INVALID_ZERO_AMOUNT");
         address from = _msgSender();
         /// transferFrom token to this contract
         TransferHelper.doTransferIn(permit2Address, token, amount, from, nonce, deadline, signature);
         /// mint bToken to user
         _mint(from, amount);
-        /// tranfer bToken to connnet
-        _transfer(from, connet, amount);
-        /// notify connet transfer info
-        IConnet(connet).deposit(token, from, amount);
+        /// transfer bToken to connect
+        _transfer(from, connect, amount);
+        /// notify connect transfer info
+        IConnect(connect).deposit(token, from, amount);
 
         emit Deposit(from, amount);
 
         return amount;
     }
 
-    function withdraw(address to, uint256 amount) external whenNotPaused onlyRole(withrawAdminRole) returns (uint256) {
+    function withdraw(address to, uint256 amount) external whenNotPaused onlyRole(WITHDRAW_ADMIN_ROLE) returns (uint256) {
         require(amount > 0, "INVALID_ZERO_AMOUNT");
         require(amount <= balanceOf(msg.sender), "insufficient balance");
         /// burn bToken
         _burn(msg.sender, amount);
         /// transfer token to toAccount
         TransferHelper.doTransferOut(token, to, amount);
-
+        emit Withdraw(to, amount);
         return amount;
     }
 
-    function changeConnet(address newConnet) external onlyOwner {
-        connet = newConnet;
-        emit ChangeConnet(newConnet);
+    function changeConnect(address newConnect) external onlyOwner {
+        connect = newConnect;
+        emit ChangeConnect(newConnect);
     }
 
     function pause() external onlyOwner {
@@ -99,6 +100,13 @@ abstract contract AbsConnetVault is Ownable2StepUpgradeable, PausableUpgradeable
 
     function revokeRole(bytes32 role, address account) public override onlyOwner {
         _revokeRole(role, account);
+    }
+
+    function withdrawToken(address _token, address _to, uint256 _amount) external onlyOwner {
+        if (_token == token) {
+            require(_amount <= (IERC20Upgradeable(_token).balanceOf(address(this)) - totalSupply()), "insufficient balance");
+        }
+        TransferHelper.doTransferOut(_token, _to, _amount);
     }
 
     // @dev This empty reserved space is put in place to allow future versions to add new

@@ -20,8 +20,8 @@ async function main() {
     "ConnectVaultOfStHOPE",
     connectVaultOfHOPEAddress
   );
-  await connectVaultOfHOPE.changeConnet(connectAddress);
-  await connectVaultOfHOPE.changeConnet(connectAddress);
+  await connectVaultOfHOPE.changeConnect(connectAddress);
+  await connectVaultOfHOPE.changeConnect(connectAddress);
   await connectVaultOfHOPE.grantRole(adminRole, withdrawAddress);
 
   // change connect and withdrawAdmin for connectVaultOfStHOPE
@@ -32,8 +32,8 @@ async function main() {
     "ConnectVaultOfStHOPE",
     connectVaultOfStHOPEAddress
   );
-  await connectVaultOfStHOPE.changeConnet(connectAddress);
-  await connectVaultOfStHOPE.changeConnet(connectAddress);
+  await connectVaultOfStHOPE.changeConnect(connectAddress);
+  await connectVaultOfStHOPE.changeConnect(connectAddress);
   await connectVaultOfStHOPE.grantRole(adminRole, withdrawAddress);
 }
 

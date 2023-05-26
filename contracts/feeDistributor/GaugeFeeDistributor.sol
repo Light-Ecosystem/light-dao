@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IGaugeFeeDistributor.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "light-lib/contracts/LibTime.sol";
-import "hardhat/console.sol";
 
 struct Point {
     int256 bias;
@@ -353,7 +352,12 @@ contract GaugeFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IG
 
         _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
         IGaugeController(gaugeController).checkpointGauge(gauge);
-        return _claim(gauge, _addr, _lastTokenTime);
+        uint256 amount = _claim(gauge, _addr, _lastTokenTime);
+        if (amount != 0) {
+            stakingHOPEAndTransfer2User(_addr, amount);
+            tokenLastBalance -= amount;
+        }
+        return amount;
     }
 
     /**

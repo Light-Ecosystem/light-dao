@@ -14,7 +14,6 @@ async function main() {
   const smartWalletWhitelist = FileUtils.getContractAddress(Constants.SmartWalletWhitelist);
   const restrictedAddress = FileUtils.getContractAddress(Constants.RESTRICTED_LIST);
   const hopeAddress = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
-  const tokenSaleAddress = FileUtils.getContractAddress(Constants.TOKEN_SALE);
   const stakingHopeAddress = FileUtils.getContractAddress(Constants.STAKING_HOPE_GAUGE);
 
   const burnerManagerAddress = FileUtils.getContractAddress(Constants.BurnerManager);
@@ -37,7 +36,6 @@ async function main() {
   await verifyContract(smartWalletWhitelist, []);
   await verifyContract(restrictedAddress, []);
   await verifyContract(await upgrades.erc1967.getImplementationAddress(hopeAddress), []);
-  await verifyContract(tokenSaleAddress, [hopeAddress, permit2Address]);
   // hope, minter, permit2, ownership
   await verifyContract(stakingHopeAddress, [hopeAddress, minterAddress, permit2Address]);
 

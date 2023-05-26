@@ -2,7 +2,6 @@ export class Constants {
     static readonly RESTRICTED_LIST = "RESTRICTED_LIST";
     static readonly HOPE_TOKEN = "HOPE_TOKEN";
     static readonly ADMIN = "ADMIN";
-    static readonly TOKEN_SALE = "TOKEN_SALE";
     static readonly PERMIT2 = "PERMIT2";
     static readonly USDT_TOKEN = "USDT_TOKEN";
     static readonly USDC_TOKEN = "USDC_TOKEN";

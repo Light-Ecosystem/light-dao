@@ -4,7 +4,7 @@ import { FileUtils } from "../file_utils";
 
 async function main() {
 
-  // todo
+  // TODO:
   const routerAddress = "0x00";
 
   const hopeSwapBurn = await ethers.getContractAt("HopeSwapBurner", FileUtils.getContractAddress(Constants.HopeSwapBurner));

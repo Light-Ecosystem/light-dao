@@ -8,14 +8,27 @@ import { Constants } from "../constant";
 async function main() {
 
   // todo
-  let pairAddress = "0x01";
+  let pairs = [
+    "0x00000",
+  ];
 
   let gauageFactoryAddress = FileUtils.getContractAddress(Constants.GAUGE_FACTORY);
-  console.log(gauageFactoryAddress);
+  console.log("FactoryAddress: ", gauageFactoryAddress);
   const gaugeFactory = await ethers.getContractAt("GaugeFactory", gauageFactoryAddress);
 
+  for (let pairAddress of pairs) {
+    // crate gauge pool
+    let tx  = await gaugeFactory.createPool(pairAddress);
+    await tx.wait(1)
+  }
+
+  for (let pairAddress of pairs) {
+    // get gauge pool
+    console.log(`pair: ${pairAddress}  ,  gauge: ${await gaugeFactory.getPool(pairAddress)}`)
+  }
+
+
   //crate gauge pool
-  let tx = await gaugeFactory.createPool(pairAddress);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

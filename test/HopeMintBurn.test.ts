@@ -71,7 +71,6 @@ describe("HOPETokenContract", () => {
             })
             it("should revert credit not enough", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 await hopeToken.grantAgent(
                     admin.address,
                     5,
@@ -84,7 +83,6 @@ describe("HOPETokenContract", () => {
             })
             it("should revert not reach effective block", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 const effectiveBlock = await ethers.provider.getBlockNumber() + 1000;
                 const expirationBlock = effectiveBlock + 1000;
                 await hopeToken.grantAgent(
@@ -99,7 +97,6 @@ describe("HOPETokenContract", () => {
             })
             it("should revert expired", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 const effectiveBlock = await ethers.provider.getBlockNumber();
                 const expirationBlock = effectiveBlock + 1000;
                 await hopeToken.grantAgent(
@@ -116,7 +113,6 @@ describe("HOPETokenContract", () => {
 
             it("Mint", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 const CREDIT = 100;
                 const MINT_AMOUNT = 10;
                 await hopeToken.grantAgent(
@@ -137,12 +133,10 @@ describe("HOPETokenContract", () => {
         describe("Burn only Agent & Burnable", async () => {
             it("should revert not have the Agent role", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 await expect(admin.burn(5)).to.be.revertedWith("AG000");
             })
             it("should revert not have the Burnable role", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 await hopeToken.grantAgent(
                     admin.address,
                     10_000,
@@ -155,7 +149,6 @@ describe("HOPETokenContract", () => {
             })
             it("should revert Balance not enough", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 await hopeToken.grantAgent(
                     admin.address,
                     10_000,
@@ -168,7 +161,6 @@ describe("HOPETokenContract", () => {
             })
             it("should revert not reach effctive block", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 let effectiveBlock = await ethers.provider.getBlockNumber();
                 const expirationBlock = effectiveBlock + 2000;
                 const CREDIT = 10;
@@ -190,7 +182,6 @@ describe("HOPETokenContract", () => {
             })
             it("should revert expired", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 const effectiveBlock = await ethers.provider.getBlockNumber();
                 const expirationBlock = effectiveBlock + 1000;
                 const CREDIT = 10;
@@ -212,7 +203,6 @@ describe("HOPETokenContract", () => {
             })
             it("burn", async () => {
                 const { hopeToken, restrictedList, admin } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 const CREDIT = 10;
                 const MINT_AMOUNT = 9;
                 const BURN_AMOUNT = 9;
@@ -237,7 +227,6 @@ describe("HOPETokenContract", () => {
             })
             it("burn out of remaining credit", async () => {
                 const { owner, hopeToken, restrictedList, admin, admin2 } = await loadFixture(deployHOPEFixture);
-                hopeToken.initialize(restrictedList.address);
                 const CREDIT = 10;
                 const MINT_AMOUNT = 9;
                 const BURN_AMOUNT = 9;

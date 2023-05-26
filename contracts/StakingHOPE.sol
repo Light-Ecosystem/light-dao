@@ -30,7 +30,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
     mapping(uint256 => uint256) public unstakingDayHistory;
     uint256 private _unstakeTotal;
 
-    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("HOPE Staking", "stHOPE") {
+    constructor(address _stakedToken, address _minter, address _permit2Address) ERC20("staked HOPE", "stHOPE") {
         require(_stakedToken != address(0), "CE000");
         require(_permit2Address != address(0), "CE000");
 
@@ -173,7 +173,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
             if (summaryMap.orderMap[_index].redeemExecuted) {
                 break;
             }
-            if (block.timestamp > summaryMap.orderMap[_index].redeemTime) {
+            if (block.timestamp >= summaryMap.orderMap[_index].redeemTime) {
                 uint256 amount = summaryMap.orderMap[_index].amount;
                 summaryMap.orderMap[_index].redeemExecuted = true;
                 summaryMap.notRedeemAmount = summaryMap.notRedeemAmount - amount;
@@ -212,7 +212,7 @@ contract StakingHOPE is IStaking, ERC20, AbsGauge {
             if (indexCount >= maxIndex) {
                 break;
             }
-            if (block.timestamp > summaryMap.orderMap[_index].redeemTime && !summaryMap.orderMap[_index].redeemExecuted) {
+            if (block.timestamp >= summaryMap.orderMap[_index].redeemTime && !summaryMap.orderMap[_index].redeemExecuted) {
                 uint256 amount = summaryMap.orderMap[_index].amount;
                 amountToRedeem += amount;
                 summaryMap.orderMap[_index].redeemExecuted = true;

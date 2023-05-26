@@ -1,9 +1,3 @@
-
-# relationship
-
-![](./images/gauge1.png)
-
-
 # AbsGauge
 
 > Gauge abstract contract

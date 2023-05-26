@@ -1,3 +1,4 @@
+import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers, upgrades } from "hardhat";
@@ -37,7 +38,7 @@ describe("BurnerManager", function () {
         it("setBurner success", async function () {
 
             const { owner, alice, bob, burnerManager } = await loadFixture(deployOneYearLockFixture);
-            await expect(await burnerManager.setBurner(owner.address, alice.address)).to.emit(burnerManager, "AddBurner").withArgs(alice.address, ethers.constants.AddressZero);
+            await expect(await burnerManager.setBurner(owner.address, alice.address)).to.emit(burnerManager, "AddBurner").withArgs(anyValue, alice.address, ethers.constants.AddressZero);
             expect(await burnerManager.burners(owner.address)).to.be.equal(alice.address);
         });
 
@@ -67,7 +68,7 @@ describe("BurnerManager", function () {
         it("setManyBurner success", async function () {
 
             const { owner, alice, bob, burnerManager } = await loadFixture(deployOneYearLockFixture);
-            await expect(await burnerManager.setManyBurner([owner.address, alice.address], [alice.address, owner.address])).to.emit(burnerManager, "AddBurner").withArgs(alice.address, ethers.constants.AddressZero);
+            await expect(await burnerManager.setManyBurner([owner.address, alice.address], [alice.address, owner.address])).to.emit(burnerManager, "AddBurner").withArgs(anyValue, alice.address, ethers.constants.AddressZero);
             expect(await burnerManager.burners(owner.address)).to.be.equal(alice.address);
             expect(await burnerManager.burners(alice.address)).to.be.equal(owner.address);
         });

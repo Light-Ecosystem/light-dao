@@ -9,11 +9,20 @@ async function main() {
 
     let hopeToken = FileUtils.getContractAddress(Constants.HOPE_TOKEN);
     let ltToken = FileUtils.getContractAddress(Constants.LT_TOKEN);
+
+    // TODO:  set Others tokens
+    let tokens = [hopeToken, ltToken]
+    let burners = []
+
     let hopeSwapBurner = FileUtils.getContractAddress(Constants.HopeSwapBurner);
     let burnerManager = FileUtils.getContractAddress(Constants.BurnerManager);
     const burnerManagerContract = await ethers.getContractAt("BurnerManager", burnerManager);
 
-    await burnerManagerContract.setManyBurner([hopeToken, ltToken], [hopeSwapBurner, hopeSwapBurner]);
+    for (let _ of tokens) {
+        burners.push(hopeSwapBurner)  
+    }
+    
+    await burnerManagerContract.setManyBurner(tokens, burners);
 }
 
 main().catch((error) => {

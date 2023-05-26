@@ -34,7 +34,12 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       gas: 4100000,
-      allowUnlimitedContractSize: false
+      initialBaseFeePerGas: 8000000000,
+      allowUnlimitedContractSize: false,
+      chainId: 31337,
+      // forking: {
+      //   url: `${process.env.MAIN_NODE_URL}`
+      // }
     },
     ganache: {
       gas: 4100000,
@@ -48,7 +53,7 @@ const config: HardhatUserConfig = {
         passphrase: ""
       }
     },
-    Sepolia: {
+    sepolia: {
       gas: 4100000,
       url: process.env.SEPOLIA_NODE_URL,
       accounts: [`${process.env.WALLET_KEY}`]

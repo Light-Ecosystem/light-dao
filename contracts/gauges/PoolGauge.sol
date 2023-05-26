@@ -6,6 +6,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "./AbsGauge.sol";
+import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 
 contract PoolGauge is AbsGauge, ReentrancyGuard {
     uint256 private constant _MAX_REWARDS = 8;
@@ -183,8 +184,7 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
 
             _updateLiquidityLimit(msg.sender, newBalance, _totalSupply);
 
-            bool success = IERC20Metadata(lpToken).transfer(msg.sender, _value);
-            require(success, "TRANSFER FAILED");
+            TransferHelper.doTransferOut(lpToken, msg.sender, _value);
         }
 
         emit Withdraw(msg.sender, _value);
@@ -347,15 +347,15 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
 
         _checkpointRewards(address(0), totalSupply, false, address(0));
 
-        require(IERC20Metadata(_rewardToken).transferFrom(msg.sender, address(this), _amount), "GP010");
+        uint256 spendAmount = TransferHelper.doTransferFrom(_rewardToken, msg.sender, address(this), _amount);
 
         uint256 periodFinish = rewardData[_rewardToken].periodFinish;
         if (block.timestamp >= periodFinish) {
-            rewardData[_rewardToken].rate = _amount / _WEEK;
+            rewardData[_rewardToken].rate = spendAmount / _WEEK;
         } else {
             uint256 remaining = periodFinish - block.timestamp;
             uint256 leftover = remaining * rewardData[_rewardToken].rate;
-            rewardData[_rewardToken].rate = (_amount + leftover) / _WEEK;
+            rewardData[_rewardToken].rate = (spendAmount + leftover) / _WEEK;
         }
 
         rewardData[_rewardToken].lastUpdate = block.timestamp;
@@ -412,7 +412,7 @@ contract PoolGauge is AbsGauge, ReentrancyGuard {
                     uint256 totalClaimed = _claimData % 2 ** 128;
                     if (_claim) {
                         claimData[_user][vars.token] = totalClaimed + totalClaimable;
-                        require(IERC20Metadata(vars.token).transfer(vars.receiver, totalClaimable), "GP010");
+                        TransferHelper.doTransferOut(vars.token, vars.receiver, totalClaimable);
                     } else if (newClaimable > 0) {
                         claimData[_user][vars.token] = totalClaimed + (totalClaimable << 128);
                     }

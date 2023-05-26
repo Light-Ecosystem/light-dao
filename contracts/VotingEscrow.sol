@@ -77,8 +77,9 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
     mapping(address => uint256) public userPointEpoch;
     mapping(uint256 => int256) public slopeChanges; // time -> signed slope change
 
-    string public name;
-    string public symbol;
+    string public constant NAME = "Vote-escrowed LT";
+    string public constant SYMBOL = "veLT";
+
     uint256 public immutable decimals;
     address public smartWalletChecker;
 
@@ -90,8 +91,6 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         supplyPointHistory[0] = Point({bias: 0, slope: 0, ts: block.timestamp, blk: block.number});
         uint256 _decimals = IERC20Metadata(_tokenAddr).decimals();
         decimals = _decimals;
-        name = "Vote-escrowed LT";
-        symbol = "veLT";
     }
 
     /***
@@ -535,12 +534,12 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
         if (_t == 0) {
             _t = block.timestamp;
         }
-
         uint256 _epoch = userPointEpoch[_addr];
         if (_epoch == 0) {
             return 0;
         } else {
             Point memory _lastPoint = userPointHistory[_addr][_epoch];
+            require(_t >= _lastPoint.ts, "GC007");
             unchecked {
                 _lastPoint.bias -= _lastPoint.slope * int256(_t - _lastPoint.ts);
             }
@@ -627,6 +626,7 @@ contract VotingEscrow is IVotingEscrow, ReentrancyGuard, Ownable2Step {
      * @return Total voting power at that time
      */
     function _supplyAt(Point memory point, uint256 t) internal view returns (uint256) {
+        require(t >= point.ts, "GC007");
         Point memory _lastPoint = point;
         uint256 _ti = (_lastPoint.ts / WEEK) * WEEK;
         for (uint256 i; i < 255; i++) {

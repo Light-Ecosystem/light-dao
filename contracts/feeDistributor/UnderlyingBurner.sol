@@ -107,8 +107,8 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
      */
     function setRouters(ISwapRouter[] calldata _routers) external onlyOwner {
         require(_routers.length != 0, "invalid param");
-        for (uint i = 0; i < routers.length; i++) {
-            require(address(routers[i]) != address(0), "invalid address");
+        for (uint i = 0; i < _routers.length; i++) {
+            require(address(_routers[i]) != address(0), "invalid address");
         }
         routers = _routers;
         emit SetRouters(_routers);
@@ -126,16 +126,15 @@ contract UnderlyingBurner is Ownable2StepUpgradeable, PausableUpgradeable {
 
         for (uint i = 0; i < routers.length; i++) {
             uint[] memory expected = routers[i].getAmountsOut(amount, path);
-            if (expected[0] > bestExpected) {
-                bestExpected = expected[0];
+            if (expected[1] > bestExpected) {
+                bestExpected = expected[1];
                 bestRouter = routers[i];
             }
         }
 
         require(bestExpected >= amountOutMin, "less than expected");
         if (!approved[bestRouter][token]) {
-            bool success = IERC20Upgradeable(token).approve(address(bestRouter), type(uint).max);
-            require(success, "approve failed");
+            TransferHelper.doApprove(address(token), address(bestRouter), type(uint).max);
             approved[bestRouter][token] = true;
         }
 

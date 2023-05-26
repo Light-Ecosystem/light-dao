@@ -18,8 +18,10 @@ interface ISwapRouter {
     ) external returns (uint[] memory amounts);
 }
 
-contract HopeSwapBurner is IBurner, Ownable2Step {
+contract HopeSwapBurnerBridge is IBurner, Ownable2Step {
     event SetRouters(ISwapRouter[] _routers);
+
+    address private constant USDT_ADDRESS = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
     ISwapRouter[] public routers;
     IERC20 public immutable HOPE;
@@ -56,14 +58,15 @@ contract HopeSwapBurner is IBurner, Ownable2Step {
 
         ISwapRouter bestRouter = routers[0];
         uint bestExpected = 0;
-        address[] memory path = new address[](2);
+        address[] memory path = new address[](3);
         path[0] = address(token);
-        path[1] = address(HOPE);
+        path[1] = USDT_ADDRESS;
+        path[2] = address(HOPE);
 
         for (uint i = 0; i < routers.length; i++) {
             uint[] memory expected = routers[i].getAmountsOut(spendAmount, path);
-            if (expected[1] > bestExpected) {
-                bestExpected = expected[1];
+            if (expected[2] > bestExpected) {
+                bestExpected = expected[2];
                 bestRouter = routers[i];
             }
         }

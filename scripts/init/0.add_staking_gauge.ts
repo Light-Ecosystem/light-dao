@@ -11,13 +11,24 @@ async function main() {
   let gaugeControllerAddress = FileUtils.getContractAddress(Constants.GAUGE_CONTROLLER);
   const gaugeController = await ethers.getContractAt("GaugeController", gaugeControllerAddress);
 
-  let name = "LT Staking Type";
+  // create Hope Staking type
+  let name = "Hope Staking";
   let weight = ethers.utils.parseEther("1");
   let typeId = await gaugeController.nGaugeTypes();
-  await gaugeController.addType(name, weight);
+  let tx = await gaugeController.addType(name, weight);
+  await tx.wait(1);
 
+  // add Gauge of HopeStaking
   let gaugeWeight = ethers.utils.parseEther("0");
-  await gaugeController.addGauge(stakingHopeGaugeAddress, typeId, gaugeWeight);
+  tx = await gaugeController.addGauge(stakingHopeGaugeAddress, typeId, gaugeWeight);
+  await tx.wait(1);
+
+  // create Hope swap type
+  name = "Hope Swap";
+  tx = await gaugeController.addType(name, weight);
+  await tx.wait(1);
+
+
 }
 
 main().catch((error) => {

@@ -17,7 +17,7 @@ describe("VotingEscrow", function () {
         let MyERC20LT = await ethers.getContractFactory("LT");
         const eRC20LT = await upgrades.deployProxy(MyERC20LT, ['LT Dao Token', 'LT']);
         await eRC20LT.deployed();
-        await time.increase(86400);
+        await time.increase(2 * 86400);
         await eRC20LT.updateMiningParameters();
 
         const Permit2Contract = await ethers.getContractFactory("Permit2");
@@ -624,8 +624,7 @@ describe("VotingEscrow", function () {
             expect(point).to.have.property('ts').to.equal(ts);
             expect(point).to.have.property('slope').to.equal(value.div(MAXTIME * BASE_RATE));
             expect(await veLT.balanceOfAtTime(owner.address, 0)).to.equal(slope.mul(MAXTIME - (lockTime - end.toNumber())));
-
-            expect(await veLT.balanceOfAtTime(owner.address, ts - (lockTime - end.toNumber()))).to.equal(slope.mul(MAXTIME));
+            await expect(veLT.balanceOfAtTime(owner.address, ts - (lockTime - end.toNumber()))).to.be.revertedWith("GC007");
             // expect(slope.mul(MAXTIME)).to.equal(value);
 
             let lastTime = await time.latest();

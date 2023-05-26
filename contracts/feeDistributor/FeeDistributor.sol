@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../interfaces/IFeeDistributor.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import "light-lib/contracts/LibTime.sol";
-import "hardhat/console.sol";
 
 struct Point {
     int256 bias;
@@ -376,7 +375,7 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
      * @return uint256 Amount of fees claimed in the call
      *
      */
-    function claimableToken(address _addr) external returns (uint256) {
+    function claimableToken(address _addr) external whenNotPaused returns (uint256) {
         if (block.timestamp >= timeCursor) {
             _checkpointTotalSupply();
         }
@@ -390,7 +389,12 @@ contract FeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IFeeDis
         }
 
         _lastTokenTime = LibTime.timesRoundedByWeek(_lastTokenTime);
-        return _claim(_addr, votingEscrow, _lastTokenTime);
+        uint256 amount = _claim(_addr, votingEscrow, _lastTokenTime);
+        if (amount != 0) {
+            stakingHOPEAndTransfer2User(_addr, amount);
+            tokenLastBalance -= amount;
+        }
+        return amount;
     }
 
     /**

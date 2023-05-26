@@ -14,7 +14,7 @@ describe("Minter", function () {
         let MyERC20LT = await ethers.getContractFactory("LT");
         const eRC20LT = await upgrades.deployProxy(MyERC20LT, ['Light Dao Token', 'LT']);
         await eRC20LT.deployed();
-        await time.increase(86400);
+        await time.increase(2 * 86400);
         await eRC20LT.updateMiningParameters();
 
         const GaugeController = await ethers.getContractFactory("GaugeController");

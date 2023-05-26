@@ -7,11 +7,11 @@
  */
 pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "../interfaces/ILT.sol";
+import "./ERC20Permit.sol";
 
-contract LT is ERC20Upgradeable, Ownable2StepUpgradeable, ILT {
+contract LT is ERC20Permit, Ownable2StepUpgradeable, ILT {
     //General constants
     uint256 private constant _DAY = 86400;
     uint256 private constant _YEAR = _DAY * 365;
@@ -34,7 +34,7 @@ contract LT is ERC20Upgradeable, Ownable2StepUpgradeable, ILT {
     /// 2 ** (1/4) * 1e18
     uint256 private constant _RATE_REDUCTION_COEFFICIENT = 1189207115002721024;
     uint256 private constant _RATE_DENOMINATOR = 10 ** 18;
-    uint256 private constant _INFLATION_DELAY = _DAY;
+    uint256 private constant _INFLATION_DELAY = 2 * _DAY;
 
     address public minter;
     /// Supply variables
@@ -57,6 +57,7 @@ contract LT is ERC20Upgradeable, Ownable2StepUpgradeable, ILT {
     function initialize(string memory _name, string memory _symbol) external initializer {
         __Ownable2Step_init();
         __ERC20_init(_name, _symbol);
+        __ERC20Permit_init();
 
         uint256 initSupply = _INITIAL_SUPPLY * 10 ** decimals();
         _mint(_msgSender(), initSupply);

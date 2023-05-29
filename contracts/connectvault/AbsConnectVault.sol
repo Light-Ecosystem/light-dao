@@ -14,8 +14,8 @@ interface IConnect {
 }
 
 abstract contract AbsConnectVault is Ownable2StepUpgradeable, PausableUpgradeable, ERC20Upgradeable, AccessControlUpgradeable {
-    event Deposit(address indexed from, uint256 amount);
-    event Withdraw(address indexed to, uint256 amount);
+    event Deposit(address indexed token, address indexed from, uint256 amount);
+    event Withdraw(address indexed token, address indexed to, uint256 amount);
     event ChangeConnect(address indexed newConnect);
 
     bytes32 public constant WITHDRAW_ADMIN_ROLE = keccak256("WITHDRAW_ADMIN_ROLE");
@@ -65,7 +65,7 @@ abstract contract AbsConnectVault is Ownable2StepUpgradeable, PausableUpgradeabl
         /// notify connect transfer info
         IConnect(connect).deposit(token, from, amount);
 
-        emit Deposit(from, amount);
+        emit Deposit(token, from, amount);
 
         return amount;
     }
@@ -77,7 +77,7 @@ abstract contract AbsConnectVault is Ownable2StepUpgradeable, PausableUpgradeabl
         _burn(msg.sender, amount);
         /// transfer token to toAccount
         TransferHelper.doTransferOut(token, to, amount);
-        emit Withdraw(to, amount);
+        emit Withdraw(token, to, amount);
         return amount;
     }
 

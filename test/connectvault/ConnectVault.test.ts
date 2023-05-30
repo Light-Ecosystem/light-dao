@@ -219,7 +219,7 @@ describe("ConnectVault", function () {
         )
       )
         .to.emit(connetVault, "Deposit")
-        .withArgs(owner.address, amount);
+        .withArgs(hopeToken.address,owner.address, amount);
       expect(await hopeToken.balanceOf(owner.address)).to.be.equal(
         beforeBalance.sub(amount)
       );
@@ -251,7 +251,7 @@ describe("ConnectVault", function () {
       let beforeBalance = await hopeToken.balanceOf(owner.address);
       await expect(await connetVault.deposit(amount, NONCE, DEADLINE, sig))
         .to.emit(connetVault, "Deposit")
-        .withArgs(owner.address, amount);
+        .withArgs(hopeToken.address,owner.address, amount);
       expect(await hopeToken.balanceOf(owner.address)).to.be.equal(
         beforeBalance.sub(amount)
       );
@@ -315,11 +315,14 @@ describe("ConnectVault", function () {
       await mockConnet.transferBToken(alice.address, amount);
 
       let withdawaAmount = ethers.utils.parseEther("5");
-      await connetVault.connect(alice).withdraw(bob.address, withdawaAmount);
+      await expect(await connetVault.connect(alice).withdraw(bob.address, withdawaAmount))
+        .to.emit(connetVault, "Withdraw")
+        .withArgs(hopeToken.address,bob.address, withdawaAmount);
+
       expect(await hopeToken.balanceOf(bob.address)).to.be.equal(
         withdawaAmount
       );
-      expect(await hopeToken.balanceOf(bob.address)).to.be.equal(
+      expect(await hopeToken.balanceOf(connetVault.address)).to.be.equal(
         withdawaAmount
       );
     });
@@ -346,11 +349,14 @@ describe("ConnectVault", function () {
       await connetVault.grantRole(adminRole, mockConnet.address);
 
       let withdawaAmount = ethers.utils.parseEther("5");
-      await mockConnet.withdraw(bob.address, withdawaAmount);
+      await expect(await mockConnet.withdraw(bob.address, withdawaAmount))
+        .to.emit(connetVault, "Withdraw")
+        .withArgs(hopeToken.address,bob.address, withdawaAmount);
+
       expect(await hopeToken.balanceOf(bob.address)).to.be.equal(
         withdawaAmount
       );
-      expect(await hopeToken.balanceOf(bob.address)).to.be.equal(
+      expect(await hopeToken.balanceOf(connetVault.address)).to.be.equal(
         withdawaAmount
       );
     });

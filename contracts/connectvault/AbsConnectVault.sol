@@ -102,7 +102,7 @@ abstract contract AbsConnectVault is Ownable2StepUpgradeable, PausableUpgradeabl
         _revokeRole(role, account);
     }
 
-    function withdrawToken(address _token, address _to, uint256 _amount) external onlyOwner {
+    function rescueTokens(address _token, address _to, uint256 _amount) external onlyOwner {
         if (_token == token) {
             require(_amount <= (IERC20Upgradeable(_token).balanceOf(address(this)) - totalSupply()), "insufficient balance");
         }

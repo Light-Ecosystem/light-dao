@@ -148,23 +148,23 @@ describe("ConnectVault", function () {
       expect(await connetVault.hasRole(adminRole, alice.address)).to.false;
     });
 
-    it("withdrawToken", async function () {
+    it("rescueTokens", async function () {
       const { owner, alice, bob, connetVault, adminRole, hopeToken } =
         await loadFixture(deployOneYearLockFixture);
       let amount = ethers.utils.parseEther("10");
       await expect(
-        connetVault.withdrawToken(hopeToken.address, alice.address, amount)
+        connetVault.rescueTokens(hopeToken.address, alice.address, amount)
       ).to.be.revertedWith("insufficient balance");
     });
 
-    it("withdrawToken success", async function () {
+    it("rescueTokens success", async function () {
       const { owner, alice, bob, connetVault, adminRole, hopeToken } =
         await loadFixture(deployOneYearLockFixture);
       let amount = ethers.utils.parseEther("10");
       let balance = await hopeToken.balanceOf(connetVault.address);
       await hopeToken.transfer(connetVault.address, amount);
       expect(await hopeToken.balanceOf(connetVault.address)).to.equal(amount);
-      await connetVault.withdrawToken(hopeToken.address, alice.address, amount);
+      await connetVault.rescueTokens(hopeToken.address, alice.address, amount);
       expect(await hopeToken.balanceOf(connetVault.address)).to.equal(balance);
     });
   });

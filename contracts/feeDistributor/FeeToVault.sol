@@ -28,8 +28,8 @@ interface SwapPair {
 contract FeeToVault is Ownable2StepUpgradeable, PausableUpgradeable, AccessControlUpgradeable {
     bytes32 public constant OPERATOR_ROLE = keccak256("Operator_Role");
 
-    address public burnerManager;
-    address public underlyingBurner;
+    address public immutable burnerManager;
+    address public immutable underlyingBurner;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

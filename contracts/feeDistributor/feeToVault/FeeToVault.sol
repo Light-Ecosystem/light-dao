@@ -6,13 +6,10 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
-
-interface IBurner {
-    function burn(address to, IERC20Upgradeable token, uint amount, uint amountOutMin) external;
-}
+import "./interfaces/IBurner.sol";
 
 interface IBurnerManager {
-    function burners(address token) external returns (IBurner burner);
+    function burners(address) external returns (IBurner);
 }
 
 interface SwapPair {
@@ -28,15 +25,16 @@ interface SwapPair {
 contract FeeToVault is Ownable2StepUpgradeable, PausableUpgradeable, AccessControlUpgradeable {
     bytes32 public constant OPERATOR_ROLE = keccak256("Operator_Role");
 
-    address public immutable burnerManager;
-    address public immutable underlyingBurner;
+    address public burnerManager;
+    address public underlyingBurner;
+    address public HOPE;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address _burnerManager, address _underlyingBurner) public initializer {
+    function initialize(address _burnerManager, address _underlyingBurner, address _HOPE) public initializer {
         require(_burnerManager != address(0), "Zero address not valid");
         require(_underlyingBurner != address(0), "Zero address not valid");
 
@@ -44,6 +42,7 @@ contract FeeToVault is Ownable2StepUpgradeable, PausableUpgradeable, AccessContr
         __Pausable_init();
         burnerManager = _burnerManager;
         underlyingBurner = _underlyingBurner;
+        HOPE = _HOPE;
     }
 
     function withdrawAdminFee(address pool) external whenNotPaused onlyRole(OPERATOR_ROLE) {
@@ -66,24 +65,41 @@ contract FeeToVault is Ownable2StepUpgradeable, PausableUpgradeable, AccessContr
         }
     }
 
-    function _burn(IERC20Upgradeable token, uint amountIn, uint amountOutMin) internal {
-        uint256 balanceOfThis = token.balanceOf(address(this));
-        require(amountIn > 0 && amountIn <= balanceOfThis, "wrong amount in");
-
-        // user choose to not burn token if not profitable
-        IBurner burner = IBurnerManager(burnerManager).burners(address(token));
-        require(burner != IBurner(address(0)), "Burner does not exist");
-        TransferHelper.doApprove(address(token), address(burner), amountIn);
-        burner.burn(underlyingBurner, token, amountIn, amountOutMin);
+    struct SwapBurnerInput {
+        address token;
+        uint256 amountIn;
+        uint256 amountOutMin;
+        address[] path;
     }
 
-    function burn(IERC20Upgradeable token, uint amountIn, uint amountOutMin) external whenNotPaused onlyRole(OPERATOR_ROLE) {
-        _burn(token, amountIn, amountOutMin);
+    function _burn(SwapBurnerInput calldata input) internal {
+        uint256 balanceOfThis = IERC20Upgradeable(input.token).balanceOf(address(this));
+        require(input.amountIn > 0 && input.amountIn <= balanceOfThis, "Wrong amount in");
+
+        if (input.token == HOPE) {
+            TransferHelper.doTransferOut(input.token, underlyingBurner, input.amountIn);
+            return;
+        }
+
+        IBurner burner = IBurnerManager(burnerManager).burners(input.token);
+        require(burner != IBurner(address(0)), "Set burner first");
+        TransferHelper.doApprove(input.token, address(burner), input.amountIn);
+        burner.burn(
+            underlyingBurner,
+            input.token,
+            input.amountIn,
+            input.amountOutMin,
+            input.path
+        );
     }
 
-    function burnMany(IERC20Upgradeable[] calldata tokens, uint[] calldata amountIns, uint[] calldata amountOutMins) external whenNotPaused onlyRole(OPERATOR_ROLE) {
-        for (uint i = 0; i < tokens.length && i < 128; i++) {
-            _burn(tokens[i], amountIns[i], amountOutMins[i]);
+    function burn(SwapBurnerInput calldata input) external whenNotPaused onlyRole(OPERATOR_ROLE) {
+        _burn(input);
+    }
+
+    function burnMany(SwapBurnerInput[] calldata inputs) external whenNotPaused onlyRole(OPERATOR_ROLE) {
+        for (uint i = 0; i < inputs.length && i < 128; i++) {
+            _burn(inputs[i]);
         }
     }
 
@@ -99,12 +115,12 @@ contract FeeToVault is Ownable2StepUpgradeable, PausableUpgradeable, AccessContr
         return hasRole(OPERATOR_ROLE, _operator);
     }
 
-    function addOperator(address _operator) public onlyOwner {
+    function addOperator(address _operator) external onlyOwner {
         require(_operator != address(0), "Zero address not valid");
         _grantRole(OPERATOR_ROLE, _operator);
     }
 
-    function removeOperator(address _operator) public onlyOwner {
+    function removeOperator(address _operator) external onlyOwner {
         require(_operator != address(0), "Zero address not valid");
         _revokeRole(OPERATOR_ROLE, _operator);
     }

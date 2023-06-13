@@ -20,10 +20,10 @@ describe("FeeToVault", function () {
         await burnerManager.deployed();
 
         const FeeToVault = await ethers.getContractFactory("FeeToVault");
-        const feeToVault = await upgrades.deployProxy(FeeToVault, [burnerManager.address, underlyingBurner.address]);
+        const feeToVault = await upgrades.deployProxy(FeeToVault, [burnerManager.address, underlyingBurner.address, HOPE.address]);
         await feeToVault.deployed();
 
-        const HopeSwapBurner = await ethers.getContractFactory("HopeSwapBurner");
+        const HopeSwapBurner = await ethers.getContractFactory("SwapBurner");
         const hopeSwapBurner = await HopeSwapBurner.deploy(HOPE.address, feeToVault.address);
         await hopeSwapBurner.deployed();
 
@@ -39,7 +39,7 @@ describe("FeeToVault", function () {
         await HOPE.transfer(feeToVault.address, 10000);
 
         await feeToVault.addOperator(owner.address);
-        await feeToVault.burn(HOPE.address, 10000, 0);
+        await feeToVault.burn([HOPE.address, 10000, 0, [ZERO_ADDRESS,ZERO_ADDRESS,ZERO_ADDRESS]]);
 
         let expectedbalance = await HOPE.balanceOf(underlyingBurner.address);
         expect(expectedbalance).to.be.gt(0);

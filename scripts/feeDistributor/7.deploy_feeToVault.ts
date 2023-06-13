@@ -15,21 +15,19 @@ async function main() {
 
   //deloy FeeToVault  contract
   const FeeToVault = await ethers.getContractFactory("FeeToVault");
-  const feeToVault = await upgrades.deployProxy(FeeToVault, [burnerManager, underlyingBurner]);
+  const feeToVault = await upgrades.deployProxy(FeeToVault, [burnerManager, underlyingBurner, HOPE]);
   await feeToVault.deployed();
   console.log("FeeToVault: ", feeToVault.address);
   FileUtils.saveFrontendFiles(feeToVault.address, "FeeToVault", Constants.FeeToVault);
 
-  // deploy new HopeSwapBurner
-  const HopeSwapBurner = await ethers.getContractFactory("HopeSwapBurner");
-  const hopeSwapBurner = await HopeSwapBurner.deploy(HOPE, feeToVault.address);
-  await hopeSwapBurner.deployed();
-  console.log("new HopeSwapBurner: ", hopeSwapBurner.address);
-  FileUtils.saveFrontendFiles(hopeSwapBurner.address, "NewHopeSwapBurner", Constants.NewHopeSwapBurner);
+  // deploy new SwapBurner
+  const SwapBurner = await ethers.getContractFactory("SwapBurner");
+  const swapBurner = await SwapBurner.deploy(HOPE, feeToVault.address);
+  await swapBurner.deployed();
+  console.log("SwapBurner: ", swapBurner.address);
+  FileUtils.saveFrontendFiles(swapBurner.address, "SwapBurner", Constants.SwapBurner);
 
-  // reset burner for HOPE
-  const burnerManagerInstance = await ethers.getContractAt("BurnerManager", burnerManager);
-  await burnerManagerInstance.setBurner(HOPE, hopeSwapBurner.address);
+  // reset burner for tokens,  hope does not need to set
 }
 
 // We recommend this pattern to be able to use async/await everywhere

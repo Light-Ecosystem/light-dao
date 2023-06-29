@@ -8,7 +8,7 @@ import "dotenv/config";
 const config: HardhatUserConfig = {
 
   gasReporter: {
-    enabled: false
+    enabled: true
   },
   contractSizer: {
     alphaSort: false,

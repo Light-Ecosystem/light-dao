@@ -342,7 +342,7 @@ contract PoolGaugeV2 is AbsGaugeV2, ReentrancyGuard {
         emit ChangeRewardDistributor(msg.sender, _rewardToken, _distributor, currentDistributor);
     }
 
-    function depositRewardToken(address _rewardToken, uint256 _amount) external payable nonReentrant {
+    function depositRewardToken(address _rewardToken, uint256 _amount) external nonReentrant {
         require(msg.sender == rewardData[_rewardToken].distributor, "GP009");
 
         _checkpointRewards(address(0), totalSupply, false, address(0));

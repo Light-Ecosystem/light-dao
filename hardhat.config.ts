@@ -6,7 +6,7 @@ import "hardhat-contract-sizer";
 import "hardhat-gas-reporter";
 import "dotenv/config";
 
-const TASK_FOLDERS = ["misc"];
+const TASK_FOLDERS = ["misc", "tokens"];
 loadTasks(TASK_FOLDERS);
 
 const config: HardhatUserConfig = {

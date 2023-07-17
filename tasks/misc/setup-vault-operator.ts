@@ -9,7 +9,7 @@ task(`setup-vault-operator`, `Setups FeeToVault operator`).setAction(
       throw new Error("INVALID_CHAIN_ID");
     }
     // 1. Set operator address first
-    const operator = "0x00";
+    const operator = "0x3141f8D6BE4e4d9137577798C1e127Db81D196d7";
     // 2. Grant FeeToVault operator
     let feeToVaultAddress = FileUtils.getContractAddress(Constants.FeeToVault);
     const feeToVault = await hre.ethers.getContractAt(

@@ -10,16 +10,14 @@ task(`setup-tokens-burner`, `Setups tokens swap burner`).setAction(
     }
     // 1. Reset burner for tokens,  hope does not need to set
     const tokens = [
-      "0xB2448D911BC792c463AF9ED8cf558a85D97c5Bf1",
-      "0xf9B7E9bb840b7BBf7E0C42724f11121D4D1eFC22",
-      "0x06DBf77E62Bdc9F5697ca6d696C1dC8B8923fdFf",
-      "0x092c325a98e50BE78A140cD043D49904fFB8Ea1F",
-      "0xee44150250AfF3E6aC25539765F056EDb7F85D7B",
-      "0x0f760D4f644a99962A25Bb7bcF563CC07Bd51b5C",
+      "0x5B71dC777A8aDCba065A644e30BBEeB8fCca273f", // DAI
+      "0x3da37B4A2F5172580411DdcddDCcae857f9a7aE6", // USDT
+      "0x235eBFC0bE0E58cF267D1c5BCb8c03a002A711ed", // USDC
+      "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6", // WETH
+      "0x89009881287EB51256141265B2f250b9960AaeE5", // stHOPE
     ];
 
     const burners = [
-      FileUtils.getContractAddress(Constants.SwapBurner),
       FileUtils.getContractAddress(Constants.SwapBurner),
       FileUtils.getContractAddress(Constants.SwapBurner),
       FileUtils.getContractAddress(Constants.SwapBurner),
@@ -30,7 +28,7 @@ task(`setup-tokens-burner`, `Setups tokens swap burner`).setAction(
       console.log("ERROR: tokens length must be equal burners length");
     }
     // 2. Grant operator
-    const burnerManagerAddress = "0x00";
+    const burnerManagerAddress = "0x46DD0d74189c5b91CE235eC3B09cB5311AB72647";
     const burnerManager = await hre.ethers.getContractAt(
       "BurnerManager",
       burnerManagerAddress

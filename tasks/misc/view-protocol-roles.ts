@@ -9,7 +9,7 @@ task(
   if (!hre.network.config.chainId) {
     throw new Error("INVALID_CHAIN_ID");
   }
-  const multiSig = "0x00";
+  const multiSig = "0xc6C1eF70746F6Bed0A43C912B2B2047f25d3eA87";
   // 2. Grant operator
   const feeToVaultAddress = FileUtils.getContractAddress(Constants.FeeToVault);
   const feeToVault = await hre.ethers.getContractAt(

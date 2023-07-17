@@ -10,7 +10,9 @@ task(
   await hre.run("deploy-fee-collector-burner");
   await hre.run("setup-vault-operator");
   await hre.run("setup-burner-router");
+  // Multisig
   await hre.run("setup-tokens-burner");
+  // setup-swap-feeto
   await hre.run("transfer-fee-ownership");
   await hre.run("verify-fee-collector-burner");
 });

@@ -12,9 +12,9 @@ task(
   // 0. Configure the Openzeppelin upgrade plugin Manifest file
 
   // 1. Set address first
-  let HOPE = "0x784388A036cb9c8c680002F43354E856f816F844";
-  let burnerManager = "0x25b6b8497F5614C4A8A255bC091191BC40f16585";
-  let underlyingBurner = "0xdd2a0C2715C7aC7BFafec2D27B13f049C499c8aD";
+  let HOPE = "0x9bA97e0913Dd0fbd4E5fedA936db9D1f1C632273";
+  let burnerManager = "0x46DD0d74189c5b91CE235eC3B09cB5311AB72647";
+  let underlyingBurner = "0x7A638E2b45dac685C6a70C97D719F73bD40bff83";
 
   // 2. Deloy FeeToVault  contract
   const FeeToVault = await hre.ethers.getContractFactory("FeeToVault");
@@ -24,7 +24,7 @@ task(
     HOPE,
   ]);
   await feeToVault.deployed();
-  console.log("- FeeToVault depeloyed: ", feeToVault.address);
+  console.log("- FeeToVault deployed: ", feeToVault.address);
   FileUtils.saveFrontendFiles(
     feeToVault.address,
     "FeeToVault",
@@ -35,7 +35,7 @@ task(
   const SwapBurner = await hre.ethers.getContractFactory("SwapBurner");
   const swapBurner = await SwapBurner.deploy(HOPE, feeToVault.address);
   await swapBurner.deployed();
-  console.log("- SwapBurner depeloyed: ", swapBurner.address);
+  console.log("- SwapBurner deployed: ", swapBurner.address);
 
   FileUtils.saveFrontendFiles(
     swapBurner.address,

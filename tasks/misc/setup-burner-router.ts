@@ -9,7 +9,7 @@ task(`setup-burner-router`, `Setups SwapBurner routers`).setAction(
       throw new Error("INVALID_CHAIN_ID");
     }
     // 1. Set address first
-    const ROUTER_02 = "0x00";
+    const ROUTER_02 = "0x3E719F9743B246C0caa053eBeE60f2C4169D8259";
     // 2. Set SwapBurner routers
     const swapBurnerAddress = FileUtils.getContractAddress(
       Constants.SwapBurner

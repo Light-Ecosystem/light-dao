@@ -26,6 +26,6 @@ export class Constants {
     static readonly HopeSwapBurner = "Hope_SwapBurner";
     static readonly FeeToVault = "FeeToVault";
     static readonly SwapBurner = "SwapBurner";
-
+    static readonly SwapBurner2 = "SwapBurner2";
 
 }

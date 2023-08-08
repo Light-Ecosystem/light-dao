@@ -66,7 +66,7 @@ If you have any questions about this project, or wish to engage with us:
 
 - [Websites](https://hope.money/)
 - [Medium](https://medium.com/@hope-money/)
-- [Twitter](https://twitter.com/Hope_money)
+- [Twitter](https://twitter.com/Hope_money_)
 - [Discord](https://discord.gg/hopemoneyofficial)
 
 # License

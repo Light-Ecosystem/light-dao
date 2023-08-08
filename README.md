@@ -65,9 +65,9 @@ You may find the following guides useful:
 If you have any questions about this project, or wish to engage with us:
 
 - [Websites](https://hope.money/)
-- [Medium](https://hope-ecosystem.medium.com/)
-- [Twitter](https://twitter.com/hope_ecosystem)
-- [Discord](https://discord.com/invite/hope-ecosystem)
+- [Medium](https://medium.com/@hope-money/)
+- [Twitter](https://twitter.com/Hope_money_)
+- [Discord](https://discord.gg/hopemoneyofficial)
 
 # License
 

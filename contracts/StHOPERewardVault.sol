@@ -24,7 +24,7 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
     /// minter address
     address public minter;
     /// singer address
-    address public signer;
+    mapping(address => bool) public signers;
     /// nonce for claim
     mapping(address => uint256) public nonces;
 
@@ -52,14 +52,14 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
         HOPE = _HOPE;
         stHOPE = _stHOPE;
         minter = _minter;
-        signer = _singer;
+        signers[_singer] = true;
     }
 
     /**
      * @notice Fund the vault
      * @param _amount amount to fund
      */
-    function fund(uint256 _amount) external onlyRole(OPERATOR_ROLE) {
+    function fund(uint256 _amount) external {
         TransferHelper.doTransferFrom(HOPE, msg.sender, address(this), _amount);
         _stakingHOPE(_amount);
 
@@ -134,8 +134,9 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
                 )
             )
         );
+        address signer = _recoverSigner(ethSignedMessageHash, _signature);
 
-        return _recoverSigner(ethSignedMessageHash, _signature) == signer;
+        return signers[signer];
     }
 
     /**
@@ -197,9 +198,19 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
     }
 
     /**
+     * @notice Set signer
+     * @param _signer signer address
+     * @param _status status
+     */
+    function setSigner(address _signer, bool _status) external onlyRole(OPERATOR_ROLE) {
+        require(_signer != address(0), "Invalid Address");
+        signers[_signer] = _status;
+    }
+
+    /**
      * @notice Claim of LT incentives by holding stHOPE
      */
-    function claimRewardsFromGauge() external onlyRole(OPERATOR_ROLE) {
+    function claimRewardsFromGauge() external {
         IMinter(minter).mint(stHOPE);
     }
 
@@ -210,6 +221,7 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
      * @param _amount amount to recover
      */
     function recoverToken(address _token, address _receiver, uint256 _amount) external onlyRole(OPERATOR_ROLE) {
+        require(_token != stHOPE, "No support for stHOPE");
         TransferHelper.doTransferOut(_token, _receiver, _amount);
     }
 

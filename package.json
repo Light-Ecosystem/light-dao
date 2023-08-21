@@ -14,7 +14,8 @@
     "lint": "yarn lint:sol && yarn lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint --max-warnings 0 .",
-    "fmt:sol": "prettier 'contracts/**/*.sol' -w"
+    "fmt:sol": "prettier 'contracts/**/*.sol' -w",
+    "test-hopecardgauge": "npx hardhat test ./test/HopeCardGauge.test.ts"
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.8.0",

@@ -41,9 +41,9 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
      * @param _HOPE HOPE Token Address
      * @param _stHOPE staking HOPE Token Address
      * @param _minter minter address
-     * @param _singer singer address
+     * @param _signer singer address
      */
-    function initialize(address _HOPE, address _stHOPE, address _minter, address _singer) public initializer {
+    function initialize(address _HOPE, address _stHOPE, address _minter, address _signer) public initializer {
         require(_HOPE != address(0), "Invalid Address");
         require(_stHOPE != address(0), "Invalid Address");
 
@@ -52,7 +52,7 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
         HOPE = _HOPE;
         stHOPE = _stHOPE;
         minter = _minter;
-        signers[_singer] = true;
+        signers[_signer] = true;
     }
 
     /**

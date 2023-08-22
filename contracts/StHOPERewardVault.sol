@@ -29,7 +29,7 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
     mapping(address => uint256) public nonces;
 
     event Fund(address indexed operator, uint256 amount, uint256 timestamp);
-    event Claim(address user, uint256 amount, uint256 nonce, uint256 rewardPerShare, uint256 lastUpdateTime, uint256 totalClaimable);
+    event Claim(address user, uint256 amount, uint256 nonce);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -71,36 +71,16 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
      * @param _signature signature
      * @param _amount amount to claim
      * @param _deadline deadline
-     * @param _rewardPerShare the rewardPerShare when claim
-     * @param _lastUpdateTime claim time
-     * @param _totalClaimable the user total claimable
      */
-    function claimRewards(
-        bytes calldata _signature,
-        uint256 _amount,
-        uint256 _deadline,
-        uint256 _rewardPerShare,
-        uint256 _lastUpdateTime,
-        uint256 _totalClaimable
-    ) external {
+    function claimRewards(bytes calldata _signature, uint256 _amount, uint256 _deadline) external {
         require(_deadline >= block.timestamp, "Signature Expired");
         nonces[msg.sender] = nonces[msg.sender] + 1;
-        bool success = _verifySignature(
-            msg.sender,
-            _amount,
-            nonces[msg.sender],
-            _deadline,
-            block.chainid,
-            _rewardPerShare,
-            _lastUpdateTime,
-            _totalClaimable,
-            _signature
-        );
+        bool success = _verifySignature(msg.sender, _amount, nonces[msg.sender], _deadline, block.chainid, _signature);
         require(success, "Invalid Signature");
 
         TransferHelper.doTransferOut(stHOPE, msg.sender, _amount);
 
-        emit Claim(msg.sender, _amount, nonces[msg.sender], _rewardPerShare, _lastUpdateTime, _totalClaimable);
+        emit Claim(msg.sender, _amount, nonces[msg.sender]);
     }
 
     /**
@@ -110,9 +90,6 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
      * @param _nonce the user nonce
      * @param _deadline deadline
      * @param chainId chainId
-     * @param _rewardPerShare the rewardPerShare when claim
-     * @param _lastUpdateTime claim time
-     * @param _totalClaimable the user total claimable
      * @param _signature signature
      */
     function _verifySignature(
@@ -121,17 +98,12 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
         uint256 _nonce,
         uint256 _deadline,
         uint256 chainId,
-        uint256 _rewardPerShare,
-        uint256 _lastUpdateTime,
-        uint256 _totalClaimable,
         bytes memory _signature
     ) internal view returns (bool) {
         bytes32 ethSignedMessageHash = keccak256(
             abi.encodePacked(
                 "\x19Ethereum Signed Message:\n32",
-                keccak256(
-                    abi.encodePacked(_account, _amount, _nonce, _deadline, chainId, _rewardPerShare, _lastUpdateTime, _totalClaimable)
-                )
+                keccak256(abi.encodePacked(_account, _amount, _nonce, _deadline, chainId, address(this)))
             )
         );
         address signer = _recoverSigner(ethSignedMessageHash, _signature);

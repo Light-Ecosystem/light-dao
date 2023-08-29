@@ -17,4 +17,6 @@ interface IHOPE {
      * @dev HOPE token burn self address
      */
     function burn(uint256 amount) external;
+
+    function balanceOf(address _account) external view returns (uint256);
 }

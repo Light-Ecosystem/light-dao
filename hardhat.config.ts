@@ -69,6 +69,12 @@ const config: HardhatUserConfig = {
       url: process.env.GOERLI_NODE_URL,
       accounts: [`${process.env.WALLET_KEY}`],
     },
+    main: {
+      url: process.env.MAIN_NODE_URL,
+      blockGasLimit: 12450000,
+      chainId: 1,
+      accounts: [`${process.env.WALLET_KEY}`],
+    },
   },
   etherscan: {
     // Your API key for Etherscan

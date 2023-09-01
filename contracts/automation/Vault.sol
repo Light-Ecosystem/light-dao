@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity 0.8.17;
 
-import {IHOPE} from "../../interfaces/IHOPE.sol";
-import {IWBTC} from "./IWBTC.sol";
-import {IWETH} from "./IWETH.sol";
-import {IStETH} from "./IStETH.sol";
+import {IHOPE} from "../interfaces/IHOPE.sol";
+import {IWBTC} from "../interfaces/IWBTC.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
+import {IStETH} from "../interfaces/IStETH.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
@@ -28,7 +29,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
     IWBTC public immutable WBTC;
     IStETH public immutable stETH;
 
-    uint256 public totalSupply;
+    uint256 public totalMinted;
 
     uint256 public mintFeeRate;
     uint256 public burnFeeRate;
@@ -37,6 +38,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
 
     using SafeCast for uint256;
     using SafeCast for int256;
+    using SafeMath for uint256;
 
     constructor(address _HOPE, address _WBTC, address _stETH) {
         HOPE = IHOPE(_HOPE);
@@ -45,8 +47,17 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
     }
 
     modifier onlyGateway() {
-        require(msg.sender == gateway, "The caller of the function is not gateway");
+        require(msg.sender == gateway, "VA000");
         _;
+    }
+
+    /**
+     * @dev Stake ETH into the Vault contract.
+     * @notice Lido Liquid staked Ether 2.0. https://etherscan.io/address/0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
+     */
+    function stakeETH() public payable onlyGateway {
+        require(msg.value > 0, "VA001");
+        stETH.submit{value: msg.value}(address(0));
     }
 
     /**
@@ -56,7 +67,8 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      * @return The minted HOPE amount after deducting fees.
      */
     function deposit(address _user, uint256 _amount) external onlyGateway whenNotPaused returns (uint256) {
-        totalSupply += _amount;
+        require(_amount > 0, "VA001");
+        totalMinted += _amount;
 
         uint256 fee;
         if (mintFeeRate > 0) {
@@ -76,21 +88,14 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      * @return The burned HOPE amount after deducting fees.
      */
     function withdraw(uint256 _amount) external onlyGateway whenNotPaused returns (uint256) {
+        require(_amount > 0, "VA001");
         uint256 fee = burnFeeRate > 0 ? (_amount * burnFeeRate) / FEE_RATE_FACTOR : 0;
 
         uint256 burnAmount = _amount - fee;
-        totalSupply -= burnAmount;
+        totalMinted -= burnAmount;
         HOPE.burn(burnAmount);
 
         return burnAmount;
-    }
-
-    /**
-     * @dev Stake ETH into the Vault contract.
-     */
-    function stakeETH() public payable onlyGateway {
-        require(msg.value > 0, "Value must be greater than 0");
-        stETH.submit{value: msg.value}(address(0));
     }
 
     /**
@@ -99,7 +104,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      */
     function claimableStETH() public view returns (uint256) {
         uint256 totalStETH = stETH.balanceOf(address(this));
-        (, uint256 totalETHReserve) = _calculateReserveAmount(totalSupply);
+        (, uint256 totalETHReserve) = _calculateReserveAmount(totalMinted);
         uint256 claimableAmount = totalStETH - totalETHReserve;
         return claimableAmount;
     }
@@ -110,7 +115,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      */
     function claimStETH(address _address) external onlyRole(VAULT_MANAGER_ROLE) {
         uint256 claimableAmount = claimableStETH();
-        require(claimableAmount > 0, "No stETH to claim");
+        require(claimableAmount > 0, "VA002");
         TransferHelper.doTransferOut(address(stETH), _address, claimableAmount);
     }
 
@@ -128,7 +133,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      */
     function claimHOPE(address _address) external onlyRole(VAULT_MANAGER_ROLE) {
         uint256 claimableAmount = claimableHOPE();
-        require(claimableAmount > 0, "No HOPE to claim");
+        require(claimableAmount > 0, "VA003");
         TransferHelper.doTransferOut(address(HOPE), _address, claimableAmount);
     }
 
@@ -147,7 +152,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      * @param _rate The new mint fee rate.
      */
     function updateMintFeeRate(uint256 _rate) external onlyOwner {
-        require(_rate >= 0 && _rate < 1e5, "Rate must be greater than 0 and less than 1e5");
+        require(_rate >= 0 && _rate < 1e5, "VA004");
         uint256 oldMintFeeRate = mintFeeRate;
         mintFeeRate = _rate;
         emit UpdateMintFeeRate(oldMintFeeRate, mintFeeRate);
@@ -158,7 +163,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      * @param _rate The new burn fee rate.
      */
     function updateBurnFeeRate(uint256 _rate) external onlyOwner {
-        require(_rate >= 0 && _rate < 1e5, "Rate must be greater than 0 and less than 1e5");
+        require(_rate >= 0 && _rate < 1e5, "VA004");
         uint256 oldBurnFeeRate = burnFeeRate;
         burnFeeRate = _rate;
         emit UpdateBurnFeeRate(oldBurnFeeRate, burnFeeRate);
@@ -223,7 +228,8 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      */
     function _calculateReserveAmount(uint256 _hopeAmount) internal pure returns (uint256 wbtcAmount, uint256 ethAmount) {
         uint256 wbtcConversionFactor = 1e18 / 1e8;
-        ethAmount = (_hopeAmount * K * ETH_TO_BTC_RATIO) / K_FACTOR;
-        wbtcAmount = ethAmount / ETH_TO_BTC_RATIO / wbtcConversionFactor;
+
+        wbtcAmount = _hopeAmount.mul(K).div(K_FACTOR).div(wbtcConversionFactor);
+        ethAmount = wbtcAmount.mul(wbtcConversionFactor).mul(ETH_TO_BTC_RATIO);
     }
 }

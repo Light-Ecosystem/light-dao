@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity 0.8.17;
 
-import {IHOPE} from "../../interfaces/IHOPE.sol";
-import {IVault} from "./IVault.sol";
-import {IWBTC} from "./IWBTC.sol";
-import {IWETH} from "./IWETH.sol";
-import {IStETH} from "./IStETH.sol";
+import {IHOPE} from "../interfaces/IHOPE.sol";
+import {IVault} from "../interfaces/IVault.sol";
+import {IWBTC} from "../interfaces/IWBTC.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
+import {IStETH} from "../interfaces/IStETH.sol";
 import {UniversalERC20} from "./UniversalERC20.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -55,6 +55,12 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         uint256 deadLine;
     }
 
+    receive() external payable {}
+
+    fallback() external payable {
+        require(msg.data.length == 0, "NON_EMPTY_DATA");
+    }
+
     constructor(address _HOPE, address _WBTC, address _WETH, address _stETH, address _VAULT) {
         HOPE = IHOPE(_HOPE);
         WBTC = IWBTC(_WBTC);
@@ -64,7 +70,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
     }
 
     modifier judgeExpired(uint256 deadLine) {
-        require(deadLine >= block.timestamp, "DODOV2Proxy02: EXPIRED");
+        require(deadLine >= block.timestamp, "GW011");
         _;
     }
 
@@ -74,10 +80,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      * @param _depositToken Reserve asset
      */
     function combinationDeposit(uint256 _amount, address _depositToken) external payable whenNotPaused nonReentrant {
-        require(
-            _depositToken == ETH_MOCK_ADDRESS || _depositToken == address(WETH) || _depositToken == address(stETH),
-            "Invalid token combination"
-        );
+        require(_depositToken == ETH_MOCK_ADDRESS || _depositToken == address(WETH) || _depositToken == address(stETH), "GW000");
 
         VAULT.deposit(_msgSender(), _amount);
 
@@ -116,15 +119,15 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      * @param inputs Array of SwapInput struct instances.
      */
     function singleDeposit(SwapInput[] calldata inputs) external payable whenNotPaused nonReentrant {
-        require(inputs.length == 2, "Invalid input array length");
+        require(inputs.length == 2, "GW001");
         require(
             inputs[0].toToken == address(WBTC) &&
                 (inputs[1].toToken == ETH_MOCK_ADDRESS || inputs[1].toToken == address(WETH) || inputs[1].toToken == address(stETH)),
-            "Invalid token addresses"
+            "GW002"
         );
-        require(inputs[0].fromToken == inputs[1].fromToken, "Tokens for deposit must match");
-        require(supportTokens[inputs[0].fromToken], "The deposit token is not supported.");
-        require(frozenTokens[inputs[0].fromToken], "The deposit token is frozen.");
+        require(inputs[0].fromToken == inputs[1].fromToken, "GW003");
+        require(supportTokens[inputs[0].fromToken], "GW004");
+        require(frozenTokens[inputs[0].fromToken], "GW005");
 
         if (inputs[0].fromToken != ETH_MOCK_ADDRESS) {
             TransferHelper.doTransferFrom(
@@ -134,7 +137,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
                 inputs[0].fromTokenAmount + inputs[1].fromTokenAmount
             );
         } else {
-            require(msg.value == inputs[0].fromTokenAmount + inputs[1].fromTokenAmount, "Invalid amount");
+            require(msg.value == inputs[0].fromTokenAmount + inputs[1].fromTokenAmount, "GW010");
         }
 
         uint256 swappedBTCAmount = inputs[0].fromToken == address(WBTC) ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
@@ -178,11 +181,11 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      * @param inputs Array of SwapInput struct instances.
      */
     function singleWithdraw(uint256 _amount, SwapInput[] calldata inputs) external whenNotPaused nonReentrant {
-        require(inputs.length == 2, "Invalid input array length");
-        require(inputs[0].fromToken == address(WBTC) && inputs[1].fromToken == address(stETH), "Invalid token addresses");
-        require(inputs[0].toToken == inputs[1].toToken, "Destination tokens must match");
-        require(supportTokens[inputs[0].toToken], "The withdraw token is not supported.");
-        require(frozenTokens[inputs[0].toToken], "The withdraw token is frozen.");
+        require(inputs.length == 2, "GW001");
+        require(inputs[0].fromToken == address(WBTC) && inputs[1].fromToken == address(stETH), "GW002");
+        require(inputs[0].toToken == inputs[1].toToken, "GW006");
+        require(supportTokens[inputs[0].toToken], "GW007");
+        require(frozenTokens[inputs[0].toToken], "GW008");
 
         TransferHelper.doTransferFrom(address(HOPE), _msgSender(), address(VAULT), _amount);
 
@@ -214,7 +217,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      * @param _isSupported Array of new support statuses.
      */
     function updateSupportTokens(address[] calldata _tokens, bool[] calldata _isSupported) external onlyOwner {
-        require(_tokens.length == _isSupported.length, "Array lengths must match");
+        require(_tokens.length == _isSupported.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateSupportToken(_tokens[i], _isSupported[i]);
         }
@@ -236,7 +239,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      * @param _isFrozen Array of new frozen statuses.
      */
     function updateFrozenTokens(address[] calldata _tokens, bool[] calldata _isFrozen) external onlyOwner {
-        require(_tokens.length == _isFrozen.length, "Array lengths must match");
+        require(_tokens.length == _isFrozen.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateFrozenToken(_tokens[i], _isFrozen[i]);
         }
@@ -289,22 +292,22 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      * @return returnAmount The amount of toToken received after the swap.
      */
     function _aggregatorSwap(SwapInput calldata input) internal judgeExpired(input.deadLine) returns (uint256 returnAmount) {
-        require(input.minReturnAmount > 0, "SwapAggregator: RETURN_AMOUNT_ZERO");
+        require(input.minReturnAmount > 0, "GW012");
 
         uint256 toTokenOriginBalance = IERC20(input.toToken).universalBalanceOf(address(this));
         if (input.fromToken != ETH_MOCK_ADDRESS) {
             IERC20(input.fromToken).universalApproveMax(input.approveTarget, input.fromTokenAmount);
         }
 
-        require(isSwapWhiteListed[input.swapTarget], "SwapAggregator: Not Whitelist Contract");
+        require(isSwapWhiteListed[input.swapTarget], "GW013");
         (bool success, ) = input.swapTarget.call{value: input.fromToken == ETH_MOCK_ADDRESS ? input.fromTokenAmount : 0}(
             input.callDataConcat
         );
 
-        require(success, "SwapAggregator: External Swap execution Failed");
+        require(success, "GW014");
 
         returnAmount = IERC20(input.toToken).universalBalanceOf(address(this)).sub(toTokenOriginBalance);
-        require(returnAmount >= input.minReturnAmount, "SwapAggregator: Return amount is not enough");
+        require(returnAmount >= input.minReturnAmount, "GW015");
 
         emit AggregatorSwap(input.fromToken, input.toToken, _msgSender(), input.fromTokenAmount, returnAmount);
     }
@@ -317,8 +320,9 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      */
     function _calculateReserveAmount(uint256 _hopeAmount) internal pure returns (uint256 wbtcAmount, uint256 ethAmount) {
         uint256 wbtcConversionFactor = 1e18 / 1e8;
-        ethAmount = (_hopeAmount * K * ETH_TO_BTC_RATIO) / K_FACTOR;
-        wbtcAmount = ethAmount / ETH_TO_BTC_RATIO / wbtcConversionFactor;
+
+        wbtcAmount = _hopeAmount.mul(K).div(K_FACTOR).div(wbtcConversionFactor);
+        ethAmount = wbtcAmount.mul(wbtcConversionFactor).mul(ETH_TO_BTC_RATIO);
     }
 
     /**
@@ -334,7 +338,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         uint256 _btcAmount,
         uint256 _ethAmount
     ) internal pure returns (uint256, uint256, uint256, uint256) {
-        require(_btcAmount > 0 && _ethAmount > 0, "Amounts must be greater than 0");
+        require(_btcAmount > 0 && _ethAmount > 0, "GW010");
 
         uint256 wbtcConversionFactor = 1e18 / 1e8;
 

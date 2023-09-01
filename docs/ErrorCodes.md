@@ -78,13 +78,15 @@
 `HS005` : `Please redeem the balance before removing the currency.`
 
 ## FeeDistributor related
+
 `FD001` : `can not perform checkpoint now.`
 
 ## Staking Hope
+
 `SH` : `Unsupport currency.`
 
-
 # Gauge Pool
+
 `GP000` : `Unauthorized.`
 `GP001` : `Kick not allowed.`
 `GP002` : `Initiation forbidden.`
@@ -99,9 +101,32 @@
 `GP011` : `Cannot redirect when claiming for another user.`
 
 # Gauge Factroy
+
 `GF000` : `No permission to create pool.`
 
+# HOPE Automation Mint & Burn Vault
 
+`VA000` : `The caller of the function is not gateway.`
+`VA001` : `Invalid amount.`
+`VA002` : `No stETH to claim.`
+`VA003` : `No HOPE to claim.`
+`VA004` : `Rate must be greater than 0 and less than 1e5.`
 
+# HOPE Automation Mint & Burn Gateway
 
-
+`GW000` : `Invalid token combination.`
+`GW001` : `Invalid input array length.`
+`GW002` : `Invalid token addresses.`
+`GW003` : `Tokens for deposit must match.`
+`GW004` : `The deposit token is not supported.`
+`GW005` : `The deposit token is frozen.`
+`GW006` : `Destination tokens must match.`
+`GW007` : `The withdraw token is not supported.`
+`GW008` : `The withdraw token is frozen.`
+`GW009` : `Array lengths must match.`
+`GW010` : `Invalid amount.`
+`GW011` : `SwapAggregator: EXPIRED.`
+`GW012` : `SwapAggregator: RETURN_AMOUNT_ZERO.`
+`GW013` : `SwapAggregator: Not Whitelist Contract.`
+`GW014` : `SwapAggregator: External Swap execution Failed.`
+`GW015` : `SwapAggregator: Return amount is not enough.`

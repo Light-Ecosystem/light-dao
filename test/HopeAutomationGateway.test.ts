@@ -477,7 +477,6 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         );
         await gateway.addEmergencyManager(alice.address);
         await gateway.connect(alice).pause();
-        await gateway.combinationDeposit(1, weth.address);
         await expect(
           gateway.combinationDeposit(1, weth.address)
         ).to.revertedWith("Pausable: paused");

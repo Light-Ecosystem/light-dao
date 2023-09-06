@@ -19,6 +19,7 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
     event UpdateSupportedToken(address indexed _token, bool isSupported);
     event UpdateFrozenToken(address indexed _token, bool isFrozen);
+    event UpdateSwapWhiteListed(address indexed _dex, bool isWhiteListed);
     event AggregatorSwap(address fromToken, address toToken, address user, uint256 fromAmount, uint256 returnAmount);
 
     bytes32 public constant EMERGENCY_MANAGER_ROLE = keccak256("EMERGENCY_MANAGER_ROLE");
@@ -127,7 +128,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         );
         require(inputs[0].fromToken == inputs[1].fromToken, "GW003");
         require(supportTokens[inputs[0].fromToken], "GW004");
-        require(frozenTokens[inputs[0].fromToken], "GW005");
+        require(!frozenTokens[inputs[0].fromToken], "GW005");
 
         if (inputs[0].fromToken != ETH_MOCK_ADDRESS) {
             TransferHelper.doTransferFrom(
@@ -140,12 +141,8 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
             require(msg.value == inputs[0].fromTokenAmount + inputs[1].fromTokenAmount, "GW010");
         }
 
-        uint256 swappedBTCAmount = inputs[0].fromToken == address(WBTC) ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
-        uint256 swappedETHAmount = inputs[1].fromToken == ETH_MOCK_ADDRESS ||
-            inputs[1].fromToken == address(WETH) ||
-            inputs[1].fromToken == address(stETH)
-            ? inputs[1].fromTokenAmount
-            : _aggregatorSwap(inputs[1]);
+        uint256 swappedBTCAmount = inputs[0].fromToken == inputs[0].toToken ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
+        uint256 swappedETHAmount = inputs[1].fromToken == inputs[1].toToken ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
 
         (uint256 needBTCAmount, uint256 needETHAmount, uint256 refundBTCAmount, uint256 refundETHAmount) = _calculateReserveCombination(
             swappedBTCAmount,
@@ -185,7 +182,7 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         require(inputs[0].fromToken == address(WBTC) && inputs[1].fromToken == address(stETH), "GW002");
         require(inputs[0].toToken == inputs[1].toToken, "GW006");
         require(supportTokens[inputs[0].toToken], "GW007");
-        require(frozenTokens[inputs[0].toToken], "GW008");
+        require(!frozenTokens[inputs[0].toToken], "GW008");
 
         TransferHelper.doTransferFrom(address(HOPE), _msgSender(), address(VAULT), _amount);
 
@@ -195,8 +192,8 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         VAULT.safeTransferToken(address(WBTC), address(this), wbtcAmount);
         VAULT.safeTransferToken(address(stETH), address(this), stEthAmount);
 
-        uint256 withdrawAmountBySwapBTC = inputs[0].toToken == address(WBTC) ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
-        uint256 withdrawAmountBySwapETH = inputs[1].toToken == address(stETH) ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
+        uint256 withdrawAmountBySwapBTC = inputs[0].fromToken == inputs[0].toToken ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
+        uint256 withdrawAmountBySwapETH = inputs[1].fromToken == inputs[1].toToken ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
 
         IERC20(inputs[0].toToken).universalTransfer(_msgSender(), withdrawAmountBySwapBTC + withdrawAmountBySwapETH);
     }
@@ -242,6 +239,28 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         require(_tokens.length == _isFrozen.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateFrozenToken(_tokens[i], _isFrozen[i]);
+        }
+    }
+
+    /**
+     * @dev Updates the white listed status of a specific dex.
+     * @param _dex Address of the dex.
+     * @param _isWhiteList White listed status.
+     */
+    function updateSwapWhiteList(address _dex, bool _isWhiteList) public onlyOwner {
+        isSwapWhiteListed[_dex] = _isWhiteList;
+        emit UpdateSwapWhiteListed(_dex, _isWhiteList);
+    }
+
+    /**
+     * @dev Updates the white listed status of multiple dex in bulk.
+     * @param _dexList Array of dex addresses.
+     * @param _isWhiteList Array of white listed statuses.
+     */
+    function updateSwapWhiteLists(address[] calldata _dexList, bool[] calldata _isWhiteList) external onlyOwner {
+        require(_dexList.length == _isWhiteList.length, "GW009");
+        for (uint256 i = 0; i < _dexList.length; i++) {
+            updateSwapWhiteList(_dexList[i], _isWhiteList[i]);
         }
     }
 

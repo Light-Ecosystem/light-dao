@@ -55,7 +55,7 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
      * @dev Stake ETH into the Vault contract.
      * @notice Lido Liquid staked Ether 2.0. https://etherscan.io/address/0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
      */
-    function stakeETH() public payable onlyGateway {
+    function stakeETH() external payable onlyGateway {
         require(msg.value > 0, "VA001");
         stETH.submit{value: msg.value}(address(0));
     }

@@ -10,7 +10,7 @@ import {IERC20WithPermit} from "../interfaces/IERC20WithPermit.sol";
 import {IGateway} from "../interfaces/IGateway.sol";
 import {UniversalERC20} from "./UniversalERC20.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
-import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";

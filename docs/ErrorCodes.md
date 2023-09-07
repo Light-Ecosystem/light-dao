@@ -111,6 +111,7 @@
 `VA002` : `No stETH to claim.`
 `VA003` : `No HOPE to claim.`
 `VA004` : `Rate must be greater than 0 and less than 1e5.`
+`VA005` : `The reserve asset cannot be rescued.`
 
 # HOPE Automation Mint & Burn Gateway
 

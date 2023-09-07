@@ -6,7 +6,6 @@ import {IWBTC} from "../interfaces/IWBTC.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
 import {IStETH} from "../interfaces/IStETH.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -15,7 +14,6 @@ import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
 contract Vault is Ownable2Step, AccessControl, Pausable {
     event UpdateGateway(address oldGateway, address newGateway);
-    event UpdateStETHRatio(uint256 oldRatio, uint256 newRatio);
     event UpdateMintFeeRate(uint256 oldMintFeeRate, uint256 newMintFeeRate);
     event UpdateBurnFeeRate(uint256 oldBurnFeeRate, uint256 newBurnFeeRate);
 
@@ -135,6 +133,17 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
         uint256 claimableAmount = claimableHOPE();
         require(claimableAmount > 0, "VA003");
         TransferHelper.doTransferOut(address(HOPE), _recipient, claimableAmount);
+    }
+
+    /**
+     * @notice Rescue and transfer tokens locked in this contract
+     * @param _token The address of the token
+     * @param _recipient The address of the recipient
+     * @param _amount The amount of token to transfer
+     */
+    function rescueTokens(address _token, address _recipient, uint256 _amount) external onlyRole(VAULT_MANAGER_ROLE) {
+        require(_token != address(WBTC) && _token != address(stETH), "VA005");
+        TransferHelper.doTransferOut(_token, _recipient, _amount);
     }
 
     /**

@@ -111,12 +111,12 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
 
     /**
      * @dev Claim stETH tokens and transfer to a specified address.
-     * @param _address The address to receive the claimed stETH tokens.
+     * @param _recipient The address to receive the claimed stETH tokens.
      */
-    function claimStETH(address _address) external onlyRole(VAULT_MANAGER_ROLE) {
+    function claimStETH(address _recipient) external onlyRole(VAULT_MANAGER_ROLE) {
         uint256 claimableAmount = claimableStETH();
         require(claimableAmount > 0, "VA002");
-        TransferHelper.doTransferOut(address(stETH), _address, claimableAmount);
+        TransferHelper.doTransferOut(address(stETH), _recipient, claimableAmount);
     }
 
     /**
@@ -129,12 +129,12 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
 
     /**
      * @dev Claim HOPE tokens and transfer to a specified address.
-     * @param _address The address to receive the claimed HOPE tokens.
+     * @param _recipient The address to receive the claimed HOPE tokens.
      */
-    function claimHOPE(address _address) external onlyRole(VAULT_MANAGER_ROLE) {
+    function claimHOPE(address _recipient) external onlyRole(VAULT_MANAGER_ROLE) {
         uint256 claimableAmount = claimableHOPE();
         require(claimableAmount > 0, "VA003");
-        TransferHelper.doTransferOut(address(HOPE), _address, claimableAmount);
+        TransferHelper.doTransferOut(address(HOPE), _recipient, claimableAmount);
     }
 
     /**

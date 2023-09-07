@@ -37,58 +37,58 @@ interface IGateway {
      * @dev Burn HOPE with Asset Combination
      * @notice Only support withdraw WBTC & stETH
      * @param _amount Amount of HOPE to burn
-     * @param deadline The deadline timestamp that the permit is valid
-     * @param permitV The V parameter of ERC712 permit sig
-     * @param permitR The R parameter of ERC712 permit sig
-     * @param permitS The S parameter of ERC712 permit sig
+     * @param _deadline The deadline timestamp that the permit is valid
+     * @param _permitV The V parameter of ERC712 permit sig
+     * @param _permitR The R parameter of ERC712 permit sig
+     * @param _permitS The S parameter of ERC712 permit sig
      */
-    function combinationWithdrawWithPermit(uint256 _amount, uint256 deadline, uint8 permitV, bytes32 permitR, bytes32 permitS) external;
+    function combinationWithdrawWithPermit(uint256 _amount, uint256 _deadline, uint8 _permitV, bytes32 _permitR, bytes32 _permitS) external;
 
     /**
      * @dev Deposits assets into vault and mints hope tokens.
-     * @param inputs Array of SwapInput struct instances.
+     * @param _inputs Array of SwapInput struct instances.
      */
-    function singleDeposit(SwapInput[2] calldata inputs) external payable;
+    function singleDeposit(SwapInput[2] calldata _inputs) external payable;
 
     /**
      * @dev Deposits assets into vault and mints hope tokens.
-     * @param inputs Array of SwapInput struct instances.
-     * @param deadline The deadline timestamp that the permit is valid
-     * @param permitV The V parameter of ERC712 permit sig
-     * @param permitR The R parameter of ERC712 permit sig
-     * @param permitS The S parameter of ERC712 permit sig
+     * @param _inputs Array of SwapInput struct instances.
+     * @param _deadline The deadline timestamp that the permit is valid
+     * @param _permitV The V parameter of ERC712 permit sig
+     * @param _permitR The R parameter of ERC712 permit sig
+     * @param _permitS The S parameter of ERC712 permit sig
      */
     function singleDepositWithPermit(
-        SwapInput[2] calldata inputs,
-        uint256 deadline,
-        uint8 permitV,
-        bytes32 permitR,
-        bytes32 permitS
+        SwapInput[2] calldata _inputs,
+        uint256 _deadline,
+        uint8 _permitV,
+        bytes32 _permitR,
+        bytes32 _permitS
     ) external;
 
     /**
      * @dev Withdraws assets from vault and burns hope tokens.
      * @param _amount Amount of hope tokens to burn.
-     * @param inputs Array of SwapInput struct instances.
+     * @param _inputs Array of SwapInput struct instances.
      */
-    function singleWithdraw(uint256 _amount, SwapInput[2] calldata inputs) external;
+    function singleWithdraw(uint256 _amount, SwapInput[2] calldata _inputs) external;
 
     /**
      * @dev Withdraws assets from vault and burns hope tokens.
      * @param _amount Amount of hope tokens to burn.
-     * @param inputs Array of SwapInput struct instances.
-     * @param deadline The deadline timestamp that the permit is valid
-     * @param permitV The V parameter of ERC712 permit sig
-     * @param permitR The R parameter of ERC712 permit sig
-     * @param permitS The S parameter of ERC712 permit sig
+     * @param _deadline The deadline timestamp that the permit is valid
+     * @param _permitV The V parameter of ERC712 permit sig
+     * @param _permitR The R parameter of ERC712 permit sig
+     * @param _permitS The S parameter of ERC712 permit sig
+     * @param _inputs Array of SwapInput struct instances.
      */
     function singleWithdrawWithPermit(
         uint256 _amount,
-        uint256 deadline,
-        uint8 permitV,
-        bytes32 permitR,
-        bytes32 permitS,
-        SwapInput[2] calldata inputs
+        uint256 _deadline,
+        uint8 _permitV,
+        bytes32 _permitR,
+        bytes32 _permitS,
+        SwapInput[2] calldata _inputs
     ) external;
 
     /**

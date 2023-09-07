@@ -5,6 +5,7 @@ import {IHOPE} from "../interfaces/IHOPE.sol";
 import {IWBTC} from "../interfaces/IWBTC.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
 import {IStETH} from "../interfaces/IStETH.sol";
+import {IVault} from "../interfaces/IVault.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -12,11 +13,7 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
-contract Vault is Ownable2Step, AccessControl, Pausable {
-    event UpdateGateway(address oldGateway, address newGateway);
-    event UpdateMintFeeRate(uint256 oldMintFeeRate, uint256 newMintFeeRate);
-    event UpdateBurnFeeRate(uint256 oldBurnFeeRate, uint256 newBurnFeeRate);
-
+contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
     bytes32 public constant VAULT_MANAGER_ROLE = keccak256("VAULT_MANAGER_ROLE");
     uint256 public constant K = 10801805;
     uint256 public constant K_FACTOR = 1e12;
@@ -49,22 +46,14 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
         _;
     }
 
-    /**
-     * @dev Stake ETH into the Vault contract.
-     * @notice Lido Liquid staked Ether 2.0. https://etherscan.io/address/0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
-     */
-    function stakeETH() external payable onlyGateway {
+    /// @inheritdoc IVault
+    function stakeETH() external payable override onlyGateway {
         require(msg.value > 0, "VA001");
         stETH.submit{value: msg.value}(address(0));
     }
 
-    /**
-     * @dev Deposit assets into the Vault contract.
-     * @param _user The address to receive the minted HOPE tokens.
-     * @param _amount The amount of assets to deposit.
-     * @return The minted HOPE amount after deducting fees.
-     */
-    function deposit(address _user, uint256 _amount) external onlyGateway whenNotPaused returns (uint256) {
+    /// @inheritdoc IVault
+    function deposit(address _user, uint256 _amount) external override onlyGateway whenNotPaused returns (uint256) {
         require(_amount > 0, "VA001");
         totalMinted += _amount;
 
@@ -80,12 +69,8 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
         return mintAmount;
     }
 
-    /**
-     * @dev Withdraw assets from the Vault contract.
-     * @param _amount The amount of HOPE tokens to burn.
-     * @return The burned HOPE amount after deducting fees.
-     */
-    function withdraw(uint256 _amount) external onlyGateway whenNotPaused returns (uint256) {
+    /// @inheritdoc IVault
+    function withdraw(uint256 _amount) external override onlyGateway whenNotPaused returns (uint256) {
         require(_amount > 0, "VA001");
         uint256 fee = burnFeeRate > 0 ? (_amount * burnFeeRate) / FEE_RATE_FACTOR : 0;
 
@@ -96,136 +81,89 @@ contract Vault is Ownable2Step, AccessControl, Pausable {
         return burnAmount;
     }
 
-    /**
-     * @dev Calculate the claimable amount of stETH tokens.
-     * @return The claimable amount of stETH tokens.
-     */
-    function claimableStETH() public view returns (uint256) {
+    /// @inheritdoc IVault
+    function claimableStETH() public view override returns (uint256) {
         uint256 totalStETH = stETH.balanceOf(address(this));
         (, uint256 totalETHReserve) = _calculateReserveAmount(totalMinted);
         uint256 claimableAmount = totalStETH - totalETHReserve;
         return claimableAmount;
     }
 
-    /**
-     * @dev Claim stETH tokens and transfer to a specified address.
-     * @param _recipient The address to receive the claimed stETH tokens.
-     */
-    function claimStETH(address _recipient) external onlyRole(VAULT_MANAGER_ROLE) {
+    /// @inheritdoc IVault
+    function claimStETH(address _recipient) external override onlyRole(VAULT_MANAGER_ROLE) {
         uint256 claimableAmount = claimableStETH();
         require(claimableAmount > 0, "VA002");
         TransferHelper.doTransferOut(address(stETH), _recipient, claimableAmount);
     }
 
-    /**
-     * @dev Calculate the claimable amount of HOPE tokens.
-     * @return The claimable amount of HOPE tokens.
-     */
+    /// @inheritdoc IVault
     function claimableHOPE() public view returns (uint256) {
         return HOPE.balanceOf(address(this));
     }
 
-    /**
-     * @dev Claim HOPE tokens and transfer to a specified address.
-     * @param _recipient The address to receive the claimed HOPE tokens.
-     */
-    function claimHOPE(address _recipient) external onlyRole(VAULT_MANAGER_ROLE) {
+    /// @inheritdoc IVault
+    function claimHOPE(address _recipient) external override onlyRole(VAULT_MANAGER_ROLE) {
         uint256 claimableAmount = claimableHOPE();
         require(claimableAmount > 0, "VA003");
         TransferHelper.doTransferOut(address(HOPE), _recipient, claimableAmount);
     }
 
-    /**
-     * @notice Rescue and transfer tokens locked in this contract
-     * @param _token The address of the token
-     * @param _recipient The address of the recipient
-     * @param _amount The amount of token to transfer
-     */
-    function rescueTokens(address _token, address _recipient, uint256 _amount) external onlyRole(VAULT_MANAGER_ROLE) {
+    /// @inheritdoc IVault
+    function rescueTokens(address _token, address _recipient, uint256 _amount) external override onlyRole(VAULT_MANAGER_ROLE) {
         require(_token != address(WBTC) && _token != address(stETH), "VA005");
         TransferHelper.doTransferOut(_token, _recipient, _amount);
     }
 
-    /**
-     * @dev Update the gateway address that can call certain functions.
-     * @param _gateway The new gateway address.
-     */
-    function updateGateway(address _gateway) external onlyOwner {
+    /// @inheritdoc IVault
+    function updateGateway(address _gateway) external override onlyOwner {
         address oldGateway = gateway;
         gateway = _gateway;
         emit UpdateGateway(oldGateway, gateway);
     }
 
-    /**
-     * @dev Update the mint fee rate.
-     * @param _rate The new mint fee rate.
-     */
-    function updateMintFeeRate(uint256 _rate) external onlyOwner {
+    /// @inheritdoc IVault
+    function updateMintFeeRate(uint256 _rate) external override onlyOwner {
         require(_rate >= 0 && _rate < 1e5, "VA004");
         uint256 oldMintFeeRate = mintFeeRate;
         mintFeeRate = _rate;
         emit UpdateMintFeeRate(oldMintFeeRate, mintFeeRate);
     }
 
-    /**
-     * @dev Update the burn fee rate.
-     * @param _rate The new burn fee rate.
-     */
-    function updateBurnFeeRate(uint256 _rate) external onlyOwner {
+    /// @inheritdoc IVault
+    function updateBurnFeeRate(uint256 _rate) external override onlyOwner {
         require(_rate >= 0 && _rate < 1e5, "VA004");
         uint256 oldBurnFeeRate = burnFeeRate;
         burnFeeRate = _rate;
         emit UpdateBurnFeeRate(oldBurnFeeRate, burnFeeRate);
     }
 
-    /**
-     * @dev Safe transfer tokens from the contract.
-     * @param _token The address of the token to transfer.
-     * @param _to The address to receive the tokens.
-     * @param _amount The amount of tokens to transfer.
-     */
-    function safeTransferToken(address _token, address _to, uint256 _amount) public onlyGateway {
+    /// @inheritdoc IVault
+    function safeTransferToken(address _token, address _to, uint256 _amount) public override onlyGateway {
         TransferHelper.doTransferOut(_token, _to, _amount);
     }
 
-    /**
-     * @dev Check if an address has the Vault Manager role.
-     * @param _manager The address to check.
-     * @return Whether the address has the Vault Manager role.
-     */
-    function isVaultManager(address _manager) external view returns (bool) {
+    /// @inheritdoc IVault
+    function isVaultManager(address _manager) external view override returns (bool) {
         return hasRole(VAULT_MANAGER_ROLE, _manager);
     }
 
-    /**
-     * @dev Add an address as a Vault Manager.
-     * @param _manager The address to grant the Vault Manager role.
-     */
-    function addVaultManager(address _manager) external onlyOwner {
+    /// @inheritdoc IVault
+    function addVaultManager(address _manager) external override onlyOwner {
         _grantRole(VAULT_MANAGER_ROLE, _manager);
     }
 
-    /**
-     * @dev Remove an address from the Vault Manager role.
-     * @param _manager The address to revoke the Vault Manager role from.
-     */
-    function removeVaultManager(address _manager) external onlyOwner {
+    /// @inheritdoc IVault
+    function removeVaultManager(address _manager) external override onlyOwner {
         _revokeRole(VAULT_MANAGER_ROLE, _manager);
     }
 
-    /**
-     * @dev Pauses contract functionality.
-     * @notice Only callable by addresses with the emergency manager role.
-     */
-    function pause() external onlyRole(VAULT_MANAGER_ROLE) {
+    /// @inheritdoc IVault
+    function pause() external override onlyRole(VAULT_MANAGER_ROLE) {
         _pause();
     }
 
-    /**
-     * @dev Unpauses contract functionality.
-     * @notice Only callable by addresses with the emergency manager role.
-     */
-    function unpause() external onlyRole(VAULT_MANAGER_ROLE) {
+    /// @inheritdoc IVault
+    function unpause() external override onlyRole(VAULT_MANAGER_ROLE) {
         _unpause();
     }
 

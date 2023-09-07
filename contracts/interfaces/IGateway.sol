@@ -151,4 +151,16 @@ interface IGateway {
      * @param _manager Address to remove from the emergency manager role.
      */
     function removeEmergencyManager(address _manager) external;
+
+    /**
+     * @dev Pauses contract functionality.
+     * @notice Only callable by addresses with the emergency manager role.
+     */
+    function pause() external;
+
+    /**
+     * @dev Unpauses contract functionality.
+     * @notice Only callable by addresses with the emergency manager role.
+     */
+    function unpause() external;
 }

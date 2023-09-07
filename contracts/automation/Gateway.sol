@@ -199,19 +199,13 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
         _revokeRole(EMERGENCY_MANAGER_ROLE, _manager);
     }
 
-    /**
-     * @dev Pauses contract functionality.
-     * @notice Only callable by addresses with the emergency manager role.
-     */
-    function pause() external onlyRole(EMERGENCY_MANAGER_ROLE) {
+    /// @inheritdoc IGateway
+    function pause() external override onlyRole(EMERGENCY_MANAGER_ROLE) {
         _pause();
     }
 
-    /**
-     * @dev Unpauses contract functionality.
-     * @notice Only callable by addresses with the emergency manager role.
-     */
-    function unpause() external onlyRole(EMERGENCY_MANAGER_ROLE) {
+    /// @inheritdoc IGateway
+    function unpause() external override onlyRole(EMERGENCY_MANAGER_ROLE) {
         _unpause();
     }
 

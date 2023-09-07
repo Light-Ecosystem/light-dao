@@ -440,6 +440,13 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
     });
 
     describe("rescue token", () => {
+      it("rescue token will revert when not vault manager", async () => {
+        const { owner, addr1, vault, wbtc, stETH } = await loadFixture(
+          deployVaultFixture
+        );
+        await expect(vault.rescueTokens(stETH.address, addr1.address, 1)).to.be
+          .reverted;
+      });
       it("rescue token will revert when transfer reserve asset", async () => {
         const { owner, addr1, vault, wbtc, stETH } = await loadFixture(
           deployVaultFixture

@@ -306,6 +306,90 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         expect(await stETH.balanceOf(vault.address)).gt(0);
       });
 
+      it("single deposit of WETH", async () => {
+        const { alice, gateway, vault, wbtc, weth, hope, stETH } =
+          await loadFixture(deployGatewayFixture);
+
+        await gateway.updateSupportToken(WETH_ADDRESS, true);
+        await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true]);
+
+        await weth.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT);
+
+        const deadline = (await time.latest()) + 3600;
+
+        const wbtcSwapInputValues = [
+          parseUnits("1", 18),
+          "1",
+          [WETH_ADDRESS, WBTC_ADDRESS],
+          gateway.address,
+          deadline,
+        ];
+
+        const wbtcInputData = ethers.utils.defaultAbiCoder.encode(
+          ["uint256", "uint256", "address[]", "address", "uint256"],
+          wbtcSwapInputValues
+        );
+
+        const functionSignature =
+          "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)";
+        const iface = new ethers.utils.Interface([
+          `function ${functionSignature}`,
+        ]);
+
+        const functionSelector = iface.getSighash(functionSignature);
+
+        const wbtcEncodeData = ethers.utils.hexConcat([
+          functionSelector,
+          wbtcInputData,
+        ]);
+
+        const wbtcSwapInput: {
+          fromToken: string;
+          toToken: string;
+          approveTarget: string;
+          swapTarget: string;
+          fromTokenAmount: BigNumberish;
+          minReturnAmount: BigNumberish;
+          callDataConcat: BytesLike;
+          deadLine: BigNumberish;
+        } = {
+          fromToken: WETH_ADDRESS,
+          toToken: WBTC_ADDRESS,
+          approveTarget: UNISWAP_ROUTER_ADDRESS,
+          swapTarget: UNISWAP_ROUTER_ADDRESS,
+          fromTokenAmount: parseUnits("1", 18),
+          minReturnAmount: "1",
+          callDataConcat: wbtcEncodeData,
+          deadLine: deadline,
+        };
+        const ethSwapInput: {
+          fromToken: string;
+          toToken: string;
+          approveTarget: string;
+          swapTarget: string;
+          fromTokenAmount: BigNumberish;
+          minReturnAmount: BigNumberish;
+          callDataConcat: BytesLike;
+          deadLine: BigNumberish;
+        } = {
+          fromToken: WETH_ADDRESS,
+          toToken: WETH_ADDRESS,
+          approveTarget: UNISWAP_ROUTER_ADDRESS,
+          swapTarget: UNISWAP_ROUTER_ADDRESS,
+          fromTokenAmount: parseUnits("1", 18),
+          minReturnAmount: "1",
+          callDataConcat: "0x",
+          deadLine: deadline,
+        };
+
+        await gateway
+          .connect(alice)
+          .singleDeposit([wbtcSwapInput, ethSwapInput]);
+
+        expect(await wbtc.balanceOf(vault.address)).gt(0);
+        expect(await stETH.balanceOf(vault.address)).gt(0);
+      });
+
       it("single deposit of ETH", async () => {
         const { alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
           await loadFixture(deployGatewayFixture);

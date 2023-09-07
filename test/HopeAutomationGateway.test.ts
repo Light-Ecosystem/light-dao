@@ -1,19 +1,28 @@
-import { ethers, upgrades } from "hardhat";
+import { ethers, upgrades, config } from "hardhat";
 import { expect } from "chai";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import {
   ETH_MOCK_ADDRESS,
   MAX_UINT_AMOUNT,
   ONE_ADDRESS,
+  ONE_HOUR,
   ZERO_ADDRESS,
 } from "../helpers/constants";
 import { parseUnits } from "ethers/lib/utils";
 import { BigNumber } from "ethers";
 import { waitForTx } from "../helpers/tx";
+import { buildPermitParams, getSignatureFromTypedData } from "./SigHelper";
 
 describe("On-chain HOPE Automation Mint & Burn", () => {
   const CREDIT = parseUnits("4000000", 18);
   let agentBlock: number;
+
+  const accounts = config.networks.hardhat.accounts;
+  const index = 1; // first wallet, increment for next wallets
+  const wallet1 = ethers.Wallet.fromMnemonic(
+    accounts.mnemonic,
+    accounts.path + `/${index}`
+  );
 
   const K: number = 10801805;
   const K_FACTOR: number = 1e12;
@@ -307,6 +316,66 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         await hope.connect(alice).approve(gateway.address, mintAmount);
         await waitForTx(
           await gateway.connect(alice).combinationWithdraw(mintAmount)
+        );
+
+        expect(await hope.balanceOf(alice.address)).to.be.equal(0);
+        expect(await wbtc.balanceOf(vault.address)).to.be.equal(0);
+        expect(await stETH.balanceOf(vault.address)).to.be.equal(0);
+        expect(await wbtc.balanceOf(alice.address)).to.be.equal(
+          initialWBTCBalance
+        );
+        expect(await stETH.balanceOf(alice.address)).to.be.equal(
+          initialStETHBalance
+        );
+      });
+      it("permit burn with withdraw wbtc & stETH", async () => {
+        const { alice, hope, wbtc, weth, stETH, gateway, vault } =
+          await loadFixture(deployGatewayFixture);
+
+        const mintAmount = parseUnits("7503.15", 18);
+
+        await waitForTx(
+          await wbtc.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT)
+        );
+        await waitForTx(
+          await stETH.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT)
+        );
+
+        await waitForTx(
+          await gateway
+            .connect(alice)
+            .combinationDeposit(mintAmount, stETH.address)
+        );
+
+        expect(await hope.balanceOf(alice.address)).to.be.equal(mintAmount);
+
+        const chainId = (await ethers.provider.getNetwork()).chainId;
+        const deadline = (await time.latest()) + ONE_HOUR;
+        const nonce = (await hope.nonces(alice.address)).toNumber();
+        const msgParams = buildPermitParams(
+          chainId,
+          hope.address,
+          "1",
+          await hope.name(),
+          alice.address,
+          gateway.address,
+          nonce,
+          deadline.toString(),
+          mintAmount.toString()
+        );
+
+        const alicePrivateKey = wallet1.privateKey;
+
+        const { v, r, s } = getSignatureFromTypedData(
+          alicePrivateKey,
+          msgParams
+        );
+
+        // await hope.connect(alice).approve(gateway.address, mintAmount);
+        await waitForTx(
+          await gateway
+            .connect(alice)
+            .combinationWithdrawWithPermit(mintAmount, deadline, v, r, s)
         );
 
         expect(await hope.balanceOf(alice.address)).to.be.equal(0);

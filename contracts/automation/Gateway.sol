@@ -6,6 +6,8 @@ import {IVault} from "../interfaces/IVault.sol";
 import {IWBTC} from "../interfaces/IWBTC.sol";
 import {IWETH} from "../interfaces/IWETH.sol";
 import {IStETH} from "../interfaces/IStETH.sol";
+import {IERC20WithPermit} from "../interfaces/IERC20WithPermit.sol";
+import {IGateway} from "../interfaces/IGateway.sol";
 import {UniversalERC20} from "./UniversalERC20.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -16,12 +18,7 @@ import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
-contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
-    event UpdateSupportedToken(address indexed _token, bool isSupported);
-    event UpdateFrozenToken(address indexed _token, bool isFrozen);
-    event UpdateSwapWhiteListed(address indexed _dex, bool isWhiteListed);
-    event AggregatorSwap(address fromToken, address toToken, address user, uint256 fromAmount, uint256 returnAmount);
-
+contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
     bytes32 public constant EMERGENCY_MANAGER_ROLE = keccak256("EMERGENCY_MANAGER_ROLE");
     uint256 public constant K = 10801805;
     uint256 public constant K_FACTOR = 1e12;
@@ -45,29 +42,18 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 
-    struct SwapInput {
-        address fromToken;
-        address toToken;
-        address approveTarget;
-        address swapTarget;
-        uint256 fromTokenAmount;
-        uint256 minReturnAmount;
-        bytes callDataConcat;
-        uint256 deadLine;
-    }
-
     receive() external payable {}
 
     fallback() external payable {
         require(msg.data.length == 0, "NON_EMPTY_DATA");
     }
 
-    constructor(address _HOPE, address _WBTC, address _WETH, address _stETH, address _VAULT) {
-        HOPE = IHOPE(_HOPE);
-        WBTC = IWBTC(_WBTC);
-        WETH = IWETH(_WETH);
-        stETH = IStETH(_stETH);
-        VAULT = IVault(_VAULT);
+    constructor(address _hopeAddress, address _wbtcAddress, address _wethAddress, address _stETHAddress, address _vaultAddress) {
+        HOPE = IHOPE(_hopeAddress);
+        WBTC = IWBTC(_wbtcAddress);
+        WETH = IWETH(_wethAddress);
+        stETH = IStETH(_stETHAddress);
+        VAULT = IVault(_vaultAddress);
     }
 
     modifier judgeExpired(uint256 deadLine) {
@@ -75,217 +61,141 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
         _;
     }
 
-    /**
-     * @dev Mint HOPE with Asset Combination
-     * @param _amount Amount of HOPE to mint
-     * @param _depositToken Reserve asset
-     */
-    function combinationDeposit(uint256 _amount, address _depositToken) external payable whenNotPaused nonReentrant {
+    /// @inheritdoc IGateway
+    function combinationDeposit(uint256 _amount, address _depositToken) external payable override whenNotPaused nonReentrant {
         require(_depositToken == ETH_MOCK_ADDRESS || _depositToken == address(WETH) || _depositToken == address(stETH), "GW000");
 
         VAULT.deposit(_msgSender(), _amount);
 
         (uint256 btcAmount, uint256 ethAmount) = _calculateReserveAmount(_amount);
 
-        TransferHelper.doTransferFrom(address(WBTC), _msgSender(), address(VAULT), btcAmount);
+        _payOrTransfer(address(WBTC), _msgSender(), address(VAULT), btcAmount);
 
         if (_depositToken == address(stETH)) {
-            TransferHelper.doTransferFrom(address(stETH), _msgSender(), address(VAULT), ethAmount);
+            _payOrTransfer(address(stETH), _msgSender(), address(VAULT), ethAmount);
         } else {
             if (_depositToken == address(WETH)) {
-                TransferHelper.doTransferFrom(address(WETH), _msgSender(), address(this), ethAmount);
+                _payOrTransfer(address(WETH), _msgSender(), address(this), ethAmount);
                 WETH.withdraw(ethAmount);
             }
             VAULT.stakeETH{value: ethAmount}();
         }
     }
 
-    /**
-     * @dev Burn HOPE with Asset Combination
-     * @notice Only support withdraw WBTC & stETH
-     * @param _amount Amount of HOPE to burn
-     */
-    function combinationWithdraw(uint256 _amount) external whenNotPaused nonReentrant {
-        TransferHelper.doTransferFrom(address(HOPE), _msgSender(), address(VAULT), _amount);
-
-        uint256 burnAmount = VAULT.withdraw(_amount);
-
-        (uint256 wbtcAmount, uint256 stEthAmount) = _calculateReserveAmount(burnAmount);
-        VAULT.safeTransferToken(address(WBTC), _msgSender(), wbtcAmount);
-        VAULT.safeTransferToken(address(stETH), _msgSender(), stEthAmount);
+    /// @inheritdoc IGateway
+    function combinationWithdraw(uint256 _amount) external override whenNotPaused nonReentrant {
+        _combinationWithdraw(_amount);
     }
 
-    /**
-     * @dev Deposits assets into vault and mints hope tokens.
-     * @param inputs Array of SwapInput struct instances.
-     */
-    function singleDeposit(SwapInput[] calldata inputs) external payable whenNotPaused nonReentrant {
-        require(inputs.length == 2, "GW001");
-        require(
-            inputs[0].toToken == address(WBTC) &&
-                (inputs[1].toToken == ETH_MOCK_ADDRESS || inputs[1].toToken == address(WETH) || inputs[1].toToken == address(stETH)),
-            "GW002"
+    /// @inheritdoc IGateway
+    function combinationWithdrawWithPermit(
+        uint256 _amount,
+        uint256 deadline,
+        uint8 permitV,
+        bytes32 permitR,
+        bytes32 permitS
+    ) external override whenNotPaused nonReentrant {
+        IERC20WithPermit(address(HOPE)).permit(_msgSender(), address(this), _amount, deadline, permitV, permitR, permitS);
+        _combinationWithdraw(_amount);
+    }
+
+    /// @inheritdoc IGateway
+    function singleDeposit(SwapInput[2] calldata inputs) external payable override whenNotPaused nonReentrant {
+        _singleDeposit(inputs);
+    }
+
+    /// @inheritdoc IGateway
+    function singleDepositWithPermit(
+        SwapInput[2] calldata inputs,
+        uint256 deadline,
+        uint8 permitV,
+        bytes32 permitR,
+        bytes32 permitS
+    ) external override whenNotPaused nonReentrant {
+        IERC20WithPermit(inputs[0].fromToken).permit(
+            _msgSender(),
+            address(this),
+            inputs[0].fromTokenAmount + inputs[1].fromTokenAmount,
+            deadline,
+            permitV,
+            permitR,
+            permitS
         );
-        require(inputs[0].fromToken == inputs[1].fromToken, "GW003");
-        require(supportTokens[inputs[0].fromToken], "GW004");
-        require(!frozenTokens[inputs[0].fromToken], "GW005");
-
-        if (inputs[0].fromToken != ETH_MOCK_ADDRESS) {
-            TransferHelper.doTransferFrom(
-                inputs[0].fromToken,
-                _msgSender(),
-                address(this),
-                inputs[0].fromTokenAmount + inputs[1].fromTokenAmount
-            );
-        } else {
-            require(msg.value == inputs[0].fromTokenAmount + inputs[1].fromTokenAmount, "GW010");
-        }
-
-        uint256 swappedBTCAmount = inputs[0].fromToken == inputs[0].toToken ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
-        uint256 swappedETHAmount = inputs[1].fromToken == inputs[1].toToken ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
-
-        (uint256 needBTCAmount, uint256 needETHAmount, uint256 refundBTCAmount, uint256 refundETHAmount) = _calculateReserveCombination(
-            swappedBTCAmount,
-            swappedETHAmount
-        );
-        uint256 hopeAmount = (needETHAmount * K_FACTOR) / (K * ETH_TO_BTC_RATIO);
-
-        VAULT.deposit(_msgSender(), hopeAmount);
-
-        TransferHelper.doTransferOut(address(WBTC), address(VAULT), needBTCAmount);
-
-        if (inputs[1].toToken == address(stETH)) {
-            TransferHelper.doTransferOut(address(stETH), address(VAULT), needETHAmount);
-        } else {
-            if (inputs[1].toToken == address(WETH)) {
-                TransferHelper.doTransferOut(address(WETH), address(this), needETHAmount);
-                WETH.withdraw(needETHAmount);
-            }
-            VAULT.stakeETH{value: needETHAmount}();
-        }
-
-        if (refundBTCAmount > 0) {
-            TransferHelper.doTransferOut(address(WBTC), _msgSender(), refundBTCAmount);
-        }
-        if (refundETHAmount > 0) {
-            IERC20(inputs[1].toToken).universalTransfer(_msgSender(), refundETHAmount);
-        }
+        _singleDeposit(inputs);
     }
 
-    /**
-     * @dev Withdraws assets from vault and burns hope tokens.
-     * @param _amount Amount of hope tokens to burn.
-     * @param inputs Array of SwapInput struct instances.
-     */
-    function singleWithdraw(uint256 _amount, SwapInput[] calldata inputs) external whenNotPaused nonReentrant {
-        require(inputs.length == 2, "GW001");
-        require(inputs[0].fromToken == address(WBTC) && inputs[1].fromToken == address(stETH), "GW002");
-        require(inputs[0].toToken == inputs[1].toToken, "GW006");
-        require(supportTokens[inputs[0].toToken], "GW007");
-        require(!frozenTokens[inputs[0].toToken], "GW008");
-
-        TransferHelper.doTransferFrom(address(HOPE), _msgSender(), address(VAULT), _amount);
-
-        uint256 burnAmount = VAULT.withdraw(_amount);
-
-        (uint256 wbtcAmount, uint256 stEthAmount) = _calculateReserveAmount(burnAmount);
-        VAULT.safeTransferToken(address(WBTC), address(this), wbtcAmount);
-        VAULT.safeTransferToken(address(stETH), address(this), stEthAmount);
-
-        uint256 withdrawAmountBySwapBTC = inputs[0].fromToken == inputs[0].toToken ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
-        uint256 withdrawAmountBySwapETH = inputs[1].fromToken == inputs[1].toToken ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
-
-        IERC20(inputs[0].toToken).universalTransfer(_msgSender(), withdrawAmountBySwapBTC + withdrawAmountBySwapETH);
+    /// @inheritdoc IGateway
+    function singleWithdraw(uint256 _amount, SwapInput[2] calldata inputs) external override whenNotPaused nonReentrant {
+        _singleWithdraw(_amount, inputs);
     }
 
-    /**
-     * @dev Updates the support status of a specific token.
-     * @param _token Address of the token.
-     * @param _isSupported New support status.
-     */
-    function updateSupportToken(address _token, bool _isSupported) public onlyOwner {
+    /// @inheritdoc IGateway
+    function singleWithdrawWithPermit(
+        uint256 _amount,
+        uint256 deadline,
+        uint8 permitV,
+        bytes32 permitR,
+        bytes32 permitS,
+        SwapInput[2] calldata inputs
+    ) external override whenNotPaused nonReentrant {
+        IERC20WithPermit(address(HOPE)).permit(_msgSender(), address(this), _amount, deadline, permitV, permitR, permitS);
+        _singleWithdraw(_amount, inputs);
+    }
+
+    /// @inheritdoc IGateway
+    function updateSupportToken(address _token, bool _isSupported) public override onlyOwner {
         supportTokens[_token] = _isSupported;
         emit UpdateSupportedToken(_token, _isSupported);
     }
 
-    /**
-     * @dev Updates the support status of multiple tokens in bulk.
-     * @param _tokens Array of token addresses.
-     * @param _isSupported Array of new support statuses.
-     */
-    function updateSupportTokens(address[] calldata _tokens, bool[] calldata _isSupported) external onlyOwner {
+    /// @inheritdoc IGateway
+    function updateSupportTokens(address[] calldata _tokens, bool[] calldata _isSupported) external override onlyOwner {
         require(_tokens.length == _isSupported.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateSupportToken(_tokens[i], _isSupported[i]);
         }
     }
 
-    /**
-     * @dev Updates the frozen status of a specific token.
-     * @param _token Address of the token.
-     * @param _isFrozen New frozen status.
-     */
-    function updateFrozenToken(address _token, bool _isFrozen) public onlyOwner {
+    /// @inheritdoc IGateway
+    function updateFrozenToken(address _token, bool _isFrozen) public override onlyOwner {
         frozenTokens[_token] = _isFrozen;
         emit UpdateFrozenToken(_token, _isFrozen);
     }
 
-    /**
-     * @dev Updates the frozen status of multiple tokens in bulk.
-     * @param _tokens Array of token addresses.
-     * @param _isFrozen Array of new frozen statuses.
-     */
-    function updateFrozenTokens(address[] calldata _tokens, bool[] calldata _isFrozen) external onlyOwner {
+    /// @inheritdoc IGateway
+    function updateFrozenTokens(address[] calldata _tokens, bool[] calldata _isFrozen) external override onlyOwner {
         require(_tokens.length == _isFrozen.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateFrozenToken(_tokens[i], _isFrozen[i]);
         }
     }
 
-    /**
-     * @dev Updates the white listed status of a specific dex.
-     * @param _dex Address of the dex.
-     * @param _isWhiteList White listed status.
-     */
-    function updateSwapWhiteList(address _dex, bool _isWhiteList) public onlyOwner {
+    /// @inheritdoc IGateway
+    function updateSwapWhiteList(address _dex, bool _isWhiteList) public override onlyOwner {
         isSwapWhiteListed[_dex] = _isWhiteList;
         emit UpdateSwapWhiteListed(_dex, _isWhiteList);
     }
 
-    /**
-     * @dev Updates the white listed status of multiple dex in bulk.
-     * @param _dexList Array of dex addresses.
-     * @param _isWhiteList Array of white listed statuses.
-     */
-    function updateSwapWhiteLists(address[] calldata _dexList, bool[] calldata _isWhiteList) external onlyOwner {
+    /// @inheritdoc IGateway
+    function updateSwapWhiteLists(address[] calldata _dexList, bool[] calldata _isWhiteList) external override onlyOwner {
         require(_dexList.length == _isWhiteList.length, "GW009");
         for (uint256 i = 0; i < _dexList.length; i++) {
             updateSwapWhiteList(_dexList[i], _isWhiteList[i]);
         }
     }
 
-    /**
-     * @dev Checks if an address has the emergency manager role.
-     * @param _manager Address to check.
-     * @return bool indicating if the address has the emergency manager role.
-     */
-    function isEmergencyManager(address _manager) external view returns (bool) {
+    /// @inheritdoc IGateway
+    function isEmergencyManager(address _manager) external view override returns (bool) {
         return hasRole(EMERGENCY_MANAGER_ROLE, _manager);
     }
 
-    /**
-     * @dev Adds an address to the emergency manager role.
-     * @param _manager Address to add as an emergency manager.
-     */
-    function addEmergencyManager(address _manager) external onlyOwner {
+    /// @inheritdoc IGateway
+    function addEmergencyManager(address _manager) external override onlyOwner {
         _grantRole(EMERGENCY_MANAGER_ROLE, _manager);
     }
 
-    /**
-     * @dev Removes an address from the emergency manager role.
-     * @param _manager Address to remove from the emergency manager role.
-     */
-    function removeEmergencyManager(address _manager) external onlyOwner {
+    /// @inheritdoc IGateway
+    function removeEmergencyManager(address _manager) external override onlyOwner {
         _revokeRole(EMERGENCY_MANAGER_ROLE, _manager);
     }
 
@@ -303,6 +213,109 @@ contract Gateway is Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
      */
     function unpause() external onlyRole(EMERGENCY_MANAGER_ROLE) {
         _unpause();
+    }
+
+    /**
+     * @dev Burn HOPE with Asset Combination
+     * @notice Only support withdraw WBTC & stETH
+     * @param _amount Amount of HOPE to burn
+     */
+    function _combinationWithdraw(uint256 _amount) internal {
+        _payOrTransfer(address(HOPE), _msgSender(), address(VAULT), _amount);
+        uint256 burnAmount = VAULT.withdraw(_amount);
+
+        (uint256 wbtcAmount, uint256 stEthAmount) = _calculateReserveAmount(burnAmount);
+        VAULT.safeTransferToken(address(WBTC), _msgSender(), wbtcAmount);
+        VAULT.safeTransferToken(address(stETH), _msgSender(), stEthAmount);
+    }
+
+    /**
+     * @dev Deposits assets into vault and mints hope tokens.
+     * @param inputs Array of SwapInput struct instances.
+     */
+    function _singleDeposit(SwapInput[2] calldata inputs) internal {
+        require(inputs.length == 2, "GW001");
+        require(
+            inputs[0].toToken == address(WBTC) &&
+                (inputs[1].toToken == ETH_MOCK_ADDRESS || inputs[1].toToken == address(WETH) || inputs[1].toToken == address(stETH)),
+            "GW002"
+        );
+        require(inputs[0].fromToken == inputs[1].fromToken, "GW003");
+        require(supportTokens[inputs[0].fromToken], "GW004");
+        require(!frozenTokens[inputs[0].fromToken], "GW005");
+
+        if (inputs[0].fromToken != ETH_MOCK_ADDRESS) {
+            _payOrTransfer(inputs[0].fromToken, _msgSender(), address(this), inputs[0].fromTokenAmount + inputs[1].fromTokenAmount);
+        } else {
+            require(msg.value == inputs[0].fromTokenAmount + inputs[1].fromTokenAmount, "GW010");
+        }
+
+        uint256 swappedBTCAmount = inputs[0].fromToken == inputs[0].toToken ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
+        uint256 swappedETHAmount = inputs[1].fromToken == inputs[1].toToken ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
+
+        (uint256 needBTCAmount, uint256 needETHAmount, uint256 refundBTCAmount, uint256 refundETHAmount) = _calculateReserveCombination(
+            swappedBTCAmount,
+            swappedETHAmount
+        );
+        uint256 hopeAmount = (needETHAmount * K_FACTOR) / (K * ETH_TO_BTC_RATIO);
+
+        VAULT.deposit(_msgSender(), hopeAmount);
+
+        _payOrTransfer(address(WBTC), address(this), address(VAULT), needBTCAmount);
+
+        if (inputs[1].toToken == address(stETH)) {
+            _payOrTransfer(address(stETH), address(this), address(VAULT), needETHAmount);
+        } else {
+            if (inputs[1].toToken == address(WETH)) {
+                WETH.withdraw(needETHAmount);
+            }
+            VAULT.stakeETH{value: needETHAmount}();
+        }
+
+        if (refundBTCAmount > 0) {
+            _payOrTransfer(address(WBTC), address(this), _msgSender(), refundBTCAmount);
+        }
+        if (refundETHAmount > 0) {
+            _payOrTransfer(inputs[1].toToken, address(this), _msgSender(), refundETHAmount);
+        }
+    }
+
+    /**
+     * @dev Withdraws assets from vault and burns hope tokens.
+     * @param _amount Amount of hope tokens to burn.
+     * @param inputs Array of SwapInput struct instances.
+     */
+    function _singleWithdraw(uint256 _amount, SwapInput[2] calldata inputs) internal {
+        require(inputs.length == 2, "GW001");
+        require(inputs[0].fromToken == address(WBTC) && inputs[1].fromToken == address(stETH), "GW002");
+        require(inputs[0].toToken == inputs[1].toToken, "GW006");
+        require(supportTokens[inputs[0].toToken], "GW007");
+        require(!frozenTokens[inputs[0].toToken], "GW008");
+
+        _payOrTransfer(address(HOPE), _msgSender(), address(VAULT), _amount);
+
+        uint256 burnAmount = VAULT.withdraw(_amount);
+
+        (uint256 wbtcAmount, uint256 stEthAmount) = _calculateReserveAmount(burnAmount);
+        VAULT.safeTransferToken(address(WBTC), address(this), wbtcAmount);
+        VAULT.safeTransferToken(address(stETH), address(this), stEthAmount);
+
+        uint256 withdrawAmountBySwapBTC = inputs[0].fromToken == inputs[0].toToken ? inputs[0].fromTokenAmount : _aggregatorSwap(inputs[0]);
+        uint256 withdrawAmountBySwapETH = inputs[1].fromToken == inputs[1].toToken ? inputs[1].fromTokenAmount : _aggregatorSwap(inputs[1]);
+
+        _payOrTransfer(inputs[0].toToken, address(this), _msgSender(), withdrawAmountBySwapBTC + withdrawAmountBySwapETH);
+    }
+
+    /**
+     * @notice Either performs a regular payment or transferFrom on Permit2, depending on the payer address
+     * @param token The token to transfer
+     * @param payer The address to pay for the transfer
+     * @param recipient The recipient of the transfer
+     * @param amount The amount to transfer
+     */
+    function _payOrTransfer(address token, address payer, address recipient, uint256 amount) internal {
+        if (payer == address(this)) IERC20(token).universalTransfer(recipient, amount);
+        else TransferHelper.doTransferFrom(token, payer, recipient, amount);
     }
 
     /**

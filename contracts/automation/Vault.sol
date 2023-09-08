@@ -109,12 +109,6 @@ contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
     }
 
     /// @inheritdoc IVault
-    function rescueTokens(address _token, address _recipient, uint256 _amount) external override onlyRole(VAULT_MANAGER_ROLE) {
-        require(_token != address(WBTC) && _token != address(stETH), "VA005");
-        TransferHelper.doTransferOut(_token, _recipient, _amount);
-    }
-
-    /// @inheritdoc IVault
     function updateGateway(address _gateway) external override onlyOwner {
         address oldGateway = gateway;
         gateway = _gateway;

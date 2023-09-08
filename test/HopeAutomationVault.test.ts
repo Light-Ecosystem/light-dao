@@ -438,51 +438,5 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         );
       });
     });
-
-    describe("rescue token", () => {
-      it("rescue token will revert when not vault manager", async () => {
-        const { owner, addr1, vault, wbtc, stETH } = await loadFixture(
-          deployVaultFixture
-        );
-        await expect(vault.rescueTokens(stETH.address, addr1.address, 1)).to.be
-          .reverted;
-      });
-      it("rescue token will revert when transfer reserve asset", async () => {
-        const { owner, addr1, vault, wbtc, stETH } = await loadFixture(
-          deployVaultFixture
-        );
-        await vault.addVaultManager(owner.address);
-        await wbtc["mint(address,uint256)"](vault.address, 1);
-        await expect(
-          vault.rescueTokens(wbtc.address, addr1.address, 1)
-        ).to.be.revertedWith("VA005");
-      });
-      it("rescue token will revert when transfer reserve asset", async () => {
-        const { owner, addr1, vault, wbtc, stETH } = await loadFixture(
-          deployVaultFixture
-        );
-        await vault.addVaultManager(owner.address);
-        await stETH.submit(ZERO_ADDRESS, { value: 1 });
-        await expect(
-          vault.rescueTokens(stETH.address, addr1.address, 1)
-        ).to.be.revertedWith("VA005");
-      });
-      it("rescue USDT", async () => {
-        const { owner, addr1, vault, usdt } = await loadFixture(
-          deployVaultFixture
-        );
-        await vault.addVaultManager(owner.address);
-
-        const mintUSDTAmount = 1001;
-        await usdt["mint(address,uint256)"](vault.address, mintUSDTAmount);
-
-        expect(await usdt.balanceOf(vault.address)).to.be.equal(mintUSDTAmount);
-
-        await vault.rescueTokens(usdt.address, addr1.address, mintUSDTAmount);
-
-        expect(await usdt.balanceOf(vault.address)).to.be.equal(0);
-        expect(await usdt.balanceOf(addr1.address)).to.be.equal(mintUSDTAmount);
-      });
-    });
   });
 });

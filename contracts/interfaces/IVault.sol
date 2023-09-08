@@ -52,14 +52,6 @@ interface IVault {
     function claimHOPE(address _recipient) external;
 
     /**
-     * @notice Rescue and transfer tokens locked in this contract
-     * @param _token The address of the token
-     * @param _recipient The address of the recipient
-     * @param _amount The amount of token to transfer
-     */
-    function rescueTokens(address _token, address _recipient, uint256 _amount) external;
-
-    /**
      * @dev Update the gateway address that can call certain functions.
      * @param _gateway The new gateway address.
      */

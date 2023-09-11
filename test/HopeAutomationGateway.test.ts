@@ -157,6 +157,20 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
           gateway.connect(alice).combinationDeposit(mintAmount, ONE_ADDRESS)
         ).to.revertedWith("GW000");
       });
+      it("mint will revert when amount too low", async () => {
+        const { alice, wbtc, gateway } = await loadFixture(
+          deployGatewayFixture
+        );
+        const mintAmount = parseUnits("0.0009", 18);
+
+        await wbtc.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT);
+
+        await expect(
+          gateway
+            .connect(alice)
+            .combinationDeposit(mintAmount, ETH_MOCK_ADDRESS)
+        ).to.revertedWith("GW010");
+      });
       it("mint with deposit wbtc & eth", async () => {
         const { alice, hope, wbtc, weth, stETH, gateway, vault } =
           await loadFixture(deployGatewayFixture);
@@ -292,6 +306,35 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
       });
     });
     describe("Withdraw", async () => {
+      it("burn will revert when amount too low", async () => {
+        const { owner, alice, hope, wbtc, weth, stETH, gateway, vault } =
+          await loadFixture(deployGatewayFixture);
+
+        const mintAmount = parseUnits("1", 18);
+
+        await waitForTx(
+          await wbtc.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT)
+        );
+        await waitForTx(
+          await stETH.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT)
+        );
+
+        await waitForTx(
+          await gateway
+            .connect(alice)
+            .combinationDeposit(mintAmount, stETH.address)
+        );
+
+        expect(await hope.balanceOf(alice.address)).to.be.equal(mintAmount);
+
+        await hope.connect(alice).approve(gateway.address, mintAmount);
+
+        const burnAmount = parseUnits("0.0009", 18);
+
+        await expect(
+          gateway.connect(alice).combinationWithdraw(burnAmount)
+        ).to.revertedWith("GW010");
+      });
       it("burn with withdraw wbtc & stETH", async () => {
         const { owner, alice, hope, wbtc, weth, stETH, gateway, vault } =
           await loadFixture(deployGatewayFixture);
@@ -559,6 +602,51 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         await expect(gateway.combinationWithdraw(1)).to.revertedWith(
           "Pausable: paused"
         );
+      });
+    });
+    describe("rescue asset", () => {
+      it("rescue ETH", async () => {
+        const { alice, bob, gateway, wbtc } = await loadFixture(
+          deployGatewayFixture
+        );
+
+        const mintAmount = parseUnits("7503.15", 18);
+
+        await waitForTx(
+          await wbtc.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT)
+        );
+
+        const [wbtcAmount, ethAmount] = calculateReserveAmount(mintAmount);
+
+        const bobEthBalanceBefore = await bob.getBalance();
+
+        await waitForTx(
+          await gateway
+            .connect(alice)
+            .combinationDeposit(mintAmount, ETH_MOCK_ADDRESS, {
+              value: ethAmount.mul(2),
+            })
+        );
+
+        await gateway.rescueTokens(ETH_MOCK_ADDRESS, bob.address, ethAmount);
+        expect(await bob.getBalance()).to.be.equal(
+          bobEthBalanceBefore.add(ethAmount)
+        );
+      });
+      it("rescue ERC20", async () => {
+        const { bob, gateway, usdt } = await loadFixture(deployGatewayFixture);
+
+        const mintUSDTAmount = 1001;
+        await usdt["mint(address,uint256)"](gateway.address, mintUSDTAmount);
+
+        expect(await usdt.balanceOf(gateway.address)).to.be.equal(
+          mintUSDTAmount
+        );
+
+        await gateway.rescueTokens(usdt.address, bob.address, mintUSDTAmount);
+
+        expect(await usdt.balanceOf(gateway.address)).to.be.equal(0);
+        expect(await usdt.balanceOf(bob.address)).to.be.equal(mintUSDTAmount);
       });
     });
   });

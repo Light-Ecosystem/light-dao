@@ -62,50 +62,50 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /// @inheritdoc IGateway
-    function combinationDeposit(uint256 _amount, address _depositToken) external payable override whenNotPaused nonReentrant {
-        require(_depositToken == ETH_MOCK_ADDRESS || _depositToken == address(WETH) || _depositToken == address(stETH), "GW000");
-
-        VAULT.deposit(_msgSender(), _amount);
-
-        (uint256 btcAmount, uint256 ethAmount) = _calculateReserveAmount(_amount);
-
-        _payOrTransfer(address(WBTC), _msgSender(), address(VAULT), btcAmount);
-
-        if (_depositToken == address(stETH)) {
-            _payOrTransfer(address(stETH), _msgSender(), address(VAULT), ethAmount);
-        } else {
-            if (_depositToken == address(WETH)) {
-                _payOrTransfer(address(WETH), _msgSender(), address(this), ethAmount);
-                WETH.withdraw(ethAmount);
-            }
-            VAULT.stakeETH{value: ethAmount}();
-        }
+    function combinationDeposit(uint256 _mintAmount, address _ethCorrelatedToken) external payable override whenNotPaused nonReentrant {
+        (uint256 wbtcAmount, uint256 ethAmount) = _calculateReserveAmount(_mintAmount);
+        _combinationDeposit(_mintAmount, _ethCorrelatedToken, wbtcAmount, ethAmount);
     }
 
     /// @inheritdoc IGateway
-    function combinationWithdraw(uint256 _amount) external override whenNotPaused nonReentrant {
-        _combinationWithdraw(_amount);
-    }
-
-    /// @inheritdoc IGateway
-    function combinationWithdrawWithPermit(
-        uint256 _amount,
+    function combinationDepositWithPermit(
+        uint256 _mintAmount,
+        address _ethCorrelatedToken,
         uint256 _deadline,
         uint8 _permitV,
         bytes32 _permitR,
         bytes32 _permitS
     ) external override whenNotPaused nonReentrant {
-        IERC20WithPermit(address(HOPE)).permit(_msgSender(), address(this), _amount, _deadline, _permitV, _permitR, _permitS);
-        _combinationWithdraw(_amount);
+        (uint256 wbtcAmount, uint256 ethAmount) = _calculateReserveAmount(_mintAmount);
+        IERC20WithPermit(_ethCorrelatedToken).permit(_msgSender(), address(this), ethAmount, _deadline, _permitV, _permitR, _permitS);
+        _combinationDeposit(_mintAmount, _ethCorrelatedToken, wbtcAmount, ethAmount);
     }
 
     /// @inheritdoc IGateway
-    function singleDeposit(SwapInput[2] calldata _inputs) external payable override whenNotPaused nonReentrant {
-        _singleDeposit(_inputs);
+    function combinationWithdraw(uint256 _burnAmount) external override whenNotPaused nonReentrant {
+        _combinationWithdraw(_burnAmount);
+    }
+
+    /// @inheritdoc IGateway
+    function combinationWithdrawWithPermit(
+        uint256 _burnAmount,
+        uint256 _deadline,
+        uint8 _permitV,
+        bytes32 _permitR,
+        bytes32 _permitS
+    ) external override whenNotPaused nonReentrant {
+        IERC20WithPermit(address(HOPE)).permit(_msgSender(), address(this), _burnAmount, _deadline, _permitV, _permitR, _permitS);
+        _combinationWithdraw(_burnAmount);
+    }
+
+    /// @inheritdoc IGateway
+    function singleDeposit(uint256 _mintAmount, SwapInput[2] calldata _inputs) external payable override whenNotPaused nonReentrant {
+        _singleDeposit(_mintAmount, _inputs);
     }
 
     /// @inheritdoc IGateway
     function singleDepositWithPermit(
+        uint256 _mintAmount,
         SwapInput[2] calldata _inputs,
         uint256 _deadline,
         uint8 _permitV,
@@ -121,25 +121,25 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
             _permitR,
             _permitS
         );
-        _singleDeposit(_inputs);
+        _singleDeposit(_mintAmount, _inputs);
     }
 
     /// @inheritdoc IGateway
-    function singleWithdraw(uint256 _amount, SwapInput[2] calldata _inputs) external override whenNotPaused nonReentrant {
-        _singleWithdraw(_amount, _inputs);
+    function singleWithdraw(uint256 _burnAmount, SwapInput[2] calldata _inputs) external override whenNotPaused nonReentrant {
+        _singleWithdraw(_burnAmount, _inputs);
     }
 
     /// @inheritdoc IGateway
     function singleWithdrawWithPermit(
-        uint256 _amount,
+        uint256 _burnAmount,
         uint256 _deadline,
         uint8 _permitV,
         bytes32 _permitR,
         bytes32 _permitS,
         SwapInput[2] calldata _inputs
     ) external override whenNotPaused nonReentrant {
-        IERC20WithPermit(address(HOPE)).permit(_msgSender(), address(this), _amount, _deadline, _permitV, _permitR, _permitS);
-        _singleWithdraw(_amount, _inputs);
+        IERC20WithPermit(address(HOPE)).permit(_msgSender(), address(this), _burnAmount, _deadline, _permitV, _permitR, _permitS);
+        _singleWithdraw(_burnAmount, _inputs);
     }
 
     /// @inheritdoc IGateway
@@ -200,6 +200,11 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /// @inheritdoc IGateway
+    function rescueTokens(address _token, address _recipient, uint256 _amount) external override onlyOwner {
+        IERC20(_token).universalTransfer(_recipient, _amount);
+    }
+
+    /// @inheritdoc IGateway
     function pause() external override onlyRole(EMERGENCY_MANAGER_ROLE) {
         _pause();
     }
@@ -210,24 +215,58 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /**
+     * @dev Mint HOPE with Asset Combination
+     * @param _mintAmount Amount of HOPE to mint
+     * @param _ethCorrelatedToken ETH correlated asset
+     * @param _wbtcAmount Amount of WBTC reserve
+     * @param _ethAmount Amount of ETH correlated reserve
+     */
+    function _combinationDeposit(uint256 _mintAmount, address _ethCorrelatedToken, uint256 _wbtcAmount, uint256 _ethAmount) internal {
+        require(
+            _ethCorrelatedToken == ETH_MOCK_ADDRESS || _ethCorrelatedToken == address(WETH) || _ethCorrelatedToken == address(stETH),
+            "GW000"
+        );
+        require(_wbtcAmount > 0 && _ethAmount > 0, "GW010");
+
+        VAULT.deposit(_msgSender(), _mintAmount);
+
+        _payOrTransfer(address(WBTC), _msgSender(), address(VAULT), _wbtcAmount);
+
+        if (_ethCorrelatedToken == address(stETH)) {
+            _payOrTransfer(address(stETH), _msgSender(), address(VAULT), _ethAmount);
+        } else {
+            if (_ethCorrelatedToken == address(WETH)) {
+                _payOrTransfer(address(WETH), _msgSender(), address(this), _ethAmount);
+                WETH.withdraw(_ethAmount);
+            }
+            VAULT.stakeETH{value: _ethAmount}();
+        }
+        emit CombinationDeposit(_msgSender(), _mintAmount, _ethCorrelatedToken, _wbtcAmount, _ethAmount);
+    }
+
+    /**
      * @dev Burn HOPE with Asset Combination
      * @notice Only support withdraw WBTC & stETH
-     * @param _amount Amount of HOPE to burn
+     * @param _burnAmount Amount of HOPE to burn
      */
-    function _combinationWithdraw(uint256 _amount) internal {
-        _payOrTransfer(address(HOPE), _msgSender(), address(VAULT), _amount);
-        uint256 burnAmount = VAULT.withdraw(_amount);
+    function _combinationWithdraw(uint256 _burnAmount) internal {
+        _payOrTransfer(address(HOPE), _msgSender(), address(VAULT), _burnAmount);
+        uint256 burnAmount = VAULT.withdraw(_burnAmount);
 
         (uint256 wbtcAmount, uint256 stEthAmount) = _calculateReserveAmount(burnAmount);
+        require(wbtcAmount > 0 && stEthAmount > 0, "GW010");
+
         VAULT.safeTransferToken(address(WBTC), _msgSender(), wbtcAmount);
         VAULT.safeTransferToken(address(stETH), _msgSender(), stEthAmount);
+        emit CombinationWithdraw(_msgSender(), _burnAmount, wbtcAmount, stEthAmount);
     }
 
     /**
      * @dev Deposits assets into vault and mints hope tokens.
+     * @param _mintAmount Amount of HOPE to mint
      * @param _inputs Array of SwapInput struct instances.
      */
-    function _singleDeposit(SwapInput[2] calldata _inputs) internal {
+    function _singleDeposit(uint256 _mintAmount, SwapInput[2] calldata _inputs) internal {
         require(_inputs.length == 2, "GW001");
         require(
             _inputs[0].toToken == address(WBTC) &&
@@ -247,15 +286,16 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
         uint256 swappedBTCAmount = _inputs[0].fromToken == _inputs[0].toToken ? _inputs[0].fromTokenAmount : _aggregatorSwap(_inputs[0]);
         uint256 swappedETHAmount = _inputs[1].fromToken == _inputs[1].toToken ? _inputs[1].fromTokenAmount : _aggregatorSwap(_inputs[1]);
 
-        (uint256 needBTCAmount, uint256 needETHAmount, uint256 refundBTCAmount, uint256 refundETHAmount) = _calculateReserveCombination(
-            swappedBTCAmount,
-            swappedETHAmount
-        );
-        uint256 hopeAmount = (needETHAmount * K_FACTOR) / (K * ETH_TO_BTC_RATIO);
+        (uint256 needWBTCAmount, uint256 needETHAmount) = _calculateReserveAmount(_mintAmount);
+        require(needWBTCAmount > 0 && needETHAmount > 0, "GW010");
+        require(swappedBTCAmount >= needWBTCAmount && swappedETHAmount >= needETHAmount, "GW010");
 
-        VAULT.deposit(_msgSender(), hopeAmount);
+        uint256 refundBTCAmount = swappedBTCAmount.sub(needWBTCAmount);
+        uint256 refundETHAmount = swappedETHAmount.sub(needETHAmount);
 
-        _payOrTransfer(address(WBTC), address(this), address(VAULT), needBTCAmount);
+        VAULT.deposit(_msgSender(), _mintAmount);
+
+        _payOrTransfer(address(WBTC), address(this), address(VAULT), needWBTCAmount);
 
         if (_inputs[1].toToken == address(stETH)) {
             _payOrTransfer(address(stETH), address(this), address(VAULT), needETHAmount);
@@ -272,25 +312,28 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
         if (refundETHAmount > 0) {
             _payOrTransfer(_inputs[1].toToken, address(this), _msgSender(), refundETHAmount);
         }
+        emit SingleDeposit(_msgSender(), _mintAmount, _inputs[0].fromToken, _inputs[0].fromTokenAmount + _inputs[1].fromTokenAmount);
     }
 
     /**
      * @dev Withdraws assets from vault and burns hope tokens.
-     * @param _amount Amount of hope tokens to burn.
+     * @param _burnAmount Amount of Hope to burn.
      * @param _inputs Array of SwapInput struct instances.
      */
-    function _singleWithdraw(uint256 _amount, SwapInput[2] calldata _inputs) internal {
+    function _singleWithdraw(uint256 _burnAmount, SwapInput[2] calldata _inputs) internal {
         require(_inputs.length == 2, "GW001");
         require(_inputs[0].fromToken == address(WBTC) && _inputs[1].fromToken == address(stETH), "GW002");
         require(_inputs[0].toToken == _inputs[1].toToken, "GW006");
         require(supportTokens[_inputs[0].toToken], "GW007");
         require(!frozenTokens[_inputs[0].toToken], "GW008");
 
-        _payOrTransfer(address(HOPE), _msgSender(), address(VAULT), _amount);
+        _payOrTransfer(address(HOPE), _msgSender(), address(VAULT), _burnAmount);
 
-        uint256 burnAmount = VAULT.withdraw(_amount);
+        uint256 burnAmount = VAULT.withdraw(_burnAmount);
 
         (uint256 wbtcAmount, uint256 stEthAmount) = _calculateReserveAmount(burnAmount);
+        require(wbtcAmount > 0 && stEthAmount > 0, "GW010");
+
         VAULT.safeTransferToken(address(WBTC), address(this), wbtcAmount);
         VAULT.safeTransferToken(address(stETH), address(this), stEthAmount);
 
@@ -302,6 +345,7 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
             : _aggregatorSwap(_inputs[1]);
 
         _payOrTransfer(_inputs[0].toToken, address(this), _msgSender(), withdrawAmountBySwapBTC + withdrawAmountBySwapETH);
+        emit SingleWithdraw(_msgSender(), _burnAmount, _inputs[0].toToken, withdrawAmountBySwapBTC + withdrawAmountBySwapETH);
     }
 
     /**
@@ -355,30 +399,14 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
         ethAmount = wbtcAmount.mul(wbtcConversionFactor).mul(ETH_TO_BTC_RATIO);
     }
 
-    /**
-     * @dev Calculate BTC and ETH amounts required for reserve combination
-     * @param _btcAmount BTC amount
-     * @param _ethAmount ETH amount
-     * @return Required BTC amount
-     * @return Required ETH amount
-     * @return Returned BTC amount
-     * @return Returned ETH amount
-     */
-    function _calculateReserveCombination(
-        uint256 _btcAmount,
-        uint256 _ethAmount
+    function _calculateRefundAsset(
+        uint256 _wbtcAmount,
+        uint256 _ethAmount,
+        uint256 _wbtcAmountOfReserve,
+        uint256 _ethAmountOfReserve
     ) internal pure returns (uint256, uint256, uint256, uint256) {
-        require(_btcAmount > 0 && _ethAmount > 0, "GW010");
+        require(_wbtcAmount >= _wbtcAmountOfReserve && _ethAmount >= _ethAmountOfReserve, "GW010");
 
-        uint256 wbtcConversionFactor = 1e18 / 1e8;
-
-        uint256 ethNeeded = _btcAmount * ETH_TO_BTC_RATIO * wbtcConversionFactor;
-
-        if (ethNeeded <= _ethAmount) {
-            return (_btcAmount, ethNeeded, 0, _ethAmount - ethNeeded);
-        } else {
-            uint256 btcNeeded = _ethAmount / ETH_TO_BTC_RATIO / wbtcConversionFactor;
-            return (btcNeeded, _ethAmount, _btcAmount - btcNeeded, 0);
-        }
+        return (_wbtcAmountOfReserve, _ethAmountOfReserve, _wbtcAmount.sub(_wbtcAmountOfReserve), _ethAmount.sub(_ethAmountOfReserve));
     }
 }

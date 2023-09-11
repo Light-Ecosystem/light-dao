@@ -40,9 +40,9 @@ const config: HardhatUserConfig = {
       initialBaseFeePerGas: 8000000000,
       allowUnlimitedContractSize: false,
       chainId: 31337,
-      // forking: {
-      //   url: `${process.env.MAIN_NODE_URL}`,
-      // },
+      forking: {
+        url: `${process.env.MAIN_NODE_URL}`,
+      },
     },
     ganache: {
       gas: 4100000,

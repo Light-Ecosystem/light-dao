@@ -214,6 +214,8 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         await usdt.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT);
 
+        const mintAmount = parseUnits("3000", 18);
+
         const deadline = (await time.latest()) + 3600;
 
         const wbtcSwapInputValues = [
@@ -300,7 +302,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         await gateway
           .connect(alice)
-          .singleDeposit([wbtcSwapInput, ethSwapInput]);
+          .singleDeposit(mintAmount, [wbtcSwapInput, ethSwapInput]);
 
         expect(await wbtc.balanceOf(vault.address)).gt(0);
         expect(await stETH.balanceOf(vault.address)).gt(0);
@@ -314,6 +316,8 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true]);
 
         await weth.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT);
+
+        const mintAmount = parseUnits("3000", 18);
 
         const deadline = (await time.latest()) + 3600;
 
@@ -384,7 +388,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         await gateway
           .connect(alice)
-          .singleDeposit([wbtcSwapInput, ethSwapInput]);
+          .singleDeposit(mintAmount, [wbtcSwapInput, ethSwapInput]);
 
         expect(await wbtc.balanceOf(vault.address)).gt(0);
         expect(await stETH.balanceOf(vault.address)).gt(0);
@@ -396,6 +400,8 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         await gateway.updateSupportToken(ETH_MOCK_ADDRESS, true);
         await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true]);
+
+        const mintAmount = parseUnits("3000", 18);
 
         const deadline = (await time.latest()) + 3600;
 
@@ -465,7 +471,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         await gateway
           .connect(alice)
-          .singleDeposit([wbtcSwapInput, ethSwapInput], {
+          .singleDeposit(mintAmount, [wbtcSwapInput, ethSwapInput], {
             value: parseUnits("2", 18),
           });
 
@@ -506,6 +512,10 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         const deadline = (await time.latest()) + 3600;
 
+        // StETH is share token.
+        const sharesOf = await stETH.getSharesByPooledEth(ethAmount);
+        const actualStETHBalanceOf = await stETH.getPooledEthByShares(sharesOf);
+
         const wbtcSwapInputValues = [
           wbtcAmount,
           "1",
@@ -515,7 +525,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         ];
 
         const ethSwapInputValues = [
-          ethAmount,
+          actualStETHBalanceOf,
           "1",
           [ST_ETH_ADDRESS, WETH_ADDRESS, USDT_ADDRESS],
           gateway.address,
@@ -630,8 +640,12 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
 
         const deadline = (await time.latest()) + 3600;
 
+        // StETH is share token.
+        const sharesOf = await stETH.getSharesByPooledEth(ethAmount);
+        const actualStETHBalanceOf = await stETH.getPooledEthByShares(sharesOf);
+
         const ethSwapInputValues = [
-          ethAmount,
+          actualStETHBalanceOf,
           "1",
           [ST_ETH_ADDRESS, WETH_ADDRESS, WBTC_ADDRESS],
           gateway.address,

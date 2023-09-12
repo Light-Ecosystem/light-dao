@@ -11,7 +11,6 @@ import {IGateway} from "../interfaces/IGateway.sol";
 import {UniversalERC20} from "./UniversalERC20.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -37,8 +36,6 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
 
     mapping(address => bool) public isSwapWhiteListed;
 
-    using SafeCast for uint256;
-    using SafeCast for int256;
     using SafeMath for uint256;
     using UniversalERC20 for IERC20;
 

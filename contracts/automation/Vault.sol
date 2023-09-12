@@ -7,7 +7,6 @@ import {IWETH} from "../interfaces/IWETH.sol";
 import {IStETH} from "../interfaces/IStETH.sol";
 import {IVault} from "../interfaces/IVault.sol";
 import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
@@ -31,8 +30,6 @@ contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
 
     address public gateway;
 
-    using SafeCast for uint256;
-    using SafeCast for int256;
     using SafeMath for uint256;
 
     constructor(address _HOPE, address _WBTC, address _stETH) {

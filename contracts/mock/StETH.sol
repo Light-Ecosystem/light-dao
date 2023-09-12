@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0
 pragma solidity 0.8.17;
 
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract StETH is ERC20 {
+contract StETH is ERC20, Ownable2Step {
     event Referal(address indexed _sender, address _referal);
 
     uint256 private _bufferETH;
@@ -14,9 +15,15 @@ contract StETH is ERC20 {
     constructor() ERC20("Lido Staking ETH", "stETH") {}
 
     function submit(address _referal) external payable returns (uint256 sharesToMint) {
-        sharesToMint = _mintShares(msg.sender, msg.value);
+        sharesToMint = _mintShares(_msgSender(), msg.value);
         _bufferETH += msg.value;
-        emit Referal(msg.sender, _referal);
+        emit Referal(_msgSender(), _referal);
+    }
+
+    function withdraw(uint256 amount) external returns (uint256 sharesToBurn) {
+        sharesToBurn = _burnShares(_msgSender(), amount);
+        _bufferETH -= amount;
+        payable(_msgSender()).transfer(amount);
     }
 
     function totalSupply() public view virtual override returns (uint256) {
@@ -33,10 +40,16 @@ contract StETH is ERC20 {
         return _sharesToMint;
     }
 
+    function _burnShares(address _user, uint256 _amount) internal returns (uint256) {
+        uint256 _sharesToMint = getSharesByPooledEth(_amount);
+        _burn(_user, _sharesToMint);
+        return _sharesToMint;
+    }
+
     function transfer(address to, uint256 amount) public virtual override returns (bool) {
-        address owner = _msgSender();
+        address from = _msgSender();
         uint256 _sharesToTransfer = getSharesByPooledEth(amount);
-        _transfer(owner, to, _sharesToTransfer);
+        _transfer(from, to, _sharesToTransfer);
         return true;
     }
 
@@ -44,7 +57,7 @@ contract StETH is ERC20 {
         address spender = _msgSender();
         uint256 _sharesToTransfer = getSharesByPooledEth(amount);
         _spendAllowance(from, spender, _sharesToTransfer);
-        _transfer(from, to, amount);
+        _transfer(from, to, _sharesToTransfer);
         return true;
     }
 
@@ -62,7 +75,7 @@ contract StETH is ERC20 {
         return _sharesAmount.mul(_getTotalPooledEther()).div(_getTotalShares());
     }
 
-    function receiveRewards() external payable {
+    function receiveRewards() external payable onlyOwner {
         _bufferETH += msg.value;
     }
 

@@ -10,9 +10,8 @@ import {TransferHelper} from "light-lib/contracts/TransferHelper.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
-contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
+contract Vault is IVault, Ownable2Step, AccessControl {
     bytes32 public constant VAULT_MANAGER_ROLE = keccak256("VAULT_MANAGER_ROLE");
     uint256 public constant K = 10801805;
     uint256 public constant K_FACTOR = 1e12;
@@ -50,7 +49,7 @@ contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
     }
 
     /// @inheritdoc IVault
-    function deposit(address _user, uint256 _amount) external override onlyGateway whenNotPaused returns (uint256) {
+    function deposit(address _user, uint256 _amount) external override onlyGateway returns (uint256) {
         require(_amount > 0, "VA001");
         totalMinted += _amount;
 
@@ -67,7 +66,7 @@ contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
     }
 
     /// @inheritdoc IVault
-    function withdraw(uint256 _amount) external override onlyGateway whenNotPaused returns (uint256) {
+    function withdraw(uint256 _amount) external override onlyGateway returns (uint256) {
         require(_amount > 0, "VA001");
         uint256 fee = burnFeeRate > 0 ? (_amount * burnFeeRate) / FEE_RATE_FACTOR : 0;
 
@@ -146,16 +145,6 @@ contract Vault is IVault, Ownable2Step, AccessControl, Pausable {
     /// @inheritdoc IVault
     function removeVaultManager(address _manager) external override onlyOwner {
         _revokeRole(VAULT_MANAGER_ROLE, _manager);
-    }
-
-    /// @inheritdoc IVault
-    function pause() external override onlyRole(VAULT_MANAGER_ROLE) {
-        _pause();
-    }
-
-    /// @inheritdoc IVault
-    function unpause() external override onlyRole(VAULT_MANAGER_ROLE) {
-        _unpause();
     }
 
     /**

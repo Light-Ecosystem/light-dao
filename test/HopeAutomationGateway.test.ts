@@ -606,9 +606,11 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
     });
     describe("rescue asset", () => {
       it("rescue ETH", async () => {
-        const { alice, bob, gateway, wbtc } = await loadFixture(
+        const { owner, alice, bob, gateway, wbtc } = await loadFixture(
           deployGatewayFixture
         );
+
+        await waitForTx(await gateway.addVaultManager(owner.address));
 
         const mintAmount = parseUnits("7503.15", 18);
 
@@ -634,7 +636,11 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         );
       });
       it("rescue ERC20", async () => {
-        const { bob, gateway, usdt } = await loadFixture(deployGatewayFixture);
+        const { owner, bob, gateway, usdt } = await loadFixture(
+          deployGatewayFixture
+        );
+
+        await waitForTx(await gateway.addVaultManager(owner.address));
 
         const mintUSDTAmount = 1001;
         await usdt["mint(address,uint256)"](gateway.address, mintUSDTAmount);

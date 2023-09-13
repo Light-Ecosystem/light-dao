@@ -124,7 +124,7 @@ interface IGateway {
 
     /**
      * @dev Updates the support status of a specific token.
-     * @notice Only callable by addresses with the owner.
+     * @notice Only callable by addresses with the vault manager role.
      * @param _token Address of the token.
      * @param _isSupported New support status.
      */
@@ -132,7 +132,7 @@ interface IGateway {
 
     /**
      * @dev Updates the support status of multiple tokens in bulk.
-     * @notice Only callable by addresses with the owner.
+     * @notice Only callable by addresses with the vault manager role.
      * @param _tokens Array of token addresses.
      * @param _isSupported Array of new support statuses.
      */
@@ -140,7 +140,7 @@ interface IGateway {
 
     /**
      * @dev Updates the frozen status of a specific token.
-     * @notice Only callable by addresses with the owner.
+     * @notice Only callable by addresses with the emergency or vault manager role.
      * @param _token Address of the token.
      * @param _isFrozen New frozen status.
      */
@@ -148,7 +148,7 @@ interface IGateway {
 
     /**
      * @dev Updates the frozen status of multiple tokens in bulk.
-     * @notice Only callable by addresses with the owner.
+     * @notice Only callable by addresses with the emergency or vault manager role.
      * @param _tokens Array of token addresses.
      * @param _isFrozen Array of new frozen statuses.
      */
@@ -169,6 +169,27 @@ interface IGateway {
      * @param _isWhiteList Array of white listed statuses.
      */
     function updateSwapWhiteLists(address[] calldata _dexList, bool[] calldata _isWhiteList) external;
+
+    /**
+     * @dev Checks if an address has the vault manager role.
+     * @param _manager Address to check.
+     * @return bool indicating if the address has the vault manager role.
+     */
+    function isVaultManager(address _manager) external view returns (bool);
+
+    /**
+     * @dev Adds an address to the vault manager role.
+     * @notice Only callable by addresses with the owner.
+     * @param _manager Address to add as an vault manager.
+     */
+    function addVaultManager(address _manager) external;
+
+    /**
+     * @dev Removes an address from the vault manager role.
+     * @notice Only callable by addresses with the owner.
+     * @param _manager Address to remove from the vault manager role.
+     */
+    function removeVaultManager(address _manager) external;
 
     /**
      * @dev Checks if an address has the emergency manager role.
@@ -193,7 +214,7 @@ interface IGateway {
 
     /**
      * @notice Rescue and transfer tokens locked in this contract
-     * @notice Only callable by addresses with the owner.
+     * @notice Only callable by addresses with the vault manager role.
      * @param _token The address of the token
      * @param _recipient The address of the recipient
      * @param _amount The amount of token to transfer
@@ -202,13 +223,13 @@ interface IGateway {
 
     /**
      * @dev Pauses contract functionality.
-     * @notice Only callable by addresses with the emergency manager role.
+     * @notice Only callable by addresses with the emergency or vault manager role.
      */
     function pause() external;
 
     /**
      * @dev Unpauses contract functionality.
-     * @notice Only callable by addresses with the emergency manager role.
+     * @notice Only callable by addresses with the emergency or vault manager role.
      */
     function unpause() external;
 }

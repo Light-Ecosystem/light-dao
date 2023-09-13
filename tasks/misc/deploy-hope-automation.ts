@@ -12,6 +12,8 @@ task(
     throw new Error("INVALID_CHAIN_ID");
   }
 
+  const deployer = "0xcbeD65Db7E177D4875dDF5B67E13326A43a7B03f";
+
   // 1. Set address first
   const HOPE_ADDRESS = "0x70C8C67CfbE228c7437Ec586a751a408e23355F4";
   const WBTC_ADDRESS = "0xAF48F7c5866c0Fd63492bAc0b7816c1933c4D43a";
@@ -20,6 +22,8 @@ task(
   const USDT_ADDRESS = "0x76127399A0CafeDB59615A93A7ACF8552c1aEE4c";
   const USDC_ADDRESS = "0x06446E7Bd1f211C3189cfeCF3CDE488757eb5e4f";
   const DAI_ADDRESS = "0xAd4979AE4a275c4f6bc194c14C3b3CFBcD435abb";
+
+  const SWAP_WHITE_LISTED: string[] = [];
 
   // 2. Deloy Vault contract
   const Vault = await hre.ethers.getContractFactory("Vault");
@@ -43,6 +47,10 @@ task(
 
   // Configure vault gateway
   await waitForTx(await vault.updateGateway(gateway.address));
+  console.log(`- [INFO] Gateway: ${gateway.address} config successful!`);
+
+  // Grant deployer VaultManager role
+  await waitForTx(await gateway.addVaultManager(deployer));
 
   // Update gateway supported tokens
   await waitForTx(
@@ -59,4 +67,13 @@ task(
       [true, true, true, true, true, true, true]
     )
   );
+  console.log(`- [INFO] Support tokens config successful!`);
+
+  // Update swap white list
+  if (SWAP_WHITE_LISTED.length > 0) {
+    await waitForTx(
+      await gateway.updateSwapWhiteLists(SWAP_WHITE_LISTED, [true])
+    );
+    console.log(`- [INFO] Swap white listed config successful!`);
+  }
 });

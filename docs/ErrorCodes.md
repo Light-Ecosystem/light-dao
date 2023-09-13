@@ -106,7 +106,7 @@
 
 # HOPE Automation Mint & Burn Vault
 
-`VA000` : `The caller of the function is not gateway.`
+`VA000` : `Only callable by addresses with gateway.`
 `VA001` : `Invalid amount.`
 `VA002` : `No stETH to claim.`
 `VA003` : `No HOPE to claim.`
@@ -131,3 +131,4 @@
 `GW013` : `SwapAggregator: Not Whitelist Contract.`
 `GW014` : `SwapAggregator: External Swap execution Failed.`
 `GW015` : `SwapAggregator: Return amount is not enough.`
+`GW016` : `Only callable by addresses with the emergency or vault manager.`

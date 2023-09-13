@@ -206,9 +206,10 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         expect(await hope.balanceOf(alice.address)).to.be.equal(mintAmount);
       });
       it("single deposit of USDT", async () => {
-        const { alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
+        const { owner, alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
           await loadFixture(deployGatewayFixture);
 
+        await gateway.addVaultManager(owner.address);
         await gateway.updateSupportToken(USDT_ADDRESS, true);
         await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true]);
 
@@ -309,9 +310,9 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
       });
 
       it("single deposit of WETH", async () => {
-        const { alice, gateway, vault, wbtc, weth, hope, stETH } =
+        const { owner, alice, gateway, vault, wbtc, weth, hope, stETH } =
           await loadFixture(deployGatewayFixture);
-
+        await gateway.addVaultManager(owner.address);
         await gateway.updateSupportToken(WETH_ADDRESS, true);
         await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true]);
 
@@ -395,9 +396,10 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
       });
 
       it("single deposit of ETH", async () => {
-        const { alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
+        const { owner, alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
           await loadFixture(deployGatewayFixture);
 
+        await gateway.addVaultManager(owner.address);
         await gateway.updateSupportToken(ETH_MOCK_ADDRESS, true);
         await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true]);
 
@@ -481,7 +483,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
     });
     describe("Withdraw", () => {
       it("single withdraw of USDT", async () => {
-        const { alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
+        const { owner, alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
           await loadFixture(deployGatewayFixture);
 
         const mintAmount = parseUnits("7503.15", 18);
@@ -499,6 +501,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
             })
         );
 
+        await gateway.addVaultManager(owner.address);
         await waitForTx(await gateway.updateSupportToken(USDT_ADDRESS, true));
         await waitForTx(
           await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true])
@@ -610,7 +613,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
       });
 
       it("single withdraw of WBTC", async () => {
-        const { alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
+        const { owner, alice, gateway, vault, wbtc, weth, usdt, hope, stETH } =
           await loadFixture(deployGatewayFixture);
 
         const mintAmount = parseUnits("7503.15", 18);
@@ -627,6 +630,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
             })
         );
 
+        await gateway.addVaultManager(owner.address);
         await waitForTx(await gateway.updateSupportToken(WBTC_ADDRESS, true));
         await waitForTx(
           await gateway.updateSwapWhiteLists([UNISWAP_ROUTER_ADDRESS], [true])

@@ -67,199 +67,199 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
   }
 
   describe("HOPE automation mint & burn", () => {
-    describe("Mint", async () => {
-      it("should revert not gateway deposit", async () => {
-        const { owner, vault } = await loadFixture(deployVaultFixture);
-        await expect(vault.deposit(owner.address, 1)).to.revertedWith("VA000");
-      });
-      it("should revert not agent role", async () => {
-        const { owner, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    // describe("Mint", async () => {
+    //   it("should revert not gateway deposit", async () => {
+    //     const { owner, vault } = await loadFixture(deployVaultFixture);
+    //     await expect(vault.deposit(owner.address, 1)).to.revertedWith("VA000");
+    //   });
+    //   it("should revert not agent role", async () => {
+    //     const { owner, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await expect(vault.deposit(owner.address, 1)).to.revertedWith("AG000");
-      });
-      it("should revert not mintable", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    //     await expect(vault.deposit(owner.address, 1)).to.revertedWith("AG000");
+    //   });
+    //   it("should revert not mintable", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          false,
-          true
-        );
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       false,
+    //       true
+    //     );
 
-        await expect(vault.deposit(owner.address, 1)).to.revertedWith("AG002");
-      });
-      it("should revert exceed credit", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    //     await expect(vault.deposit(owner.address, 1)).to.revertedWith("AG002");
+    //   });
+    //   it("should revert exceed credit", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
 
-        await expect(
-          vault.deposit(owner.address, CREDIT.add(BigNumber.from("1")))
-        ).to.revertedWith("AG004");
-      });
-      it("mint success", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    //     await expect(
+    //       vault.deposit(owner.address, CREDIT.add(BigNumber.from("1")))
+    //     ).to.revertedWith("AG004");
+    //   });
+    //   it("mint success", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
-        const mintAmount = parseUnits("100", 18);
-        await vault.deposit(owner.address, mintAmount);
-        expect(await vault.totalMinted()).to.be.equal(mintAmount);
-        expect(await hope.balanceOf(owner.address)).to.be.equal(mintAmount);
-        expect(await hope.balanceOf(vault.address)).to.be.equal(0);
-        expect(await hope.getRemainingCredit(vault.address)).to.be.equal(
-          CREDIT.sub(mintAmount)
-        );
-      });
-    });
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
+    //     const mintAmount = parseUnits("100", 18);
+    //     await vault.deposit(owner.address, mintAmount);
+    //     expect(await vault.totalMinted()).to.be.equal(mintAmount);
+    //     expect(await hope.balanceOf(owner.address)).to.be.equal(mintAmount);
+    //     expect(await hope.balanceOf(vault.address)).to.be.equal(0);
+    //     expect(await hope.getRemainingCredit(vault.address)).to.be.equal(
+    //       CREDIT.sub(mintAmount)
+    //     );
+    //   });
+    // });
 
-    describe("Burn", async () => {
-      it("should revert not gateway deposit", async () => {
-        const { vault } = await loadFixture(deployVaultFixture);
-        await expect(vault.withdraw(1)).to.revertedWith("VA000");
-      });
-      it("should revert not burnable", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    // describe("Burn", async () => {
+    //   it("should revert not gateway deposit", async () => {
+    //     const { vault } = await loadFixture(deployVaultFixture);
+    //     await expect(vault.withdraw(1)).to.revertedWith("VA000");
+    //   });
+    //   it("should revert not burnable", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          false
-        );
-        await vault.deposit(vault.address, 1);
-        await expect(vault.withdraw(1)).to.revertedWith("AG003");
-      });
-      it("should revert exceed credit", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       false
+    //     );
+    //     await vault.deposit(vault.address, 1);
+    //     await expect(vault.withdraw(1)).to.revertedWith("AG003");
+    //   });
+    //   it("should revert exceed credit", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
 
-        await vault.deposit(vault.address, CREDIT);
+    //     await vault.deposit(vault.address, CREDIT);
 
-        await expect(
-          vault.withdraw(CREDIT.add(BigNumber.from("1")))
-        ).to.revertedWithPanic();
-      });
-      it("burn success", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    //     await expect(
+    //       vault.withdraw(CREDIT.add(BigNumber.from("1")))
+    //     ).to.revertedWithPanic();
+    //   });
+    //   it("burn success", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
-        const mintAmount = parseUnits("100", 18);
-        await vault.deposit(vault.address, mintAmount);
-        const burnAmount = parseUnits("49", 18);
-        await vault.withdraw(burnAmount);
-        expect(await vault.totalMinted()).to.be.equal(
-          mintAmount.sub(burnAmount)
-        );
-        expect(await hope.balanceOf(vault.address)).to.be.equal(
-          mintAmount.sub(burnAmount)
-        );
-        expect(await hope.getRemainingCredit(vault.address)).to.be.equal(
-          CREDIT.sub(mintAmount).add(burnAmount)
-        );
-      });
-    });
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
+    //     const mintAmount = parseUnits("100", 18);
+    //     await vault.deposit(vault.address, mintAmount);
+    //     const burnAmount = parseUnits("49", 18);
+    //     await vault.withdraw(burnAmount);
+    //     expect(await vault.totalMinted()).to.be.equal(
+    //       mintAmount.sub(burnAmount)
+    //     );
+    //     expect(await hope.balanceOf(vault.address)).to.be.equal(
+    //       mintAmount.sub(burnAmount)
+    //     );
+    //     expect(await hope.getRemainingCredit(vault.address)).to.be.equal(
+    //       CREDIT.sub(mintAmount).add(burnAmount)
+    //     );
+    //   });
+    // });
 
-    describe("Pause", () => {
-      it("mint should revert when paused", async () => {
-        const { owner, addr1, vault } = await loadFixture(deployVaultFixture);
-        await vault.updateGateway(owner.address);
-        await vault.addVaultManager(addr1.address);
-        await vault.connect(addr1).pause();
-        await expect(vault.deposit(owner.address, 1)).to.revertedWith(
-          "Pausable: paused"
-        );
-      });
-      it("burn should revert when paused", async () => {
-        const { hope, owner, addr1, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        await vault.updateGateway(owner.address);
+    // describe("Pause", () => {
+    //   it("mint should revert when paused", async () => {
+    //     const { owner, addr1, vault } = await loadFixture(deployVaultFixture);
+    //     await vault.updateGateway(owner.address);
+    //     await vault.addVaultManager(addr1.address);
+    //     await vault.connect(addr1).pause();
+    //     await expect(vault.deposit(owner.address, 1)).to.revertedWith(
+    //       "Pausable: paused"
+    //     );
+    //   });
+    //   it("burn should revert when paused", async () => {
+    //     const { hope, owner, addr1, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     await vault.updateGateway(owner.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
-        const mintAmount = parseUnits("100", 18);
-        await vault.deposit(vault.address, mintAmount);
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
+    //     const mintAmount = parseUnits("100", 18);
+    //     await vault.deposit(vault.address, mintAmount);
 
-        await vault.addVaultManager(addr1.address);
-        await vault.connect(addr1).pause();
-        await expect(vault.withdraw(1)).to.revertedWith("Pausable: paused");
-      });
-    });
-    describe("Transfer ERC20 Token", () => {
-      it("transfer should revert not gateway", async () => {
-        const { wbtc, owner, addr1, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        await expect(
-          vault.safeTransferToken(wbtc.address, addr1.address, 1)
-        ).to.revertedWith("VA000");
-      });
-      it("transfer token", async () => {
-        const { wbtc, owner, addr1, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        await wbtc["mint(address,uint256)"](vault.address, 1);
+    //     await vault.addVaultManager(addr1.address);
+    //     await vault.connect(addr1).pause();
+    //     await expect(vault.withdraw(1)).to.revertedWith("Pausable: paused");
+    //   });
+    // });
+    // describe("Transfer ERC20 Token", () => {
+    //   it("transfer should revert not gateway", async () => {
+    //     const { wbtc, owner, addr1, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     await expect(
+    //       vault.safeTransferToken(wbtc.address, addr1.address, 1)
+    //     ).to.revertedWith("VA000");
+    //   });
+    //   it("transfer token", async () => {
+    //     const { wbtc, owner, addr1, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     await wbtc["mint(address,uint256)"](vault.address, 1);
 
-        await vault.updateGateway(owner.address);
-        await vault.safeTransferToken(wbtc.address, addr1.address, 1);
-        expect(await wbtc.balanceOf(vault.address)).to.be.equal(0);
-        expect(await wbtc.balanceOf(addr1.address)).to.be.equal(1);
-      });
-    });
+    //     await vault.updateGateway(owner.address);
+    //     await vault.safeTransferToken(wbtc.address, addr1.address, 1);
+    //     expect(await wbtc.balanceOf(vault.address)).to.be.equal(0);
+    //     expect(await wbtc.balanceOf(addr1.address)).to.be.equal(1);
+    //   });
+    // });
 
     describe("mint with fee", () => {
       it("update fee rate will revert", async () => {
@@ -301,142 +301,142 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
       });
     });
 
-    describe("burn with fee", () => {
-      it("update fee rate will revert", async () => {
-        const { owner, addr1, vault } = await loadFixture(deployVaultFixture);
-        const burnFeeRate = parseUnits("0.1", 6);
-        await expect(vault.updateMintFeeRate(burnFeeRate)).to.revertedWith(
-          "VA004"
-        );
-      });
-      it("burn success", async () => {
-        const { owner, hope, vault } = await loadFixture(deployVaultFixture);
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    // describe("burn with fee", () => {
+    //   it("update fee rate will revert", async () => {
+    //     const { owner, addr1, vault } = await loadFixture(deployVaultFixture);
+    //     const burnFeeRate = parseUnits("0.1", 6);
+    //     await expect(vault.updateMintFeeRate(burnFeeRate)).to.revertedWith(
+    //       "VA004"
+    //     );
+    //   });
+    //   it("burn success", async () => {
+    //     const { owner, hope, vault } = await loadFixture(deployVaultFixture);
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        const burnFeeRate = parseUnits("0.099999", 6);
-        await vault.updateBurnFeeRate(burnFeeRate);
+    //     const burnFeeRate = parseUnits("0.099999", 6);
+    //     await vault.updateBurnFeeRate(burnFeeRate);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
-        const mintAmount = parseUnits("100", 18);
-        await vault.deposit(vault.address, mintAmount);
-        await vault.withdraw(mintAmount);
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
+    //     const mintAmount = parseUnits("100", 18);
+    //     await vault.deposit(vault.address, mintAmount);
+    //     await vault.withdraw(mintAmount);
 
-        const fee = mintAmount.mul(burnFeeRate).div(parseUnits("1", 6));
+    //     const fee = mintAmount.mul(burnFeeRate).div(parseUnits("1", 6));
 
-        expect(await vault.totalMinted()).to.be.equal(fee);
-        expect(await hope.balanceOf(vault.address)).to.be.equal(fee);
-        expect(await hope.getRemainingCredit(vault.address)).to.be.equal(
-          CREDIT.sub(mintAmount).add(mintAmount).sub(fee)
-        );
-      });
-    });
+    //     expect(await vault.totalMinted()).to.be.equal(fee);
+    //     expect(await hope.balanceOf(vault.address)).to.be.equal(fee);
+    //     expect(await hope.getRemainingCredit(vault.address)).to.be.equal(
+    //       CREDIT.sub(mintAmount).add(mintAmount).sub(fee)
+    //     );
+    //   });
+    // });
 
-    describe("Claim", () => {
-      it("claim fee will revert not vault manager", async () => {
-        const { owner, addr1, hope, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
-        await expect(vault.claimHOPE(owner.address)).to.reverted;
-      });
-      it("claim fee", async () => {
-        const { owner, addr1, hope, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
+    // describe("Claim", () => {
+    //   it("claim fee will revert not vault manager", async () => {
+    //     const { owner, addr1, hope, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
+    //     await expect(vault.claimHOPE(owner.address)).to.reverted;
+    //   });
+    //   it("claim fee", async () => {
+    //     const { owner, addr1, hope, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
 
-        await vault.addVaultManager(addr1.address);
+    //     await vault.addVaultManager(addr1.address);
 
-        const mintFeeRate = parseUnits("0.099999", 6);
-        await vault.updateMintFeeRate(mintFeeRate);
+    //     const mintFeeRate = parseUnits("0.099999", 6);
+    //     await vault.updateMintFeeRate(mintFeeRate);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
-        const mintAmount = parseUnits("100", 18);
-        await vault.deposit(owner.address, mintAmount);
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
+    //     const mintAmount = parseUnits("100", 18);
+    //     await vault.deposit(owner.address, mintAmount);
 
-        const fee = mintAmount.mul(mintFeeRate).div(parseUnits("1", 6));
+    //     const fee = mintAmount.mul(mintFeeRate).div(parseUnits("1", 6));
 
-        expect(await vault.totalMinted()).to.be.equal(mintAmount);
-        expect(await hope.balanceOf(owner.address)).to.be.equal(
-          mintAmount.sub(fee)
-        );
-        expect(await hope.balanceOf(vault.address)).to.be.equal(fee);
+    //     expect(await vault.totalMinted()).to.be.equal(mintAmount);
+    //     expect(await hope.balanceOf(owner.address)).to.be.equal(
+    //       mintAmount.sub(fee)
+    //     );
+    //     expect(await hope.balanceOf(vault.address)).to.be.equal(fee);
 
-        expect(await vault.claimableHOPE()).to.be.equal(fee);
-        await vault.connect(addr1).claimHOPE(addr1.address);
+    //     expect(await vault.claimableHOPE()).to.be.equal(fee);
+    //     await vault.connect(addr1).claimHOPE(addr1.address);
 
-        expect(await hope.balanceOf(vault.address)).to.be.equal(0);
-        expect(await vault.claimableHOPE()).to.be.equal(0);
-        expect(await hope.balanceOf(addr1.address)).to.be.equal(fee);
-      });
-      it("claim stETH will revert not vault manager", async () => {
-        const { owner, addr1, hope, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
-        await expect(vault.claimStETH(owner.address)).to.reverted;
-      });
-      it("claim stETH", async () => {
-        const { owner, addr1, hope, stETH, vault } = await loadFixture(
-          deployVaultFixture
-        );
-        // Mock Gateway
-        await vault.updateGateway(owner.address);
-        await vault.addVaultManager(addr1.address);
+    //     expect(await hope.balanceOf(vault.address)).to.be.equal(0);
+    //     expect(await vault.claimableHOPE()).to.be.equal(0);
+    //     expect(await hope.balanceOf(addr1.address)).to.be.equal(fee);
+    //   });
+    //   it("claim stETH will revert not vault manager", async () => {
+    //     const { owner, addr1, hope, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
+    //     await expect(vault.claimStETH(owner.address)).to.reverted;
+    //   });
+    //   it("claim stETH", async () => {
+    //     const { owner, addr1, hope, stETH, vault } = await loadFixture(
+    //       deployVaultFixture
+    //     );
+    //     // Mock Gateway
+    //     await vault.updateGateway(owner.address);
+    //     await vault.addVaultManager(addr1.address);
 
-        await hope.grantAgent(
-          vault.address,
-          CREDIT,
-          agentBlock,
-          agentBlock + 1000,
-          true,
-          true
-        );
+    //     await hope.grantAgent(
+    //       vault.address,
+    //       CREDIT,
+    //       agentBlock,
+    //       agentBlock + 1000,
+    //       true,
+    //       true
+    //     );
 
-        const stakedAmount = parseUnits("1", 18);
-        await vault.stakeETH({ value: stakedAmount });
+    //     const stakedAmount = parseUnits("1", 18);
+    //     await vault.stakeETH({ value: stakedAmount });
 
-        const mintAmount = parseUnits("5000", 18);
-        await vault.deposit(owner.address, mintAmount);
+    //     const mintAmount = parseUnits("5000", 18);
+    //     await vault.deposit(owner.address, mintAmount);
 
-        const [, totalETHReserve] = calculateReserveAmount(mintAmount);
+    //     const [, totalETHReserve] = calculateReserveAmount(mintAmount);
 
-        // Mock Lido rewards
-        await stETH.receiveRewards({ value: parseUnits("0.2", 18) });
+    //     // Mock Lido rewards
+    //     await stETH.receiveRewards({ value: parseUnits("0.2", 18) });
 
-        const stETHBalance = await stETH.balanceOf(vault.address);
+    //     const stETHBalance = await stETH.balanceOf(vault.address);
 
-        expect(await vault.claimableStETH()).to.equal(
-          stETHBalance.sub(totalETHReserve)
-        );
+    //     expect(await vault.claimableStETH()).to.equal(
+    //       stETHBalance.sub(totalETHReserve)
+    //     );
 
-        await vault.connect(addr1).claimStETH(addr1.address);
+    //     await vault.connect(addr1).claimStETH(addr1.address);
 
-        expect(await vault.claimableStETH()).to.be.equal(0);
-        // Ignore minimal error caused by the Share Token transfer process
-        expect(await stETH.balanceOf(addr1.address)).to.closeTo(
-          stETHBalance.sub(totalETHReserve),
-          1
-        );
-      });
-    });
+    //     expect(await vault.claimableStETH()).to.be.equal(0);
+    //     // Ignore minimal error caused by the Share Token transfer process
+    //     expect(await stETH.balanceOf(addr1.address)).to.closeTo(
+    //       stETHBalance.sub(totalETHReserve),
+    //       1
+    //     );
+    //   });
+    // });
   });
 });

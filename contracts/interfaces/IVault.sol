@@ -106,16 +106,4 @@ interface IVault {
      * @param _manager The address to revoke the Vault Manager role from.
      */
     function removeVaultManager(address _manager) external;
-
-    /**
-     * @dev Pauses contract functionality.
-     * @notice Only callable by addresses with the vault manager role.
-     */
-    function pause() external;
-
-    /**
-     * @dev Unpauses contract functionality.
-     * @notice Only callable by addresses with the vault manager role.
-     */
-    function unpause() external;
 }

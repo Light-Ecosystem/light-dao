@@ -18,6 +18,7 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 
 contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyGuard {
+    bytes32 public constant VAULT_MANAGER_ROLE = keccak256("VAULT_MANAGER_ROLE");
     bytes32 public constant EMERGENCY_MANAGER_ROLE = keccak256("EMERGENCY_MANAGER_ROLE");
     uint256 public constant K = 10801805;
     uint256 public constant K_FACTOR = 1e12;
@@ -55,6 +56,11 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
 
     modifier judgeExpired(uint256 deadLine) {
         require(deadLine >= block.timestamp, "GW011");
+        _;
+    }
+
+    modifier onlyEmergencyOrVaultManager() {
+        require(isEmergencyManager(_msgSender()) || isVaultManager(_msgSender()), "GW016");
         _;
     }
 
@@ -140,13 +146,13 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /// @inheritdoc IGateway
-    function updateSupportToken(address _token, bool _isSupported) public override onlyOwner {
+    function updateSupportToken(address _token, bool _isSupported) public override onlyRole(VAULT_MANAGER_ROLE) {
         supportTokens[_token] = _isSupported;
         emit UpdateSupportedToken(_token, _isSupported);
     }
 
     /// @inheritdoc IGateway
-    function updateSupportTokens(address[] calldata _tokens, bool[] calldata _isSupported) external override onlyOwner {
+    function updateSupportTokens(address[] calldata _tokens, bool[] calldata _isSupported) external override onlyRole(VAULT_MANAGER_ROLE) {
         require(_tokens.length == _isSupported.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateSupportToken(_tokens[i], _isSupported[i]);
@@ -154,13 +160,13 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /// @inheritdoc IGateway
-    function updateFrozenToken(address _token, bool _isFrozen) public override onlyOwner {
+    function updateFrozenToken(address _token, bool _isFrozen) public override onlyEmergencyOrVaultManager {
         frozenTokens[_token] = _isFrozen;
         emit UpdateFrozenToken(_token, _isFrozen);
     }
 
     /// @inheritdoc IGateway
-    function updateFrozenTokens(address[] calldata _tokens, bool[] calldata _isFrozen) external override onlyOwner {
+    function updateFrozenTokens(address[] calldata _tokens, bool[] calldata _isFrozen) external override onlyEmergencyOrVaultManager {
         require(_tokens.length == _isFrozen.length, "GW009");
         for (uint256 i = 0; i < _tokens.length; i++) {
             updateFrozenToken(_tokens[i], _isFrozen[i]);
@@ -182,7 +188,22 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /// @inheritdoc IGateway
-    function isEmergencyManager(address _manager) external view override returns (bool) {
+    function isVaultManager(address _manager) public view override returns (bool) {
+        return hasRole(VAULT_MANAGER_ROLE, _manager);
+    }
+
+    /// @inheritdoc IGateway
+    function addVaultManager(address _manager) external override onlyOwner {
+        _grantRole(VAULT_MANAGER_ROLE, _manager);
+    }
+
+    /// @inheritdoc IGateway
+    function removeVaultManager(address _manager) external override onlyOwner {
+        _revokeRole(VAULT_MANAGER_ROLE, _manager);
+    }
+
+    /// @inheritdoc IGateway
+    function isEmergencyManager(address _manager) public view override returns (bool) {
         return hasRole(EMERGENCY_MANAGER_ROLE, _manager);
     }
 
@@ -197,17 +218,17 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
     }
 
     /// @inheritdoc IGateway
-    function rescueTokens(address _token, address _recipient, uint256 _amount) external override onlyOwner {
+    function rescueTokens(address _token, address _recipient, uint256 _amount) external override onlyRole(VAULT_MANAGER_ROLE) {
         IERC20(_token).universalTransfer(_recipient, _amount);
     }
 
     /// @inheritdoc IGateway
-    function pause() external override onlyRole(EMERGENCY_MANAGER_ROLE) {
+    function pause() external override onlyEmergencyOrVaultManager {
         _pause();
     }
 
     /// @inheritdoc IGateway
-    function unpause() external override onlyRole(EMERGENCY_MANAGER_ROLE) {
+    function unpause() external override onlyEmergencyOrVaultManager {
         _unpause();
     }
 

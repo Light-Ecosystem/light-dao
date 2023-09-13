@@ -10,7 +10,6 @@ task(
     throw new Error("INVALID_CHAIN_ID");
   }
 
-  const STETH_ADDRESS = FileUtils.getContractAddress("stETH");
   const VAULT_ADDRESS = FileUtils.getContractAddress("Vault");
   const GATEWAY_ADDRESS = FileUtils.getContractAddress("Gateway");
 
@@ -19,14 +18,6 @@ task(
   const WETH_ADDRESS = "0xE55a23aaFb3a712BFae5BE96E0f61C745dedf33C";
   const stETH_ADDRESS = "0x00c71b0fCadE911B2feeE9912DE4Fe19eB04ca56";
 
-  try {
-    await hre.run("verify:verify", {
-      address: STETH_ADDRESS,
-      constructorArguments: [],
-    });
-  } catch (error) {
-    console.error(error);
-  }
   console.log(`- Verifying Vault:`);
   try {
     await hre.run("verify:verify", {

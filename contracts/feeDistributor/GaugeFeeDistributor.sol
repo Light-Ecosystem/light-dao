@@ -124,7 +124,7 @@ contract GaugeFeeDistributor is Ownable2StepUpgradeable, PausableUpgradeable, IG
         uint256 thisWeek = LibTime.timesRoundedByWeek(t);
         uint256 nextWeek = 0;
 
-        for (uint i = 0; i < 20; i++) {
+        for (uint i = 0; i < 50; i++) {
             nextWeek = thisWeek + WEEK;
             if (block.timestamp < nextWeek) {
                 if (sinceLast == 0 && block.timestamp == t) {

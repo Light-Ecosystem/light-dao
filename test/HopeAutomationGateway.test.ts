@@ -610,26 +610,15 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
           deployGatewayFixture
         );
 
-        await waitForTx(await gateway.addVaultManager(owner.address));
-
         const mintAmount = parseUnits("7503.15", 18);
 
-        await waitForTx(
-          await wbtc.connect(alice).approve(gateway.address, MAX_UINT_AMOUNT)
-        );
-
-        const [wbtcAmount, ethAmount] = calculateReserveAmount(mintAmount);
+        const [_, ethAmount] = calculateReserveAmount(mintAmount);
 
         const bobEthBalanceBefore = await bob.getBalance();
 
         await waitForTx(
-          await gateway
-            .connect(alice)
-            .combinationDeposit(mintAmount, ETH_MOCK_ADDRESS, {
-              value: ethAmount.mul(2),
-            })
+          await owner.sendTransaction({ to: gateway.address, value: ethAmount })
         );
-
         await gateway.rescueTokens(ETH_MOCK_ADDRESS, bob.address, ethAmount);
         expect(await bob.getBalance()).to.be.equal(
           bobEthBalanceBefore.add(ethAmount)

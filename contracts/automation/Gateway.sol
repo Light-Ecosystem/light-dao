@@ -256,6 +256,8 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
             if (_ethCorrelatedToken == address(WETH)) {
                 _payOrTransfer(address(WETH), _msgSender(), address(this), _ethAmount);
                 WETH.withdraw(_ethAmount);
+            } else {
+                require(msg.value == _ethAmount, "GW010");
             }
             VAULT.stakeETH{value: _ethAmount}();
         }

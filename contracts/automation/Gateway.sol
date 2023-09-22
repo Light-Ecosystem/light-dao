@@ -419,15 +419,4 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
         wbtcAmount = _hopeAmount.mul(K).div(K_FACTOR).div(wbtcConversionFactor);
         ethAmount = wbtcAmount.mul(wbtcConversionFactor).mul(ETH_TO_BTC_RATIO);
     }
-
-    function _calculateRefundAsset(
-        uint256 _wbtcAmount,
-        uint256 _ethAmount,
-        uint256 _wbtcAmountOfReserve,
-        uint256 _ethAmountOfReserve
-    ) internal pure returns (uint256, uint256, uint256, uint256) {
-        require(_wbtcAmount >= _wbtcAmountOfReserve && _ethAmount >= _ethAmountOfReserve, "GW010");
-
-        return (_wbtcAmountOfReserve, _ethAmountOfReserve, _wbtcAmount.sub(_wbtcAmountOfReserve), _ethAmount.sub(_ethAmountOfReserve));
-    }
 }

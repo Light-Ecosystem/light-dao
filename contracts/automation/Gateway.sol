@@ -79,6 +79,7 @@ contract Gateway is IGateway, Ownable2Step, AccessControl, Pausable, ReentrancyG
         bytes32 _permitR,
         bytes32 _permitS
     ) external override whenNotPaused nonReentrant {
+        require(_ethCorrelatedToken == address(stETH), "GW002");
         (uint256 wbtcAmount, uint256 ethAmount) = _calculateReserveAmount(_mintAmount);
         IERC20WithPermit(_ethCorrelatedToken).permit(_msgSender(), address(this), ethAmount, _deadline, _permitV, _permitR, _permitS);
         _combinationDeposit(_mintAmount, _ethCorrelatedToken, wbtcAmount, ethAmount);

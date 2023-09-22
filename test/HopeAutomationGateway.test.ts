@@ -610,6 +610,8 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
           deployGatewayFixture
         );
 
+        await waitForTx(await gateway.addVaultManager(owner.address));
+
         const mintAmount = parseUnits("7503.15", 18);
 
         const [_, ethAmount] = calculateReserveAmount(mintAmount);

@@ -107,6 +107,7 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
             )
         );
         address signer = _recoverSigner(ethSignedMessageHash, _signature);
+        require(signer != address(0), "Signer not be zero address");
 
         return signers[signer];
     }

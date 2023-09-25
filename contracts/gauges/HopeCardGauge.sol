@@ -47,6 +47,7 @@ interface IMinter {
 contract HopeCardGauge is Ownable2Step {
 
     event UpdateReceiver(address oldReceiver, address newReceiver);
+    event UpdateStatus(bool isKilled, uint timestamp);
 
     struct InflationParams {
         uint256 rate;
@@ -179,6 +180,8 @@ contract HopeCardGauge is Ownable2Step {
         }
 
         isKilled = _isKilled;
+
+        emit UpdateStatus(_isKilled, block.timestamp);
     }
 
     /***

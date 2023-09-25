@@ -30,6 +30,8 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
 
     event Fund(address indexed operator, uint256 amount, uint256 timestamp);
     event Claim(address user, uint256 amount, uint256 nonce);
+    event NewMinter(address minter, address operator);
+    event UpdateSigner(address signer, bool status, address operator);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -168,6 +170,8 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
     function setMinter(address _minter) external onlyRole(OPERATOR_ROLE) {
         require(_minter != address(0), "Invalid Address");
         minter = _minter;
+
+        emit NewMinter(minter, msg.sender);
     }
 
     /**
@@ -178,6 +182,8 @@ contract StHOPERewardVault is Ownable2StepUpgradeable, AccessControlUpgradeable 
     function setSigner(address _signer, bool _status) external onlyRole(OPERATOR_ROLE) {
         require(_signer != address(0), "Invalid Address");
         signers[_signer] = _status;
+
+        emit UpdateSigner(_signer, _status, msg.sender);
     }
 
     /**

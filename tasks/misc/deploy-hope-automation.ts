@@ -15,15 +15,18 @@ task(
   const deployer = "0xcbeD65Db7E177D4875dDF5B67E13326A43a7B03f";
 
   // 1. Set address first
-  const HOPE_ADDRESS = "0x70C8C67CfbE228c7437Ec586a751a408e23355F4";
-  const WBTC_ADDRESS = "0xAF48F7c5866c0Fd63492bAc0b7816c1933c4D43a";
-  const WETH_ADDRESS = "0xE55a23aaFb3a712BFae5BE96E0f61C745dedf33C";
-  const stETH_ADDRESS = "0x00c71b0fCadE911B2feeE9912DE4Fe19eB04ca56";
-  const USDT_ADDRESS = "0x76127399A0CafeDB59615A93A7ACF8552c1aEE4c";
-  const USDC_ADDRESS = "0x06446E7Bd1f211C3189cfeCF3CDE488757eb5e4f";
-  const DAI_ADDRESS = "0xAd4979AE4a275c4f6bc194c14C3b3CFBcD435abb";
+  const HOPE_ADDRESS = "0xc353Bf07405304AeaB75F4C2Fac7E88D6A68f98e";
+  const WBTC_ADDRESS = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599";
+  const WETH_ADDRESS = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+  const stETH_ADDRESS = "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84";
+  const USDT_ADDRESS = "0xdAC17F958D2ee523a2206206994597C13D831ec7";
+  const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+  const DAI_ADDRESS = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 
-  const SWAP_WHITE_LISTED: string[] = [];
+  const ONE_INCH = "0x1111111254eeb25477b68fb85ed929f73a960582";
+  const ZERO_EX = "0xdef1c0ded9bec7f1a1670819833240f027b25eff";
+  const OKEX = "0x3b3ae790Df4F312e745D270119c6052904FB6790";
+  const SWAP_WHITE_LISTED: string[] = [ONE_INCH, ZERO_EX, OKEX];
 
   // 2. Deloy Vault contract
   const Vault = await hre.ethers.getContractFactory("Vault");
@@ -72,7 +75,7 @@ task(
   // Update swap white list
   if (SWAP_WHITE_LISTED.length > 0) {
     await waitForTx(
-      await gateway.updateSwapWhiteLists(SWAP_WHITE_LISTED, [true])
+      await gateway.updateSwapWhiteLists(SWAP_WHITE_LISTED, [true, true, true])
     );
     console.log(`- [INFO] Swap white listed config successful!`);
   }

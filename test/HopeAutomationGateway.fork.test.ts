@@ -546,7 +546,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         );
 
         const functionSignature =
-          "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)";
+          "swapExactTokensForTokensSupportingFeeOnTransferTokens(uint256,uint256,address[],address,uint256)";
         const iface = new ethers.utils.Interface([
           `function ${functionSignature}`,
         ]);
@@ -662,7 +662,7 @@ describe("On-chain HOPE Automation Mint & Burn", () => {
         );
 
         const functionSignature =
-          "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)";
+          "swapExactTokensForTokensSupportingFeeOnTransferTokens(uint256,uint256,address[],address,uint256)";
         const iface = new ethers.utils.Interface([
           `function ${functionSignature}`,
         ]);

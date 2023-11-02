@@ -14,7 +14,7 @@ task(`setup-hope-agent`, `Setups HOPE agent role`).setAction(async (_, hre) => {
 
   const HOPE_ADDRESS = "0xc353Bf07405304AeaB75F4C2Fac7E88D6A68f98e";
   const SAFE_OWNER = "0xC2D0108307Ff76eBb0ea05B78567b5eAF5AC7830";
-  const VAULT_ADDRESS = "0xC2D0108307Ff76eBb0ea05B78567b5eAF5AC7830";
+  const VAULT_ADDRESS = "0x7DFfB34cA18C5ae958E402622225777341ee35Eb";
 
   const safeSigner = provider.getSigner(SAFE_OWNER);
 

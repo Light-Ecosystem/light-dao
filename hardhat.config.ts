@@ -40,22 +40,16 @@ const config: HardhatUserConfig = {
       initialBaseFeePerGas: 8000000000,
       allowUnlimitedContractSize: false,
       chainId: 31337,
-      // forking: {
-      //   url: `${process.env.MAIN_NODE_URL}`,
-      // },
+      forking: {
+        url: `${process.env.MAIN_NODE_URL}`,
+      },
     },
     ganache: {
       gas: 4100000,
       gasPrice: 8000000000,
-      url: `http://localhost:7545`,
-      accounts: {
-        mnemonic:
-          "soda scrub envelope feature net hunt sea copper extend hole inner horse",
-        path: "m/44'/60'/0'/0",
-        initialIndex: 0,
-        count: 20,
-        passphrase: "",
-      },
+      url: `https://ganache-test2.hivefin.net`,
+      accounts: [`${process.env.WALLET_KEY}`],
+      chainId: 1337,
     },
     sepolia: {
       gas: 4100000,

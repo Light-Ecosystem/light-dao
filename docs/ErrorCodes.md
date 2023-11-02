@@ -118,10 +118,10 @@
 `GW000` : `Invalid token combination.`
 `GW001` : `Invalid input array length.`
 `GW002` : `Invalid token addresses.`
-`GW003` : `Tokens for deposit must match.`
+`GW003` : `The source tokens must match.`
 `GW004` : `The deposit token is not supported.`
 `GW005` : `The deposit token is frozen.`
-`GW006` : `Destination tokens must match.`
+`GW006` : `The destination tokens must match.`
 `GW007` : `The withdraw token is not supported.`
 `GW008` : `The withdraw token is frozen.`
 `GW009` : `Array lengths must match.`

@@ -14,21 +14,26 @@ task(`deploy-grants-gauge`, `deploy GrantsGauge`).setAction(async (_, hre) => {
   let minter = "0x2DD369a0126B014f5A574f92FB5510B4EaB4eF01";
   let multiSig = "0xcbeD65Db7E177D4875dDF5B67E13326A43a7B03f";
 
-  const GrantsGauge = await hre.ethers.getContractFactory("GrantsGauge");
-  const grantsGauge = await GrantsGauge.deploy(
+  const TransmitEmissionsGauge = await hre.ethers.getContractFactory(
+    "TransmitEmissionsGauge"
+  );
+  const transmitEmissionsGauge = await TransmitEmissionsGauge.deploy(
     ltToken,
     gaugeController,
     minter,
     receiver
   );
-  await grantsGauge.deployed();
-  console.log("GrantsGauge Address: ", grantsGauge.address);
+  await transmitEmissionsGauge.deployed();
+  console.log(
+    "TransmitEmissionsGauge Address: ",
+    transmitEmissionsGauge.address
+  );
   FileUtils.saveFrontendFiles(
-    grantsGauge.address,
-    "GrantsGauge",
-    Constants.GrantsGauge
+    transmitEmissionsGauge.address,
+    "TransmitEmissionsGauge",
+    Constants.TransmitEmissionsGauge
   );
 
-  await grantsGauge.transferOwnership(multiSig);
+  await transmitEmissionsGauge.transferOwnership(multiSig);
   console.log(`[INFO] Owner transfer to ${multiSig}`);
 });

@@ -44,7 +44,7 @@ interface IMinter {
     function mint(address gaugeAddress) external;
 }
 
-contract GrantsGauge is Ownable2Step {
+contract TransmitEmissionsGauge is Ownable2Step {
     event UpdateReceiver(address oldReceiver, address newReceiver);
     event UpdateStatus(bool isKilled, uint timestamp);
 
